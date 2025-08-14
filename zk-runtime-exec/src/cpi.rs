@@ -18,19 +18,13 @@ declare_builtin_function!(
     BuiltinCPI,
     fn rust(
         context_object: &mut ExecContext,
-        arg_a: u64,
-        arg_b: u64,
-        arg_c: u64,
-        arg_d: u64,
-        arg_e: u64,
+        in_ptr: u64,
+        in_len: u64,
+        out_ptr: u64,
+        out_len: u64,
+        _unused: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Box<dyn std::error::Error>> {
-        let in_ptr  = arg_a;
-        let in_len  = arg_b;
-        let out_ptr = arg_c;
-        let out_len = arg_d;
-        let _unused = arg_e;
-
         // Map input buffer (convert ProgramResult -> boxed error)
         let in_host = match memory_mapping.map(AccessType::Load, in_ptr, in_len) {
             StableResult::Ok(addr) => addr,
