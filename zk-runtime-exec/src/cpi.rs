@@ -71,7 +71,7 @@ declare_builtin_function!(
             std::ptr::copy_nonoverlapping(out_bytes.as_ptr(), out_host as *mut u8, out_bytes.len());
         }
 
-        Ok(0) // success return value; macro wraps this into ProgramResult::Ok(0)
+        Ok(0)
     }
 );
 
