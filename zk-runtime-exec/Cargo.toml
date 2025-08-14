@@ -1,0 +1,7 @@
+[package]
+name = "zk-runtime-exec"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+solana-sbpf = "0.12.2"
