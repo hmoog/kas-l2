@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io;
 
-use crate::execution_context::ExecutionContext;
+use crate::runtime_context::RuntimeContext;
 use macros::builtin;
 use solana_sbpf::error::StableResult;
 use solana_sbpf::memory_region::{AccessType, MemoryMapping};
@@ -9,7 +9,7 @@ use solana_sbpf::memory_region::{AccessType, MemoryMapping};
 #[builtin]
 impl CPI {
     pub fn route(
-        context_object: &mut ExecutionContext,
+        ctx: &mut RuntimeContext,
         in_ptr: u64,
         in_len: u64,
         out_ptr: u64,
@@ -40,7 +40,7 @@ impl CPI {
         let params = &in_slice[8..];
 
         // Host-side CPI "invoke"
-        let out_bytes = Self::invoke(context_object, app_id, params)
+        let out_bytes = Self::invoke(ctx, app_id, params)
             .map_err(|msg| boxed_err(format!("cpi_invoke: {msg}")))?;
 
         // Ensure caller provided enough output space
@@ -68,7 +68,7 @@ impl CPI {
     }
 
     pub fn invoke(
-        ctx: &mut ExecutionContext,
+        ctx: &mut RuntimeContext,
         app_id: u64,
         params: &[u8],
     ) -> Result<Vec<u8>, String> {

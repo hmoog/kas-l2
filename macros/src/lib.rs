@@ -29,7 +29,7 @@ pub fn builtin(_args: TokenStream, input: TokenStream) -> TokenStream {
         ::solana_sbpf::declare_builtin_function!(
             #self_ty,
             fn rust(
-                context_object: &mut ExecutionContext,
+                context_object: &mut RuntimeContext,
                 in_ptr: u64,
                 in_len: u64,
                 out_ptr: u64,

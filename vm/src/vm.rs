@@ -1,5 +1,5 @@
-use crate::ExecutionContext;
-use crate::cpi::CPI;
+use crate::RuntimeContext;
+use crate::builtin::cpi::CPI;
 use solana_sbpf::aligned_memory::AlignedMemory;
 use solana_sbpf::ebpf;
 use solana_sbpf::elf::Executable;
@@ -13,7 +13,7 @@ use std::sync::Arc;
 /// Convenience wrapper around a loader + VM config.
 pub struct VM {
     pub config: Config,
-    pub builtin_program: Arc<BuiltinProgram<ExecutionContext>>,
+    pub builtin_program: Arc<BuiltinProgram<RuntimeContext>>,
 }
 
 impl VM {
@@ -38,13 +38,13 @@ impl VM {
     pub fn execute_elf(
         &self,
         elf_bytes: &[u8],
-        ctx: &mut ExecutionContext,
+        ctx: &mut RuntimeContext,
         input_mem: &mut [u8],
         interpreted: bool,
     ) -> (u64, ProgramResult) {
         // Load and verify the executable.
         let exec =
-            Executable::<ExecutionContext>::from_elf(elf_bytes, self.builtin_program.clone())
+            Executable::<RuntimeContext>::from_elf(elf_bytes, self.builtin_program.clone())
                 .expect("load executable");
         exec.verify::<RequisiteVerifier>().expect("verify elf");
 

@@ -5,24 +5,25 @@ use solana_sbpf::vm::ContextObject;
 use crate::app_registry::AppRegistry;
 use crate::runtime_state::RuntimeState;
 
-pub struct ExecutionContext {
-    remaining_gas: u64,
+pub struct RuntimeContext {
     pub runtime_state: RuntimeState,
     pub app_registry: Arc<dyn AppRegistry>,
+    remaining_gas: u64,
 }
 
-impl ExecutionContext {
-    pub fn new(registry: Arc<dyn AppRegistry>, runtime: RuntimeState, gas_limit: u64) -> Self {
+impl RuntimeContext {
+    pub fn new(app_registry: Arc<dyn AppRegistry>, runtime_state: RuntimeState, gas_limit: u64) -> Self {
         Self {
+            app_registry,
+            runtime_state,
             remaining_gas: gas_limit,
-            app_registry: registry,
-            runtime_state: runtime,
         }
     }
 }
 
-impl ContextObject for ExecutionContext {
-    fn trace(&mut self, _state: [u64; 12]) { /* optional tracing */
+impl ContextObject for RuntimeContext {
+    fn trace(&mut self, _state: [u64; 12]) {
+        /* optional tracing */
     }
 
     fn consume(&mut self, amount: u64) {

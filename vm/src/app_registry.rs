@@ -1,14 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// How the runtime locates application binaries.
-/// In a real node this might hit a DB, local cache, or network.
 pub trait AppRegistry: Send + Sync {
-    /// Returns ELF bytes for `app_id`, if known.
     fn load_app_elf(&self, app_id: u64) -> Option<Arc<Vec<u8>>>;
 }
 
-/// A tiny in-memory registry for demos/tests.
 #[derive(Default)]
 pub struct InMemoryAppRegistry {
     map: HashMap<u64, Arc<Vec<u8>>>,
