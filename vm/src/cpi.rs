@@ -1,34 +1,31 @@
+use std::error::Error;
 use std::io;
 
-use solana_sbpf::{
-    declare_builtin_function,
-    error::EbpfError,
-    memory_region::{AccessType, MemoryMapping},
-    program::BuiltinProgram,
-};
+use crate::execution_context::ExecutionContext;
+use macros::builtin;
 use solana_sbpf::error::StableResult;
-use crate::exec::ExecContext;
+use solana_sbpf::memory_region::{AccessType, MemoryMapping};
 
-#[inline]
-fn boxed_err(msg: impl Into<String>) -> Box<dyn std::error::Error> {
-    Box::new(io::Error::new(io::ErrorKind::Other, msg.into()))
-}
-
-declare_builtin_function!(
-    BuiltinCPI,
-    fn rust(
-        context_object: &mut ExecContext,
+#[builtin]
+impl CPI {
+    pub fn route(
+        context_object: &mut ExecutionContext,
         in_ptr: u64,
         in_len: u64,
         out_ptr: u64,
         out_len: u64,
         _unused: u64,
         memory_mapping: &mut MemoryMapping,
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> Result<u64, Box<dyn Error>> {
+        #[inline]
+        fn boxed_err(msg: impl Into<String>) -> Box<dyn Error> {
+            Box::new(io::Error::other(msg.into()))
+        }
+
         // Map input buffer (convert ProgramResult -> boxed error)
         let in_host = match memory_mapping.map(AccessType::Load, in_ptr, in_len) {
             StableResult::Ok(addr) => addr,
-            StableResult::Err(e)   => return Err(boxed_err(format!("cpi: map input failed: {e:?}"))),
+            StableResult::Err(e) => return Err(boxed_err(format!("cpi: map input failed: {e:?}"))),
         };
         let in_slice = unsafe { std::slice::from_raw_parts(in_host as *const u8, in_len as usize) };
 
@@ -43,8 +40,7 @@ declare_builtin_function!(
         let params = &in_slice[8..];
 
         // Host-side CPI "invoke"
-        let out_bytes = context_object
-            .cpi_invoke(app_id, params)
+        let out_bytes = Self::invoke(context_object, app_id, params)
             .map_err(|msg| boxed_err(format!("cpi_invoke: {msg}")))?;
 
         // Ensure caller provided enough output space
@@ -57,9 +53,12 @@ declare_builtin_function!(
         }
 
         // Write result back into guest memory
-        let out_host = match memory_mapping.map(AccessType::Store, out_ptr, out_bytes.len() as u64) {
+        let out_host = match memory_mapping.map(AccessType::Store, out_ptr, out_bytes.len() as u64)
+        {
             StableResult::Ok(addr) => addr,
-            StableResult::Err(e)   => return Err(boxed_err(format!("cpi: map output failed: {e:?}"))),
+            StableResult::Err(e) => {
+                return Err(boxed_err(format!("cpi: map output failed: {e:?}")));
+            }
         };
         unsafe {
             std::ptr::copy_nonoverlapping(out_bytes.as_ptr(), out_host as *mut u8, out_bytes.len());
@@ -67,12 +66,20 @@ declare_builtin_function!(
 
         Ok(0)
     }
-);
 
-/// Register the CPI builtin into a loader (concrete over ExecContext).
-pub fn register_cpi_builtin(
-    mut loader: BuiltinProgram<ExecContext>,
-) -> Result<BuiltinProgram<ExecContext>, EbpfError> {
-    loader.register_function("cpi", BuiltinCPI::vm)?;
-    Ok(loader)
+    pub fn invoke(
+        ctx: &mut ExecutionContext,
+        app_id: u64,
+        params: &[u8],
+    ) -> Result<Vec<u8>, String> {
+        // Demo behavior: hash(state_root || app_id || params)
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(ctx.runtime_state.state_root.as_bytes());
+        hasher.update(&app_id.to_le_bytes());
+        hasher.update(params);
+        let out = hasher.finalize();
+        // Update the state's root to simulate a write set application
+        ctx.runtime_state.state_root = out;
+        Ok(out.as_bytes().to_vec()) // 32 bytes
+    }
 }

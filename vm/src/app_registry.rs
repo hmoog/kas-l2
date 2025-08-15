@@ -9,14 +9,16 @@ pub trait AppRegistry: Send + Sync {
 }
 
 /// A tiny in-memory registry for demos/tests.
+#[derive(Default)]
 pub struct InMemoryAppRegistry {
     map: HashMap<u64, Arc<Vec<u8>>>,
 }
 
 impl InMemoryAppRegistry {
     pub fn new() -> Self {
-        Self { map: HashMap::new() }
+        Self::default()
     }
+
     pub fn insert(&mut self, app_id: u64, elf: Vec<u8>) {
         self.map.insert(app_id, Arc::new(elf));
     }

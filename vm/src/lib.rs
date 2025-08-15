@@ -7,11 +7,14 @@
 //!
 //! See the module docs and `exec::execute_elf` to run a guest ELF.
 
-pub mod exec;
+pub mod app_registry;
 pub mod cpi;
-pub mod registry;
-pub mod runtime;
+pub mod execution_context;
+pub mod runtime_state;
+mod vm;
 
-pub use exec::{execute_elf, ExecContext, Loader};
-pub use registry::{AppRegistry, InMemoryAppRegistry};
-pub use runtime::RuntimeState;
+pub use vm::VM;
+
+pub use app_registry::{AppRegistry, InMemoryAppRegistry};
+pub use execution_context::ExecutionContext;
+pub use runtime_state::RuntimeState;

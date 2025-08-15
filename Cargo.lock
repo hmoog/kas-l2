@@ -118,6 +118,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -276,6 +285,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "vm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "macros",
+ "serde",
+ "solana-sbpf",
+]
+
+[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -328,20 +348,6 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "zk-runtime-exec"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "serde",
- "solana-sbpf",
-]
-
-[[package]]
-name = "zk-runtime-macros"
-version = "0.1.0"
 
 [[package]]
 name = "zk-runtime-prov"

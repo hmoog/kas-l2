@@ -1,10 +1,11 @@
 [package]
-name = "zk-runtime-exec"
+name = "vm"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
+macros = { path = "../macros" }
 serde = { version = "1.0.219", features = ["derive"] }
 anyhow = "1.0.99"
