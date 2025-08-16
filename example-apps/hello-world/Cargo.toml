@@ -1,0 +1,18 @@
+[workspace]
+
+[package]
+name = "hello_world"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+custom-heap = []
+custom-panic = []
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = "3.0.0"
+base64ct = "=1.7.3"
