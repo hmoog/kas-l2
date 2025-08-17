@@ -12,3 +12,11 @@ impl RuntimeState {
         })
     }
 }
+
+impl Default for RuntimeState {
+    fn default() -> Self {
+        Self {
+            state_root: blake3::Hash::from([0u8; 32]),
+        }
+    }
+}

@@ -67,11 +67,7 @@ impl CPI {
         Ok(0)
     }
 
-    pub fn invoke(
-        ctx: &mut RuntimeContext,
-        app_id: u64,
-        params: &[u8],
-    ) -> Result<Vec<u8>, String> {
+    pub fn invoke(ctx: &mut RuntimeContext, app_id: u64, params: &[u8]) -> Result<Vec<u8>, String> {
         // Demo behavior: hash(state_root || app_id || params)
         let mut hasher = blake3::Hasher::new();
         hasher.update(ctx.runtime_state.state_root.as_bytes());

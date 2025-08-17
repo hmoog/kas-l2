@@ -1,6 +1,12 @@
 mod app_registry;
 mod builtin {
+    pub mod abort;
     pub mod cpi;
+    pub mod sol_alloc_free;
+    pub mod sol_log;
+    pub mod sol_log_64;
+    pub mod sol_memcpy;
+    pub mod sol_panic;
 }
 
 mod runtime_context;
