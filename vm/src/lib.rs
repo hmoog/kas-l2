@@ -11,10 +11,13 @@ mod builtin {
 
 mod runtime_context;
 mod runtime_state;
-mod vm;
+mod loader;
+mod program;
+mod account;
 
-pub use vm::VM;
-
+pub use account::Account;
+pub use loader::Loader;
+pub use program::Program;
 pub use app_registry::{AppRegistry, InMemoryAppRegistry};
 pub use runtime_context::RuntimeContext;
 pub use runtime_state::RuntimeState;

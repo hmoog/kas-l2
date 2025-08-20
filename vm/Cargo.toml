@@ -7,3 +7,6 @@ edition = "2024"
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
 macros = { path = "../macros" }
+solana-program-runtime = "2.3.7"
+solana-transaction-context = "2.3.7"
+solana-program = "3.0.0"
