@@ -17,7 +17,7 @@ impl SolLog64 {
         _memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Box<dyn Error>> {
         eprintln!("[sol_log_64_]");
-        
+
         eprintln!("[sol_log_64_] {r1}, {r2}, {r3}, {r4}, {r5}");
         Ok(0)
     }

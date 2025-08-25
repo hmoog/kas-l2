@@ -17,7 +17,7 @@ impl SolMemcpy {
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Box<dyn Error>> {
         eprintln!("[sol_memcpy_]");
-        
+
         // Naive byte-by-byte copy using the VM memory API.
         // `load` yields u64; take the low 8 bits for a byte and store as u8.
         let mut i = 0;

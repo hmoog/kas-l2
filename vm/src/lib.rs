@@ -9,15 +9,15 @@ mod builtin {
     pub mod sol_panic;
 }
 
-mod runtime_context;
-mod runtime_state;
+mod account;
 mod loader;
 mod program;
-mod account;
+mod runtime_context;
+mod runtime_state;
 
 pub use account::Account;
+pub use app_registry::{AppRegistry, InMemoryAppRegistry};
 pub use loader::Loader;
 pub use program::Program;
-pub use app_registry::{AppRegistry, InMemoryAppRegistry};
 pub use runtime_context::RuntimeContext;
 pub use runtime_state::RuntimeState;

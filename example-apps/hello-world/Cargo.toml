@@ -13,6 +13,11 @@ custom-panic = []
 [lib]
 crate-type = ["cdylib", "lib"]
 
+[[bin]]
+name = "sp1_guest"
+path = "src/lib.rs"
+
 [dependencies]
-solana-program = "3.0.0"
-base64ct = "=1.7.3"
+# add this line (even if you don't use it directly)
+base64ct = { version = "=1.7.3", default-features = false }
+kas_program = { path = "../../kas_program" }

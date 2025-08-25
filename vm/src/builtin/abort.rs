@@ -17,7 +17,7 @@ impl Abort {
         _memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Box<dyn Error>> {
         eprintln!("[abort]");
-        
+
         // Match panic-abort semantics by failing the VM step.
         Err(io::Error::other("abort() called").into())
     }

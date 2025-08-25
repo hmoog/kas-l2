@@ -31,10 +31,10 @@ impl RuntimeContext {
 
 impl ContextObject for RuntimeContext {
     fn trace(&mut self, state: [u64; 12]) {
-        let r1  = state[1];
-        let r2  = state[2];
+        let r1 = state[1];
+        let r2 = state[2];
         let r10 = state[10];
-        let pc  = state[11]; // program counter
+        let pc = state[11]; // program counter
         eprintln!("pc={:#06x}  r1={:#x}  r2={:#x}  r10={:#x}", pc, r1, r2, r10);
     }
 

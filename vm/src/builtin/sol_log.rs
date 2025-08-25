@@ -1,8 +1,8 @@
-use std::error::Error;
-use solana_sbpf::error::StableResult;
 use crate::runtime_context::RuntimeContext;
 use macros::builtin;
-use solana_sbpf::memory_region::{MemoryMapping};
+use solana_sbpf::error::StableResult;
+use solana_sbpf::memory_region::MemoryMapping;
+use std::error::Error;
 
 #[builtin]
 impl SolLog {
@@ -37,4 +37,3 @@ impl SolLog {
         Ok(0)
     }
 }
-

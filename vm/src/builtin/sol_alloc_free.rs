@@ -10,8 +10,8 @@ impl SolAllocFree {
     /// Free when (size == 0 && free_ptr != 0) — no-op for bump allocator.
     pub fn route(
         ctx: &mut RuntimeContext,
-        size: u64,        // r1
-        free_ptr: u64,    // r2
+        size: u64,     // r1
+        free_ptr: u64, // r2
         _r3: u64,
         _r4: u64,
         _r5: u64,
