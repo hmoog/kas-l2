@@ -1,5 +1,6 @@
 use getrandom::Error;
 
+#[cfg(not(target_os = "zkvm"))]
 #[unsafe(no_mangle)]
 unsafe extern "Rust" fn __getrandom_v03_custom(
     dest: *mut u8,

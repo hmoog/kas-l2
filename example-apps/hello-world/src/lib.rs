@@ -1,3 +1,7 @@
+#![no_main]
+#![allow(unexpected_cfgs)]
+entrypoint!(process_instruction);
+
 use kas_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -5,8 +9,6 @@ use kas_program::{
     pubkey::Pubkey,
     entrypoint,
 };
-
-entrypoint!(process_instruction);
 
 pub fn process_instruction(
     _program_id: &Pubkey,
@@ -16,10 +18,6 @@ pub fn process_instruction(
     // Print "Hello, world!" to the program log
     msg!("Hello, world!");
     Ok(())
-}
-
-pub fn main() {
-
 }
 
 // //! A simple program that takes a number `n` as input, and writes the `n-1`th and `n`th fibonacci

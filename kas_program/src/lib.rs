@@ -3,15 +3,20 @@ pub mod solana_program {
     pub use solana_program::*;
 }
 
-pub mod randomness {
-        pub mod custom; // defines the required hook
-        pub mod buffer; // global stack of prover randomness
-        #[cfg(target_os = "zkvm")]
-        pub mod zkvm;
-        #[cfg(not(target_os = "zkvm"))]
-        pub mod host;
+#[cfg(target_os = "zkvm")]
+pub mod sp1_zkvm {
+    pub use sp1_zkvm::*;
+}
 
-        pub use buffer::push_prover_randomness;
+pub mod randomness {
+    pub mod custom; // defines the required hook
+    pub mod buffer; // global stack of prover randomness
+    #[cfg(target_os = "zkvm")]
+    pub mod zkvm;
+    #[cfg(not(target_os = "zkvm"))]
+    pub mod host;
+
+    pub use buffer::push_prover_randomness;
 }
 
 /// entrypoint! macro
@@ -40,6 +45,11 @@ macro_rules! entrypoint {
             }
         }
 
+        #[cfg(target_os = "zkvm")]
+        $crate::sp1_zkvm::entrypoint!(main);
+        pub fn main () {
+            // zkVM entrypoint does not use main, so we leave it empty.
+        }
     };
 }
 

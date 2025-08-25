@@ -5,19 +5,14 @@ name = "hello_world"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = []
-custom-heap = []
-custom-panic = []
-
 [lib]
+name = "hello_world_solana"
 crate-type = ["cdylib", "lib"]
 
 [[bin]]
-name = "sp1_guest"
+name = "hello_world_sp1"
 path = "src/lib.rs"
 
 [dependencies]
-# add this line (even if you don't use it directly)
-base64ct = { version = "=1.7.3", default-features = false }
+base64ct = { version = "=1.7.3", default-features = false } # pin to avoid issues
 kas_program = { path = "../../kas_program" }
