@@ -1,14 +1,8 @@
 #![no_main]
 #![allow(unexpected_cfgs)]
-entrypoint!(process_instruction);
+kas_program::entrypoint!(process_instruction);
 
-use kas_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    msg,
-    pubkey::Pubkey,
-    entrypoint,
-};
+use kas_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 pub fn process_instruction(
     _program_id: &Pubkey,

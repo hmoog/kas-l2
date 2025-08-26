@@ -14,5 +14,4 @@ name = "hello_world_sp1"
 path = "src/lib.rs"
 
 [dependencies]
-base64ct = { version = "=1.7.3", default-features = false } # pin to avoid issues
 kas_program = { path = "../../kas_program" }
