@@ -5,6 +5,10 @@ name = "hello_world"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+custom-heap = []
+custom-panic = []
+
 [lib]
 name = "hello_world_solana"
 crate-type = ["cdylib", "lib"]
