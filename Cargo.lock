@@ -482,8 +482,6 @@ dependencies = [
 name = "kas_program"
 version = "0.1.0"
 dependencies = [
- "getrandom 0.2.16",
- "once_cell",
  "solana-program",
  "sp1-zkvm",
 ]

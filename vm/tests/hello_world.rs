@@ -8,7 +8,7 @@ fn test_vm() {
         [0; 32],
         concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../example-apps/hello-world/target/sbpf-solana-solana/release/hello_world.so"
+            "/../example-apps/hello-world/target/sbpf-solana-solana/release/hello_world_solana.so"
         ),
     );
 

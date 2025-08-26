@@ -30,9 +30,9 @@ macro_rules! entrypoint {
             use std::cell::RefCell;
             use std::rc::Rc;
 
-            $crate::sp1_zkvm::entrypoint!(main);
+            $crate::sp1_zkvm::entrypoint!(zkvm_glue);
 
-            pub fn main() {
+            pub fn zkvm_glue() {
                 // === number of accounts ===
                 let acct_count = $crate::sp1_zkvm::io::read::<u64>() as usize;
 

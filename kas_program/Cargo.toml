@@ -3,15 +3,7 @@ name = "kas_program"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = ["std"]
-std = []
-custom-heap = []
-custom-panic = []
-
 [dependencies]
-getrandom = { version = "0.2.16", features = ["custom"] }
-once_cell = "1.19"
 solana-program = "3.0.0"
 
 [target.'cfg(all(target_arch = "riscv32", target_vendor = "succinct"))'.dependencies]
