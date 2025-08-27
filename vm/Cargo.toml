@@ -7,3 +7,5 @@ edition = "2021"
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
 macros = { path = "../macros" }
+sp1-sdk = "5.2.1"
+dotenv = "0.15.0"

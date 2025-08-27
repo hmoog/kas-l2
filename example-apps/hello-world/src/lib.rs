@@ -1,5 +1,4 @@
 #![no_main]
-
 use kas_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 kas_program::entrypoint!(main);

@@ -10,11 +10,10 @@ custom-heap = []
 custom-panic = []
 
 [lib]
-name = "hello_world_solana"
 crate-type = ["cdylib", "lib"]
 
 [[bin]]
-name = "hello_world_sp1"
+name = "prover"
 path = "src/lib.rs"
 
 [dependencies]
