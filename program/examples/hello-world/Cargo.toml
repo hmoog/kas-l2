@@ -15,4 +15,4 @@ name = "prover"
 path = "src/lib.rs"
 
 [dependencies]
-program = { path = "../.." }
+kas-l2-program = { path = "../.." }

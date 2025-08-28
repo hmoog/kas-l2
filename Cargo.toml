@@ -1,4 +1,4 @@
 [workspace]
 resolver = "3"
-members = ["multi-vm", "multi-vm-macros", "program", "program/examples/hello-world"]
-default-members = ["multi-vm", "multi-vm-macros", "program"]
+members = ["vm", "vm-macros", "program", "program/examples/hello-world"]
+default-members = ["vm", "vm-macros", "program"]

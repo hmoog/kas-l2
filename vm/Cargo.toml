@@ -1,11 +1,11 @@
 [package]
-name = "multi-vm"
+name = "kas-l2-vm"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
-multi-vm-macros = { path = "../multi-vm-macros" }
+kas-l2-vm-macros = { path = "../vm-macros" }
 sp1-sdk = "5.2.1"
 dotenv = "0.15.0"

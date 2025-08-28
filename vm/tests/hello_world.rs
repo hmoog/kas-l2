@@ -1,7 +1,7 @@
 use std::fs;
 use solana_sbpf::vm::Config;
 use std::sync::Arc;
-use multi_vm::{InMemoryAppRegistry, Loader, RuntimeContext, RuntimeState};
+use kas_l2_vm::{InMemoryAppRegistry, Loader, RuntimeContext, RuntimeState};
 use sp1_sdk;
 use sp1_sdk::{ProverClient, SP1Stdin};
 

@@ -1,5 +1,5 @@
 use crate::runtime_context::RuntimeContext;
-use multi_vm_macros::builtin;
+use kas_l2_vm_macros::builtin;
 use solana_sbpf::error::StableResult;
 use solana_sbpf::memory_region::MemoryMapping;
 use std::error::Error;

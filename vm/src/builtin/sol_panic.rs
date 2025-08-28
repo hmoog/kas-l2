@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io;
 
 use crate::runtime_context::RuntimeContext;
-use multi_vm_macros::builtin;
+use kas_l2_vm_macros::builtin;
 use solana_sbpf::memory_region::MemoryMapping;
 
 #[builtin]
