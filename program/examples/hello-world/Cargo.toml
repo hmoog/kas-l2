@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "hello_world"
 version = "0.1.0"
@@ -17,4 +15,4 @@ name = "prover"
 path = "src/lib.rs"
 
 [dependencies]
-kas_program = { path = "../../kas_program" }
+program = { path = "../.." }

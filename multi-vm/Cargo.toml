@@ -1,11 +1,11 @@
 [package]
-name = "vm"
+name = "multi-vm"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
-macros = { path = "../macros" }
+multi-vm-macros = { path = "../multi-vm-macros" }
 sp1-sdk = "5.2.1"
 dotenv = "0.15.0"

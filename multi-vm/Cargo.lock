@@ -259,7 +259,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vm"
+name = "multi-vm"
 version = "0.1.0"
 dependencies = [
  "blake3",

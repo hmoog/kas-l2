@@ -1,25 +1,35 @@
 use std::fs;
 use solana_sbpf::vm::Config;
 use std::sync::Arc;
-use vm::{Loader, RuntimeContext};
+use multi_vm::{InMemoryAppRegistry, Loader, RuntimeContext, RuntimeState};
 use sp1_sdk;
 use sp1_sdk::{ProverClient, SP1Stdin};
 
 #[test]
 fn test_vm() {
+    // let vm_loader = VMLoader::new(Config::default());
+    //
+    // let program = Program::new([0; 32], program_bytes);
+    //
+    // let solana_program = vm_loader.load_solana(&program);
+    // let solana_program.execute(...);
+    //
+    // let sp1_program = vm_loader.load_sp1(&program);
+    // let sp1_program.prove(...);
+
     let loader = Loader::new(Config::default());
     let program = loader.load_elf_file(
         [0; 32],
         concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../example-apps/hello-world/target/sbpf-solana-solana/release/hello_world.so"
+            "/../program/examples/hello-world/target/sbpf-solana-solana/release/hello_world.so"
         ),
     );
 
     let (executed_instructions, _result) = program.execute(
         &mut RuntimeContext::new(
-            Arc::new(vm::InMemoryAppRegistry::new()),
-            vm::RuntimeState::default(),
+            Arc::new(InMemoryAppRegistry::new()),
+            RuntimeState::default(),
             10000000,
         ),
         &mut [],
@@ -53,7 +63,7 @@ fn test_vm() {
 
     let result = client.execute(fs::read(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../example-apps/hello-world/target/elf-compilation/riscv32im-succinct-zkvm-elf/release/prover"
+        "/../program/examples/hello-world/target/elf-compilation/riscv32im-succinct-zkvm-elf/release/prover"
     )).expect("failed to file").as_slice(), &stdin).run();
 
     match result {

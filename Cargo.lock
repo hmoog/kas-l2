@@ -2741,6 +2741,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "hello_world"
+version = "0.1.0"
+dependencies = [
+ "program",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3300,14 +3307,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas_program"
-version = "0.1.0"
-dependencies = [
- "solana-program",
- "sp1-zkvm",
-]
-
-[[package]]
 name = "keccak"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3434,15 +3433,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
 name = "matchers"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3508,6 +3498,26 @@ dependencies = [
  "libc",
  "wasi 0.11.1+wasi-snapshot-preview1",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "multi-vm"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "dotenv",
+ "multi-vm-macros",
+ "solana-sbpf",
+ "sp1-sdk",
+]
+
+[[package]]
+name = "multi-vm-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -4297,6 +4307,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89ae43fd86e4158d6db51ad8e2b80f313af9cc74f5c0e03ccb87de09998732de"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "program"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "sp1-zkvm",
 ]
 
 [[package]]
@@ -7243,17 +7261,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
-name = "vm"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "dotenv",
- "macros",
- "solana-sbpf",
- "sp1-sdk",
-]
-
-[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7910,10 +7917,6 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
-
-[[package]]
-name = "zk-runtime-prov"
-version = "0.1.0"
 
 [[package]]
 name = "zkhash"

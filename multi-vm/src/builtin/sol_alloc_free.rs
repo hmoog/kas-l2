@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use crate::runtime_context::RuntimeContext;
-use macros::builtin;
+use multi_vm_macros::builtin;
 use solana_sbpf::memory_region::MemoryMapping;
 
 #[builtin]
