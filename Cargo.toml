@@ -1,4 +1,4 @@
 [workspace]
 resolver = "3"
-members = ["vm", "vm-macros", "program", "program/examples/hello-world"]
+members = ["tools/cargo-kas-l2", "vm", "vm-macros", "program", "program/examples/hello-world"]
 default-members = ["vm", "vm-macros", "program"]

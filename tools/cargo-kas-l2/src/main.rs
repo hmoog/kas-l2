@@ -71,14 +71,14 @@ enum Cmd {
 #[derive(Copy, Clone, Eq, PartialEq, ValueEnum)]
 enum LenPrefix { U32, U64 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct CargoPackage {
     name: String,
     manifest_path: String,
     targets: Vec<CargoTarget>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct CargoTarget {
     name: String,
     kind: Vec<String>,         // e.g. ["lib"], ["bin"]
@@ -424,5 +424,5 @@ fn docker_run(args: &[&str], verbose: bool) -> Result<()> {
 }
 
 fn vlog(verbose: bool, msg: &str) {
-    if verbose { eprintln!("[kas] {msg}"); }
+    if verbose { eprintln!("[kas-l2] {msg}"); }
 }
