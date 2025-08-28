@@ -400,7 +400,7 @@ checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 name = "hello_world"
 version = "0.1.0"
 dependencies = [
- "program",
+ "kas-l2-program",
 ]
 
 [[package]]
@@ -449,6 +449,14 @@ dependencies = [
  "once_cell",
  "sha2",
  "signature",
+]
+
+[[package]]
+name = "kas-l2-program"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "sp1-zkvm",
 ]
 
 [[package]]
@@ -719,14 +727,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89ae43fd86e4158d6db51ad8e2b80f313af9cc74f5c0e03ccb87de09998732de"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "program"
-version = "0.1.0"
-dependencies = [
- "solana-program",
- "sp1-zkvm",
 ]
 
 [[package]]

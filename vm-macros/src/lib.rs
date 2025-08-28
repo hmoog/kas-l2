@@ -2,13 +2,6 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemImpl, parse_macro_input};
 
-/// Usage:
-///     #[builtin]
-///     impl MyClass { /* items */ }
-///
-/// Expands to:
-///     declare_builtin_function!(MyClass, fn rust(...) -> Result<_, _> { MyClass::route(...) });
-///     impl MyClass { /* items */ }
 #[proc_macro_attribute]
 pub fn builtin(_args: TokenStream, input: TokenStream) -> TokenStream {
     // Parse the incoming impl block
