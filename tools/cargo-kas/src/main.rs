@@ -12,7 +12,7 @@ use std::process::{Command, Stdio};
 use which::which;
 
 #[derive(Parser)]
-#[command(name = "cargo-kas-l2", version, about = "Dockerized builder/packager for kas artifacts")]
+#[command(bin_name = "cargo-kas", version, about = "Dockerized builder/packager for kas artifacts")]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -20,7 +20,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Build artifacts in Docker; package into target/kas-l2/<name>.kas
+    /// Build artifacts in Docker; package into target/kas/<name>.kas
     BuildProgram {
         #[arg(long)]
         name: Option<String>,
@@ -60,7 +60,12 @@ struct CargoTarget {
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
+    let mut args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "kas" {
+        args.remove(1);
+    }
+    let cli = Cli::parse_from(args);
+
     match cli.cmd {
         Cmd::BuildProgram {
             name,
@@ -120,7 +125,7 @@ fn build_program(
     }
 
     // ---- dirs ----
-    let out_dir = out_dir_cli.unwrap_or_else(|| PathBuf::from("target/kas-l2"));
+    let out_dir = out_dir_cli.unwrap_or_else(|| PathBuf::from("target/kas"));
     let stage_dir = out_dir.join("_staging").join(&out_name);
     fs::create_dir_all(&stage_dir)?;
     fs::create_dir_all(&out_dir)?;
@@ -419,6 +424,6 @@ fn docker_run(args: &[&str], verbose: bool) -> Result<()> {
 
 fn vlog(verbose: bool, msg: &str) {
     if verbose {
-        eprintln!("[kas-l2] {msg}");
+        eprintln!("[kas] {msg}");
     }
 }

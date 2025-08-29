@@ -1526,7 +1526,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-kas-l2"
+name = "cargo-kas"
 version = "0.1.0"
 dependencies = [
  "anyhow",
