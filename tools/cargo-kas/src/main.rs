@@ -351,8 +351,14 @@ fn derive_expected_artifacts(targets: &Vec<CargoTarget>) -> (Vec<String>, Vec<St
 fn stage_copy_unique(src: &Path, stage_dir: &Path, staged: &mut Vec<PathBuf>, verbose: bool) -> Result<()> {
     let dest = stage_dir.join(src.file_name().unwrap());
     if dest.exists() {
-        vlog(verbose, &format!("    -> already staged {}, skipping duplicate", dest.display()));
-        return Ok(());
+        if dest.is_file() {
+            // Count pre-existing staged artifacts so packaging works on repeat runs.
+            staged.push(dest.clone());
+            vlog(verbose, &format!("    -> already staged {}, counting existing", dest.display()));
+            return Ok(());
+        } else {
+            bail!("staging destination exists and is not a file: {}", dest.display());
+        }
     }
     fs::copy(src, &dest)?;
     staged.push(dest.clone());
