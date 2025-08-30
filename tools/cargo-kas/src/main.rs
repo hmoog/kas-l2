@@ -20,7 +20,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Build artifacts in Docker; package into target/kas/<name>.kas
+    /// Build artifacts; package into target/kas/<name>.kas
     BuildProgram {
         #[arg(long)]
         name: Option<String>,
@@ -28,6 +28,9 @@ enum Cmd {
         skip_prove: bool,
         #[arg(long)]
         skip_sbf: bool,
+        /// Force reproducible dockerized builds for both SBF and SP1 (ignore local toolchains)
+        #[arg(long)]
+        reproducible: bool,
         #[arg(long)]
         verbose: bool,
         #[arg(long, value_enum, default_value_t = LenPrefix::U64)]
@@ -73,6 +76,7 @@ fn main() -> Result<()> {
             name,
             skip_prove,
             skip_sbf,
+            reproducible,
             verbose,
             len,
             solana_image,
@@ -82,6 +86,7 @@ fn main() -> Result<()> {
             name,
             skip_prove,
             skip_sbf,
+            reproducible,
             verbose,
             len,
             &solana_image,
@@ -95,14 +100,13 @@ fn build_program(
     name_cli: Option<String>,
     skip_prove: bool,
     skip_sbf: bool,
+    reproducible: bool,
     verbose: bool,
     len: LenPrefix,
     solana_image: &str,
     rust_image: &str,
     out_dir_cli: Option<PathBuf>,
 ) -> Result<()> {
-    which("docker").context("docker is required on the host")?;
-
     // ---- cargo metadata ----
     let meta = cargo_metadata_json()?;
     let workspace_root = PathBuf::from(meta["workspace_root"].as_str().unwrap_or("."));
@@ -134,6 +138,9 @@ fn build_program(
                 eprintln!("   - {f}");
             }
         }
+        if reproducible {
+            eprintln!("[kas] reproducible mode: forcing dockerized builds for SBF and SP1");
+        }
     }
 
     // ---- dirs ----
@@ -143,35 +150,87 @@ fn build_program(
     fs::create_dir_all(&out_dir)?;
     let out_path = out_dir.join(format!("{out_name}.kas"));
 
-    // ---- Solana build (verifiable) ----
+    // ---- Solana build (local preferred unless --reproducible, then Docker) ----
     if !skip_sbf {
-        vlog(verbose, "Solana: cargo-build-sbf");
-        let build_cmd = if rel_cwd_str.is_empty() {
-            "cargo-build-sbf -- --lib".to_string()
+        let mut use_docker_for_sbf = reproducible;
+
+        if !use_docker_for_sbf {
+            // Try local cargo-build-sbf in the current working directory
+            match which("cargo-build-sbf") {
+                Ok(_) => {
+                    vlog(verbose, "Solana: cargo-build-sbf (local)");
+                    let mut cmd = Command::new("cargo-build-sbf");
+                    cmd.args(["--", "--lib"])
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::inherit())
+                        .stderr(Stdio::inherit())
+                        .current_dir(&cwd);
+                    vlog(verbose, "running: cargo-build-sbf -- --lib");
+                    match cmd.status() {
+                        Ok(status) => {
+                            if !status.success() {
+                                // Local tool exists; treat failure as a real build error and do NOT fallback (unless reproducible requested).
+                                bail!(
+                                    "local cargo-build-sbf failed (exit code {:?})",
+                                    status.code()
+                                );
+                            }
+                        }
+                        Err(err) => {
+                            // Tool was found but couldn't execute (likely missing runtime deps). Fallback to Docker.
+                            eprintln!(
+                                "[kas] local 'cargo-build-sbf' could not be executed: {err}\n\
+                                 [kas] Falling back to Docker-based SBF build.\n\
+                                 [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
+                                 [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
+                            );
+                            use_docker_for_sbf = true;
+                        }
+                    }
+                }
+                Err(_) => {
+                    eprintln!(
+                        "[kas] 'cargo-build-sbf' not found locally; falling back to Docker-based SBF build.\n\
+                         [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
+                         [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
+                    );
+                    use_docker_for_sbf = true;
+                }
+            }
         } else {
-            format!("cd {} && cargo-build-sbf -- --lib", rel_cwd_str)
-        };
-        eprintln!("[kas] build_cmd: {}", build_cmd);
-        docker_run(
-            &[
-                "run",
-                "--rm",
-                "-v",
-                &format!("{}:/work", workspace_root.display()),
-                "-w",
-                "/work",
-                solana_image,
-                "bash",
-                "-lc",
-                &format!(
-                    "set -euo pipefail; \
-                     export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
-                     {build_cmd}; \
-                     chown -R $(id -u):$(id -g) /work"
-                ),
-            ],
-            verbose,
-        )?;
+            vlog(verbose, "Solana: reproducible mode -> using Docker");
+        }
+
+        if use_docker_for_sbf {
+            which("docker").context("docker is required for SBF build")?;
+            vlog(verbose, "Solana: cargo-build-sbf (docker)");
+            let build_cmd = if rel_cwd_str.is_empty() {
+                "cargo-build-sbf -- --lib".to_string()
+            } else {
+                format!("cd {} && cargo-build-sbf -- --lib", rel_cwd_str)
+            };
+            eprintln!("[kas] build_cmd: {}", build_cmd);
+            docker_run(
+                &[
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{}:/work", workspace_root.display()),
+                    "-w",
+                    "/work",
+                    solana_image,
+                    "bash",
+                    "-lc",
+                    &format!(
+                        "set -euo pipefail; \
+                         export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
+                         {build_cmd}; \
+                         chown -R $(id -u):$(id -g) /work"
+                    ),
+                ],
+                verbose,
+            )?;
+        }
     } else {
         vlog(verbose, "Solana: skipped");
     }
@@ -188,41 +247,94 @@ fn build_program(
     }
     stage_expected(&expected_sbf, &solana_search_roots, &stage_dir, &mut staged, verbose)?;
 
-    // ---- SP1 build ----
+    // ---- SP1 build (local preferred unless --reproducible, then Docker) ----
     if !skip_prove {
-        vlog(verbose, "SP1: cargo prove build --docker");
-        let inner = if rel_cwd_str.is_empty() {
-            "cargo prove build".to_string()
+        let mut use_docker_for_sp1 = reproducible;
+
+        if !use_docker_for_sp1 {
+            // Prefer local `cargo prove build` if `cargo-prove` is installed and runnable.
+            match which("cargo-prove") {
+                Ok(_) => {
+                    vlog(verbose, "SP1: cargo prove build (local)");
+                    let mut cmd = Command::new("cargo");
+                    cmd.args(["prove", "build"])
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::inherit())
+                        .stderr(Stdio::inherit())
+                        .current_dir(&cwd);
+                    vlog(verbose, "running: cargo prove build");
+                    match cmd.status() {
+                        Ok(status) => {
+                            if !status.success() {
+                                // It ran but failed; surface the failure (don't mask with Docker).
+                                bail!(
+                                    "local `cargo prove build` failed (exit code {:?})",
+                                    status.code()
+                                );
+                            }
+                        }
+                        Err(err) => {
+                            // Could not execute (likely missing toolchain/deps); fallback to Docker.
+                            eprintln!(
+                                "[kas] local 'cargo prove build' could not be executed: {err}\n\
+                                 [kas] Falling back to Docker-based SP1 build.\n\
+                                 [kas] Tip: install SP1 locally for faster builds:\n\
+                                 [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
+                            );
+                            use_docker_for_sp1 = true;
+                        }
+                    }
+                }
+                Err(_) => {
+                    eprintln!(
+                        "[kas] 'cargo prove' (cargo-prove) not found locally; falling back to Docker-based SP1 build.\n\
+                         [kas] Tip: install SP1 locally for faster builds:\n\
+                         [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
+                    );
+                    use_docker_for_sp1 = true;
+                }
+            }
         } else {
-            format!("cd {} && cargo prove build", rel_cwd_str)
-        };
-        let script = format!(
-            "set -euo pipefail; \
-             apt-get update -qq; apt-get install -y -qq curl git ca-certificates build-essential; \
-             if ! command -v cargo >/dev/null 2>&1; then curl https://sh.rustup.rs -sSf | sh -s -- -y; fi; \
-             . $HOME/.cargo/env; \
-             export PATH=$HOME/.cargo/bin:$PATH; \
-             curl -sSL https://sp1up.succinct.xyz | bash; \
-             source /root/.bashrc; \
-             sp1up; \
-             {inner}; \
-             chown -R $(id -u):$(id -g) /work"
-        );
-        docker_run(
-            &[
-                "run",
-                "--rm",
-                "-v",
-                &format!("{}:/work", workspace_root.display()),
-                "-w",
-                "/work",
-                rust_image,
-                "bash",
-                "-lc",
-                &script,
-            ],
-            verbose,
-        )?;
+            vlog(verbose, "SP1: reproducible mode -> using Docker");
+        }
+
+        if use_docker_for_sp1 {
+            which("docker").context("docker is required for SP1 build")?;
+
+            vlog(verbose, "SP1: cargo prove build (docker)");
+            let inner = if rel_cwd_str.is_empty() {
+                "cargo prove build".to_string()
+            } else {
+                format!("cd {} && cargo prove build", rel_cwd_str)
+            };
+            let script = format!(
+                "set -euo pipefail; \
+                 apt-get update -qq; apt-get install -y -qq curl git ca-certificates build-essential; \
+                 if ! command -v cargo >/dev/null 2>&1; then curl https://sh.rustup.rs -sSf | sh -s -- -y; fi; \
+                 . $HOME/.cargo/env; \
+                 export PATH=$HOME/.cargo/bin:$PATH; \
+                 curl -sSL https://sp1up.succinct.xyz | bash; \
+                 source /root/.bashrc; \
+                 sp1up; \
+                 {inner}; \
+                 chown -R $(id -u):$(id -g) /work"
+            );
+            docker_run(
+                &[
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{}:/work", workspace_root.display()),
+                    "-w",
+                    "/work",
+                    rust_image,
+                    "bash",
+                    "-lc",
+                    &script,
+                ],
+                verbose,
+            )?;
+        }
     } else {
         vlog(verbose, "SP1: skipped");
     }
