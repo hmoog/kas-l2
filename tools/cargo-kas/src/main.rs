@@ -27,6 +27,8 @@ enum Cmd {
         #[arg(long)]
         skip_prove: bool,
         #[arg(long)]
+        skip_sbf: bool,
+        #[arg(long)]
         verbose: bool,
         #[arg(long, value_enum, default_value_t = LenPrefix::U64)]
         len: LenPrefix,
@@ -70,6 +72,7 @@ fn main() -> Result<()> {
         Cmd::BuildProgram {
             name,
             skip_prove,
+            skip_sbf,
             verbose,
             len,
             solana_image,
@@ -78,6 +81,7 @@ fn main() -> Result<()> {
         } => build_program(
             name,
             skip_prove,
+            skip_sbf,
             verbose,
             len,
             &solana_image,
@@ -90,6 +94,7 @@ fn main() -> Result<()> {
 fn build_program(
     name_cli: Option<String>,
     skip_prove: bool,
+    skip_sbf: bool,
     verbose: bool,
     len: LenPrefix,
     solana_image: &str,
@@ -110,17 +115,24 @@ fn build_program(
     let rel_cwd_str = rel_cwd.to_string_lossy();
 
     let out_name = name_cli.unwrap_or_else(|| primary_pkg.name.clone());
-    let targets = &primary_pkg.targets;
-    let expected = derive_expected_filenames(targets);
+
+    // Separate expected SBF (shared objects) from SP1 (bin names)
+    let (expected_sbf, sp1_bins) = derive_expected_artifacts(&primary_pkg.targets);
 
     if verbose {
         eprintln!("[kas] package: {}", primary_pkg.name);
         eprintln!("[kas] workspace_root: {}", workspace_root.display());
         eprintln!("[kas] cwd: {}", cwd.display());
         eprintln!("[kas] rel_cwd: {}", rel_cwd_str);
-        eprintln!("[kas] expected artifacts:");
-        for f in &expected {
+        eprintln!("[kas] expected SBF artifacts:");
+        for f in &expected_sbf {
             eprintln!("   - {f}");
+        }
+        if !sp1_bins.is_empty() {
+            eprintln!("[kas] expected SP1 bin names:");
+            for f in &sp1_bins {
+                eprintln!("   - {f} (and/or {f}.elf)");
+            }
         }
     }
 
@@ -131,44 +143,60 @@ fn build_program(
     fs::create_dir_all(&out_dir)?;
     let out_path = out_dir.join(format!("{out_name}.kas"));
 
-    // ---- Solana build (always verifiable) ----
-    vlog(verbose, "Solana: cargo-build-sbf");
-    let build_cmd = if rel_cwd_str.is_empty() {
-        "cargo-build-sbf -- --lib".to_string()
+    // ---- Solana build (verifiable) ----
+    if !skip_sbf {
+        vlog(verbose, "Solana: cargo-build-sbf");
+        let build_cmd = if rel_cwd_str.is_empty() {
+            "cargo-build-sbf -- --lib".to_string()
+        } else {
+            format!("cd {} && cargo-build-sbf -- --lib", rel_cwd_str)
+        };
+        eprintln!("[kas] build_cmd: {}", build_cmd);
+        docker_run(
+            &[
+                "run",
+                "--rm",
+                "-v",
+                &format!("{}:/work", workspace_root.display()),
+                "-w",
+                "/work",
+                solana_image,
+                "bash",
+                "-lc",
+                &format!(
+                    "set -euo pipefail; \
+                     export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
+                     {build_cmd}; \
+                     chown -R $(id -u):$(id -g) /work"
+                ),
+            ],
+            verbose,
+        )?;
     } else {
-        format!("cd {} && cargo-build-sbf -- --lib", rel_cwd_str)
-    };
-    eprintln!("[kas] build_cmd: {}", build_cmd);
-    docker_run(
-        &[
-            "run",
-            "--rm",
-            "-v",
-            &format!("{}:/work", workspace_root.display()),
-            "-w",
-            "/work",
-            solana_image,
-            "bash",
-            "-lc",
-            &format!(
-                "set -euo pipefail; \
-                 export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
-                 {build_cmd}; \
-                 chown -R $(id -u):$(id -g) /work"
-            ),
-        ],
-        verbose,
-    )?;
+        vlog(verbose, "Solana: skipped");
+    }
 
-    // ---- Stage Solana artifacts ----
+    // ---- Stage ONLY SBF artifacts ----
     let mut staged: Vec<PathBuf> = Vec::new();
     let solana_search_roots = [
-        PathBuf::from("target/verifiable"),
-        PathBuf::from("target/deploy"),
-        PathBuf::from("target/sbf-solana-solana/release"),
-        PathBuf::from("target/sbpf-solana-solana/release"),
+        // canonical Solana outputs
+        workspace_root.join("target/deploy"),
+        workspace_root.join("target/verifiable"),
+        workspace_root.join("target/sbf-solana-solana/release"),
+        workspace_root.join("target/sbpf-solana-solana/release"),
+        // local cwd variants
+        cwd.join("target/deploy"),
+        cwd.join("target/verifiable"),
+        cwd.join("target/sbf-solana-solana/release"),
+        cwd.join("target/sbpf-solana-solana/release"),
     ];
-    stage_expected(&expected, &solana_search_roots, &stage_dir, &mut staged, verbose)?;
+    if verbose {
+        eprintln!("[kas] SBF artifact search roots:");
+        for r in &solana_search_roots {
+            eprintln!("   - {}", r.display());
+        }
+    }
+    stage_expected(&expected_sbf, &solana_search_roots, &stage_dir, &mut staged, verbose)?;
 
     // ---- SP1 build ----
     if !skip_prove {
@@ -205,17 +233,32 @@ fn build_program(
             ],
             verbose,
         )?;
-
-        let bin_names: Vec<String> = targets
-            .iter()
-            .filter(|t| t.kind.iter().any(|k| k == "bin"))
-            .map(|t| t.name.clone())
-            .collect();
-        let sp1_search_roots = [PathBuf::from("target"), PathBuf::from(".")];
-        stage_sp1_elves(&bin_names, &sp1_search_roots, &stage_dir, &mut staged, verbose)?;
     } else {
         vlog(verbose, "SP1: skipped");
     }
+
+    // ---- Stage ONLY SP1 artifacts (bins) ----
+    // Prefer known SP1 release dirs (no globs first), then minimal fallback globs in /target
+    let sp1_release_dirs = [
+        workspace_root.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release"),
+        cwd.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release"),
+        workspace_root.join("target/riscv32im-succinct-zkvm-elf/release"),
+        cwd.join("target/riscv32im-succinct-zkvm-elf/release"),
+    ];
+    let sp1_fallback_roots = [workspace_root.join("target"), cwd.join("target")];
+
+    if verbose {
+        eprintln!("[kas] SP1 primary release dirs:");
+        for r in &sp1_release_dirs {
+            eprintln!("   - {}", r.display());
+        }
+        eprintln!("[kas] SP1 fallback roots (glob in these only):");
+        for r in &sp1_fallback_roots {
+            eprintln!("   - {}", r.display());
+        }
+    }
+
+    stage_sp1_bins(&sp1_bins, &sp1_release_dirs, &sp1_fallback_roots, &stage_dir, &mut staged, verbose)?;
 
     if staged.is_empty() {
         bail!("no artifacts found in {}", stage_dir.display());
@@ -292,36 +335,50 @@ fn select_primary_package(meta: &Json) -> Result<(CargoPackage, Vec<CargoPackage
     Ok((primary, pkgs))
 }
 
-fn derive_expected_filenames(targets: &Vec<CargoTarget>) -> Vec<String> {
-    let mut out = Vec::new();
+// Return (expected_sbf_files, sp1_bin_names)
+fn derive_expected_artifacts(targets: &Vec<CargoTarget>) -> (Vec<String>, Vec<String>) {
+    let mut sbf = Vec::new();
+    let mut sp1_bins = Vec::new();
     let mut seen = HashSet::new();
+
     for t in targets {
+        // Skip Cargo build-script target
+        if t.name == "build_script_build" || t.kind.iter().any(|k| k == "custom-build") {
+            continue;
+        }
+
         let name = t.name.replace('-', "_");
         let has = |s: &str| t.kind.iter().any(|k| k == s) || t.crate_types.iter().any(|c| c == s);
+
+        // SBF shared objects only
         if has("cdylib") || has("dylib") {
-            for cand in [format!("{name}.so"), format!("lib{name}.so")] {
-                if seen.insert(cand.clone()) {
-                    out.push(cand);
-                }
+            let cand = format!("{name}.so");
+            if seen.insert(format!("sbf::{cand}")) {
+                sbf.push(cand);
             }
         }
-        if has("lib") || has("rlib") {
-            let f = format!("lib{name}.rlib");
-            if seen.insert(f.clone()) {
-                out.push(f);
-            }
-        }
+
+        // SP1 bins (stage later, separately)
         if has("bin") {
-            if seen.insert(name.clone()) {
-                out.push(name.clone());
-            }
-            let elf = format!("{name}.elf");
-            if seen.insert(elf.clone()) {
-                out.push(elf);
+            if seen.insert(format!("bin::{name}")) {
+                sp1_bins.push(name);
             }
         }
     }
-    out
+
+    (sbf, sp1_bins)
+}
+
+fn stage_copy_unique(src: &Path, stage_dir: &Path, staged: &mut Vec<PathBuf>, verbose: bool) -> Result<()> {
+    let dest = stage_dir.join(src.file_name().unwrap());
+    if dest.exists() {
+        vlog(verbose, &format!("    -> already staged {}, skipping duplicate", dest.display()));
+        return Ok(());
+    }
+    fs::copy(src, &dest)?;
+    staged.push(dest.clone());
+    vlog(verbose, &format!("    -> staged {}", src.display()));
+    Ok(())
 }
 
 fn stage_expected(
@@ -333,27 +390,26 @@ fn stage_expected(
 ) -> Result<()> {
     for fname in expected_filenames {
         let mut found = false;
+        vlog(verbose, &format!("searching for expected SBF file: {fname}"));
         for r in roots {
             let p = r.join(fname);
+            vlog(verbose, &format!("  - check {}", p.display()));
             if p.is_file() {
-                let dest = stage_dir.join(p.file_name().unwrap());
-                fs::copy(&p, &dest)?;
-                staged.push(dest);
-                vlog(verbose, &format!("staged {}", p.display()));
+                stage_copy_unique(&p, stage_dir, staged, verbose)?;
                 found = true;
                 break;
+            } else {
+                vlog(verbose, "    -> not found here");
             }
         }
         if !found {
             for r in roots {
                 let pat = format!("{}/**/{}", r.display(), fname);
+                vlog(verbose, &format!("  - glob {pat}"));
                 for entry in glob(&pat)? {
                     if let Ok(p) = entry {
                         if p.is_file() {
-                            let dest = stage_dir.join(p.file_name().unwrap());
-                            fs::copy(&p, &dest)?;
-                            staged.push(dest);
-                            vlog(verbose, &format!("staged {}", p.display()));
+                            stage_copy_unique(&p, stage_dir, staged, verbose)?;
                             found = true;
                             break;
                         }
@@ -364,48 +420,68 @@ fn stage_expected(
                 }
             }
         }
+        if !found {
+            vlog(verbose, &format!("  ! {} not found in any root", fname));
+        }
     }
     Ok(())
 }
 
-fn stage_sp1_elves(
+fn stage_sp1_bins(
     bin_names: &Vec<String>,
-    roots: &[PathBuf],
+    release_dirs: &[PathBuf],
+    fallback_roots: &[PathBuf],
     stage_dir: &Path,
     staged: &mut Vec<PathBuf>,
     verbose: bool,
 ) -> Result<()> {
-    let mut want: HashSet<String> = bin_names.iter().map(|n| format!("{n}.elf")).collect();
-    if want.is_empty() {
-        for r in roots {
-            let pat = format!("{}/**/release/*.elf", r.display());
-            for entry in glob(&pat)? {
-                if let Ok(p) = entry {
-                    if p.is_file() {
-                        let dest = stage_dir.join(p.file_name().unwrap());
-                        fs::copy(&p, &dest)?;
-                        staged.push(dest);
-                        vlog(verbose, &format!("staged {}", p.display()));
+    if bin_names.is_empty() {
+        return Ok(());
+    }
+
+    // First, try known release dirs directly (no globs, no duplication)
+    for name in bin_names {
+        let mut matched = false;
+        for d in release_dirs {
+            for candidate in [d.join(format!("{name}.elf")), d.join(name)] {
+                vlog(verbose, &format!("SP1 check {}", candidate.display()));
+                if candidate.is_file() {
+                    stage_copy_unique(&candidate, stage_dir, staged, verbose)?;
+                    matched = true;
+                    break;
+                }
+            }
+            if matched {
+                break;
+            }
+        }
+
+        // Minimal fallback via glob only if not found in known dirs
+        if !matched {
+            for root in fallback_roots {
+                for suffix in [format!("{name}.elf"), name.to_string()] {
+                    let pat = format!("{}/**/release/{}", root.display(), suffix);
+                    vlog(verbose, &format!("SP1 glob: {pat}"));
+                    for entry in glob(&pat)? {
+                        if let Ok(p) = entry {
+                            if p.is_file() {
+                                stage_copy_unique(&p, stage_dir, staged, verbose)?;
+                                matched = true;
+                                break;
+                            }
+                        }
                     }
+                    if matched {
+                        break;
+                    }
+                }
+                if matched {
+                    break;
                 }
             }
         }
-        return Ok(());
-    }
-    for r in roots {
-        for name in bin_names {
-            let pat = format!("{}/**/release/{}.elf", r.display(), name);
-            for entry in glob(&pat)? {
-                if let Ok(p) = entry {
-                    if p.is_file() {
-                        let dest = stage_dir.join(p.file_name().unwrap());
-                        fs::copy(&p, &dest)?;
-                        staged.push(dest);
-                        vlog(verbose, &format!("staged {}", p.display()));
-                        want.remove(&format!("{name}.elf"));
-                    }
-                }
-            }
+        if !matched {
+            vlog(verbose, &format!("  ! SP1 binary not found: {name} (or {name}.elf)"));
         }
     }
     Ok(())
