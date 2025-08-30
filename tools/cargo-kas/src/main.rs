@@ -131,7 +131,7 @@ fn build_program(
         if !sp1_bins.is_empty() {
             eprintln!("[kas] expected SP1 bin names:");
             for f in &sp1_bins {
-                eprintln!("   - {f} (and/or {f}.elf)");
+                eprintln!("   - {f}");
             }
         }
     }
@@ -228,27 +228,16 @@ fn build_program(
     }
 
     // ---- Stage ONLY SP1 artifacts (bins) ----
-    // Prefer known SP1 release dirs (no globs first), then minimal fallback globs in /target
-    let sp1_release_dirs = [
-        workspace_root.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release"),
-        cwd.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release"),
-        workspace_root.join("target/riscv32im-succinct-zkvm-elf/release"),
-        cwd.join("target/riscv32im-succinct-zkvm-elf/release"),
-    ];
-    let sp1_fallback_roots = [workspace_root.join("target"), cwd.join("target")];
+    // The SP1 artifact is always here: target/elf-compilation/riscv32im-succinct-zkvm-elf/release/<bin.name>
+    let sp1_release_dir =
+        workspace_root.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release");
 
     if verbose {
-        eprintln!("[kas] SP1 primary release dirs:");
-        for r in &sp1_release_dirs {
-            eprintln!("   - {}", r.display());
-        }
-        eprintln!("[kas] SP1 fallback roots (glob in these only):");
-        for r in &sp1_fallback_roots {
-            eprintln!("   - {}", r.display());
-        }
+        eprintln!("[kas] SP1 release dir:");
+        eprintln!("   - {}", sp1_release_dir.display());
     }
 
-    stage_sp1_bins(&sp1_bins, &sp1_release_dirs, &sp1_fallback_roots, &stage_dir, &mut staged, verbose)?;
+    stage_sp1_bins(&sp1_bins, &sp1_release_dir, &stage_dir, &mut staged, verbose)?;
 
     if staged.is_empty() {
         bail!("no artifacts found in {}", stage_dir.display());
@@ -417,10 +406,10 @@ fn stage_expected(
     Ok(())
 }
 
+// Only check the single canonical SP1 release directory and the bin name (no .elf fallback)
 fn stage_sp1_bins(
     bin_names: &Vec<String>,
-    release_dirs: &[PathBuf],
-    fallback_roots: &[PathBuf],
+    release_dir: &Path,
     stage_dir: &Path,
     staged: &mut Vec<PathBuf>,
     verbose: bool,
@@ -429,49 +418,13 @@ fn stage_sp1_bins(
         return Ok(());
     }
 
-    // First, try known release dirs directly (no globs, no duplication)
     for name in bin_names {
-        let mut matched = false;
-        for d in release_dirs {
-            for candidate in [d.join(format!("{name}.elf")), d.join(name)] {
-                vlog(verbose, &format!("SP1 check {}", candidate.display()));
-                if candidate.is_file() {
-                    stage_copy_unique(&candidate, stage_dir, staged, verbose)?;
-                    matched = true;
-                    break;
-                }
-            }
-            if matched {
-                break;
-            }
-        }
-
-        // Minimal fallback via glob only if not found in known dirs
-        if !matched {
-            for root in fallback_roots {
-                for suffix in [format!("{name}.elf"), name.to_string()] {
-                    let pat = format!("{}/**/release/{}", root.display(), suffix);
-                    vlog(verbose, &format!("SP1 glob: {pat}"));
-                    for entry in glob(&pat)? {
-                        if let Ok(p) = entry {
-                            if p.is_file() {
-                                stage_copy_unique(&p, stage_dir, staged, verbose)?;
-                                matched = true;
-                                break;
-                            }
-                        }
-                    }
-                    if matched {
-                        break;
-                    }
-                }
-                if matched {
-                    break;
-                }
-            }
-        }
-        if !matched {
-            vlog(verbose, &format!("  ! SP1 binary not found: {name} (or {name}.elf)"));
+        let candidate = release_dir.join(name);
+        vlog(verbose, &format!("SP1 check {}", candidate.display()));
+        if candidate.is_file() {
+            stage_copy_unique(&candidate, stage_dir, staged, verbose)?;
+        } else {
+            vlog(verbose, &format!("  ! SP1 binary not found: {}", candidate.display()));
         }
     }
     Ok(())
