@@ -225,7 +225,8 @@ fn build_program(
                         "set -euo pipefail; \
                          export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
                          {build_cmd}; \
-                         chown -R $(id -u):$(id -g) /work"
+                         OWNER=$(stat -c '%u:%g' /work || echo 0:0); \
+                         chown -R $OWNER /work"
                     ),
                 ],
                 verbose,
@@ -317,7 +318,8 @@ fn build_program(
                  source /root/.bashrc; \
                  sp1up; \
                  {inner}; \
-                 chown -R $(id -u):$(id -g) /work"
+                 OWNER=$(stat -c '%u:%g' /work || echo 0:0); \
+                 chown -R $OWNER /work"
             );
             docker_run(
                 &[
