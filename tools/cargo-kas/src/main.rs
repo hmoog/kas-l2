@@ -65,6 +65,7 @@ struct CargoTarget {
 }
 
 fn main() -> Result<()> {
+    // Support invoking as `cargo kas ...`
     let mut args: Vec<String> = env::args().collect();
     if args.len() > 1 && args[1] == "kas" {
         args.remove(1);
@@ -107,295 +108,304 @@ fn build_program(
     rust_image: &str,
     out_dir_cli: Option<PathBuf>,
 ) -> Result<()> {
-    // We'll run ownership fix-ups at the very end if any docker step was used,
-    // even if an earlier docker command failed.
-    let mut need_final_chown = false;
+    // Track whether we touched Docker so we can fix ownership at the end.
+    let mut used_docker = false;
 
-    // Execute the main build logic in a closure so we can "finally" run chown.
-    let result: Result<()> = (|| {
-        // ---- cargo metadata ----
-        let meta = cargo_metadata_json()?;
-        let workspace_root = PathBuf::from(meta["workspace_root"].as_str().unwrap_or("."));
-        let workspace_root = workspace_root.canonicalize().unwrap_or(env::current_dir()?);
-        let cwd = env::current_dir()?.canonicalize()?;
-        let (primary_pkg, _pkgs) = select_primary_package(&meta)?;
+    // ---- workspace / metadata ----
+    let meta = cargo_metadata_json()?;
+    let workspace_root = PathBuf::from(meta["workspace_root"].as_str().unwrap_or("."))
+        .canonicalize()
+        .unwrap_or(env::current_dir()?);
+    let cwd = env::current_dir()?.canonicalize()?;
+    let (primary_pkg, _) = select_primary_package(&meta)?;
+    let rel_cwd = cwd.strip_prefix(&workspace_root).unwrap_or(Path::new(""));
+    let rel_cwd_str = rel_cwd.to_string_lossy().to_string();
+    let out_name = name_cli.unwrap_or_else(|| primary_pkg.name.clone());
 
-        // compute relative subdir
-        let rel_cwd = cwd.strip_prefix(&workspace_root).unwrap_or(Path::new(""));
-        let rel_cwd_str = rel_cwd.to_string_lossy();
+    // Expected artifacts
+    let (expected_sbf, sp1_bins) = derive_expected_artifacts(&primary_pkg.targets);
 
-        let out_name = name_cli.clone().unwrap_or_else(|| primary_pkg.name.clone());
-
-        // Separate expected SBF (shared objects) from SP1 (bin names)
-        let (expected_sbf, sp1_bins) = derive_expected_artifacts(&primary_pkg.targets);
-
-        if verbose {
-            eprintln!("[kas] package: {}", primary_pkg.name);
-            eprintln!("[kas] workspace_root: {}", workspace_root.display());
-            eprintln!("[kas] cwd: {}", cwd.display());
-            eprintln!("[kas] rel_cwd: {}", rel_cwd_str);
+    if verbose {
+        eprintln!("[kas] package: {}", primary_pkg.name);
+        eprintln!("[kas] workspace_root: {}", workspace_root.display());
+        eprintln!("[kas] cwd: {}", cwd.display());
+        eprintln!("[kas] rel_cwd: {}", rel_cwd_str);
+        if !expected_sbf.is_empty() {
             eprintln!("[kas] expected SBF artifacts:");
             for f in &expected_sbf {
                 eprintln!("   - {f}");
             }
-            if !sp1_bins.is_empty() {
-                eprintln!("[kas] expected SP1 bin names:");
-                for f in &sp1_bins {
-                    eprintln!("   - {f}");
-                }
-            }
-            if reproducible {
-                eprintln!("[kas] reproducible mode: forcing dockerized builds for SBF and SP1");
+        }
+        if !sp1_bins.is_empty() {
+            eprintln!("[kas] expected SP1 bin names:");
+            for b in &sp1_bins {
+                eprintln!("   - {b}");
             }
         }
-
-        // ---- dirs ----
-        let out_dir = out_dir_cli.clone().unwrap_or_else(|| PathBuf::from("target/kas"));
-        let stage_dir = out_dir.join("_staging").join(&out_name);
-        fs::create_dir_all(&stage_dir)?;
-        fs::create_dir_all(&out_dir)?;
-        let out_path = out_dir.join(format!("{out_name}.kas"));
-
-        // ---- Solana build (local preferred unless --reproducible, then Docker) ----
-        if !skip_sbf {
-            let mut use_docker_for_sbf = reproducible;
-
-            if !use_docker_for_sbf {
-                // Try local cargo-build-sbf in the current working directory
-                match which("cargo-build-sbf") {
-                    Ok(_) => {
-                        vlog(verbose, "Solana: cargo-build-sbf (local)");
-                        let mut cmd = Command::new("cargo-build-sbf");
-                        cmd.args(["--", "--lib"])
-                            .stdin(Stdio::null())
-                            .stdout(Stdio::inherit())
-                            .stderr(Stdio::inherit())
-                            .current_dir(&cwd);
-                        vlog(verbose, "running: cargo-build-sbf -- --lib");
-                        match cmd.status() {
-                            Ok(status) => {
-                                if !status.success() {
-                                    bail!(
-                                        "local cargo-build-sbf failed (exit code {:?})",
-                                        status.code()
-                                    );
-                                }
-                            }
-                            Err(err) => {
-                                eprintln!(
-                                    "[kas] local 'cargo-build-sbf' could not be executed: {err}\n\
-                                     [kas] Falling back to Docker-based SBF build.\n\
-                                     [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
-                                     [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
-                                );
-                                use_docker_for_sbf = true;
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        eprintln!(
-                            "[kas] 'cargo-build-sbf' not found locally; falling back to Docker-based SBF build.\n\
-                             [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
-                             [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
-                        );
-                        use_docker_for_sbf = true;
-                    }
-                }
-            } else {
-                vlog(verbose, "Solana: reproducible mode -> using Docker");
-            }
-
-            if use_docker_for_sbf {
-                need_final_chown = true; // ensure we fix ownership later even if this fails
-                which("docker").context("docker is required for SBF build")?;
-                vlog(verbose, "Solana: cargo-build-sbf (docker)");
-                let build_cmd = if rel_cwd_str.is_empty() {
-                    "cargo-build-sbf -- --lib".to_string()
-                } else {
-                    format!("cd {} && cargo-build-sbf -- --lib", rel_cwd_str)
-                };
-                eprintln!("[kas] build_cmd: {}", build_cmd);
-                docker_run(
-                    &[
-                        "run",
-                        "--rm",
-                        "-v",
-                        &format!("{}:/work", workspace_root.display()),
-                        "-w",
-                        "/work",
-                        solana_image,
-                        "bash",
-                        "-lc",
-                        &format!(
-                            "set -euo pipefail; \
-                             export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
-                             {build_cmd}"
-                        ),
-                    ],
-                    verbose,
-                )?;
-            }
-        } else {
-            vlog(verbose, "Solana: skipped");
+        if reproducible {
+            eprintln!("[kas] reproducible mode: forcing dockerized builds for SBF and SP1");
         }
+    }
 
-        // ---- Stage ONLY SBF artifacts ----
-        let mut staged: Vec<PathBuf> = Vec::new();
-        // The SBF artifact is always here: target/sbpf-solana-solana/release/<package-name>.so
-        let solana_search_roots = [workspace_root.join("target/sbpf-solana-solana/release")];
-        if verbose {
-            eprintln!("[kas] SBF artifact dir:");
-            for r in &solana_search_roots {
-                eprintln!("   - {}", r.display());
+    // ---- dirs ----
+    let out_dir = out_dir_cli.unwrap_or_else(|| PathBuf::from("target/kas"));
+    let stage_dir = out_dir.join("_staging").join(&out_name);
+    fs::create_dir_all(&stage_dir)?;
+    fs::create_dir_all(&out_dir)?;
+    let out_path = out_dir.join(format!("{out_name}.kas"));
+
+    // ---- build SBF (local preferred unless reproducible) ----
+    if !skip_sbf {
+        used_docker |= build_sbf(
+            &workspace_root,
+            &rel_cwd_str,
+            reproducible,
+            verbose,
+            solana_image,
+        )?;
+    } else {
+        vlog(verbose, "Solana: skipped");
+    }
+
+    // ---- stage SBF artifacts ----
+    let mut staged: Vec<PathBuf> = Vec::new();
+    let sbf_roots = [workspace_root.join("target/sbpf-solana-solana/release")];
+    if verbose {
+        eprintln!("[kas] SBF artifact dir:");
+        for r in &sbf_roots {
+            eprintln!("   - {}", r.display());
+        }
+    }
+    stage_expected(&expected_sbf, &sbf_roots, &stage_dir, &mut staged, verbose)?;
+
+    // ---- build SP1 (local preferred unless reproducible) ----
+    if !skip_prove {
+        used_docker |= build_sp1(
+            &workspace_root,
+            &rel_cwd_str,
+            reproducible,
+            verbose,
+            rust_image,
+        )?;
+    } else {
+        vlog(verbose, "SP1: skipped");
+    }
+
+    // ---- stage SP1 artifacts (bins only) ----
+    let sp1_release_dir =
+        workspace_root.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release");
+    if verbose {
+        eprintln!("[kas] SP1 release dir:\n   - {}", sp1_release_dir.display());
+    }
+    stage_sp1_bins(&sp1_bins, &sp1_release_dir, &stage_dir, &mut staged, verbose)?;
+
+    if staged.is_empty() {
+        bail!("no artifacts found in {}", stage_dir.display());
+    }
+
+    // ---- pack artifacts ----
+    staged.sort();
+    let f = fs::File::create(&out_path)?;
+    let mut w = BufWriter::new(f);
+
+    for p in &staged {
+        let bytes = fs::read(p)?;
+        match len {
+            LenPrefix::U32 => {
+                let n = u32::try_from(bytes.len()).context("too large")?;
+                w.write_all(&n.to_le_bytes())?;
+            }
+            LenPrefix::U64 => {
+                let n = u64::try_from(bytes.len()).unwrap();
+                w.write_all(&n.to_le_bytes())?;
             }
         }
-        stage_expected(&expected_sbf, &solana_search_roots, &stage_dir, &mut staged, verbose)?;
+        w.write_all(&bytes)?;
+    }
+    w.flush()?;
 
-        // ---- SP1 build (local preferred unless --reproducible, then Docker) ----
-        if !skip_prove {
-            let mut use_docker_for_sp1 = reproducible;
+    println!("Wrote {} artifacts -> {}", staged.len(), out_path.display());
+    for p in staged {
+        println!("  - {}", p.display());
+    }
 
-            if !use_docker_for_sp1 {
-                // Prefer local `cargo prove build` if `cargo-prove` is installed and runnable.
-                match which("cargo-prove") {
-                    Ok(_) => {
-                        vlog(verbose, "SP1: cargo prove build (local)");
-                        let mut cmd = Command::new("cargo");
-                        cmd.args(["prove", "build"])
-                            .stdin(Stdio::null())
-                            .stdout(Stdio::inherit())
-                            .stderr(Stdio::inherit())
-                            .current_dir(&cwd);
-                        vlog(verbose, "running: cargo prove build");
-                        match cmd.status() {
-                            Ok(status) => {
-                                if !status.success() {
-                                    bail!(
-                                        "local `cargo prove build` failed (exit code {:?})",
-                                        status.code()
-                                    );
-                                }
-                            }
-                            Err(err) => {
-                                eprintln!(
-                                    "[kas] local 'cargo prove build' could not be executed: {err}\n\
-                                     [kas] Falling back to Docker-based SP1 build.\n\
-                                     [kas] Tip: install SP1 locally for faster builds:\n\
-                                     [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
-                                );
-                                use_docker_for_sp1 = true;
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        eprintln!(
-                            "[kas] 'cargo prove' (cargo-prove) not found locally; falling back to Docker-based SP1 build.\n\
-                             [kas] Tip: install SP1 locally for faster builds:\n\
-                             [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
-                        );
-                        use_docker_for_sp1 = true;
-                    }
-                }
-            } else {
-                vlog(verbose, "SP1: reproducible mode -> using Docker");
-            }
-
-            if use_docker_for_sp1 {
-                need_final_chown = true; // ensure we fix ownership later even if this fails
-                which("docker").context("docker is required for SP1 build")?;
-
-                vlog(verbose, "SP1: cargo prove build (docker)");
-                let inner = if rel_cwd_str.is_empty() {
-                    "cargo prove build".to_string()
-                } else {
-                    format!("cd {} && cargo prove build", rel_cwd_str)
-                };
-                let script = format!(
-                    "set -euo pipefail; \
-                     apt-get update -qq; apt-get install -y -qq curl git ca-certificates build-essential; \
-                     if ! command -v cargo >/dev/null 2>&1; then curl https://sh.rustup.rs -sSf | sh -s -- -y; fi; \
-                     . $HOME/.cargo/env; \
-                     export PATH=$HOME/.cargo/bin:$PATH; \
-                     curl -sSL https://sp1up.succinct.xyz | bash; \
-                     source /root/.bashrc; \
-                     sp1up; \
-                     {inner}"
-                );
-                docker_run(
-                    &[
-                        "run",
-                        "--rm",
-                        "-v",
-                        &format!("{}:/work", workspace_root.display()),
-                        "-w",
-                        "/work",
-                        rust_image,
-                        "bash",
-                        "-lc",
-                        &script,
-                    ],
-                    verbose,
-                )?;
-            }
-        } else {
-            vlog(verbose, "SP1: skipped");
-        }
-
-        // ---- Stage ONLY SP1 artifacts (bins) ----
-        // The SP1 artifact is always here: target/elf-compilation/riscv32im-succinct-zkvm-elf/release/<bin.name>
-        let sp1_release_dir =
-            workspace_root.join("target/elf-compilation/riscv32im-succinct-zkvm-elf/release");
-
-        if verbose {
-            eprintln!("[kas] SP1 release dir:");
-            eprintln!("   - {}", sp1_release_dir.display());
-        }
-
-        stage_sp1_bins(&sp1_bins, &sp1_release_dir, &stage_dir, &mut staged, verbose)?;
-
-        if staged.is_empty() {
-            bail!("no artifacts found in {}", stage_dir.display());
-        }
-
-        // ---- Pack artifacts ----
-        staged.sort();
-        let f = fs::File::create(&out_path)?;
-        let mut w = BufWriter::new(f);
-        for p in &staged {
-            let bytes = fs::read(p)?;
-            match len {
-                LenPrefix::U32 => {
-                    let n = u32::try_from(bytes.len()).context("too large")?;
-                    w.write_all(&n.to_le_bytes())?;
-                }
-                LenPrefix::U64 => {
-                    let n = u64::try_from(bytes.len()).unwrap();
-                    w.write_all(&n.to_le_bytes())?;
-                }
-            }
-            w.write_all(&bytes)?;
-        }
-        w.flush()?;
-
-        println!("Wrote {} artifacts -> {}", staged.len(), out_path.display());
-        for p in staged {
-            println!("  - {}", p.display());
-        }
-        Ok(())
-    })();
-
-    // ---- FINALIZER: fix ownership even if a docker command failed ----
-    if need_final_chown {
-        if let Err(e) = docker_fix_ownership(&env::current_dir()?.canonicalize()?, rust_image, verbose) {
+    // ---- finalizer: fix ownership if docker touched the tree ----
+    if used_docker {
+        if let Err(e) =
+            docker_fix_ownership(&env::current_dir()?.canonicalize()?, rust_image, verbose)
+        {
             eprintln!("[kas] warning: failed to fix ownership after docker build: {e}");
         }
     }
 
-    // Return the original build result (success or failure)
-    result
+    Ok(())
 }
 
-// ---- helpers ----
+/* ---------- build helpers ---------- */
+
+fn build_sbf(
+    workspace_root: &Path,
+    rel_cwd: &str,
+    reproducible: bool,
+    verbose: bool,
+    solana_image: &str,
+) -> Result<bool> {
+    let mut used_docker = false;
+
+    if !reproducible {
+        match which("cargo-build-sbf") {
+            Ok(_) => {
+                vlog(verbose, "Solana: cargo-build-sbf (local)");
+                let status = Command::new("cargo-build-sbf")
+                    .args(["--", "--lib"])
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .status();
+
+                match status {
+                    Ok(s) if s.success() => return Ok(false),
+                    Ok(s) => bail!("local cargo-build-sbf failed (exit code {:?})", s.code()),
+                    Err(err) => {
+                        eprintln!(
+                            "[kas] local 'cargo-build-sbf' could not be executed: {err}\n\
+                             [kas] Falling back to Docker-based SBF build.\n\
+                             [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
+                             [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
+                        );
+                    }
+                }
+            }
+            Err(_) => {
+                eprintln!(
+                    "[kas] 'cargo-build-sbf' not found locally; falling back to Docker-based SBF build.\n\
+                     [kas] Tip: install Solana CLI (provides 'cargo-build-sbf') for faster builds:\n\
+                     [kas]   https://docs.solana.com/cli/install-solana-cli-tools"
+                );
+            }
+        }
+    } else {
+        vlog(verbose, "Solana: reproducible mode -> using Docker");
+    }
+
+    which("docker").context("docker is required for SBF build")?;
+    used_docker = true;
+
+    let build_cmd = if rel_cwd.is_empty() {
+        "cargo-build-sbf -- --lib".to_string()
+    } else {
+        format!("cd {rel_cwd} && cargo-build-sbf -- --lib")
+    };
+
+    docker_run(
+        &[
+            "run",
+            "--rm",
+            "-v",
+            &format!("{}:/work", workspace_root.display()),
+            "-w",
+            "/work",
+            solana_image,
+            "bash",
+            "-lc",
+            &format!(
+                "set -euo pipefail; \
+                 export PATH=/usr/local/cargo/bin:/root/.local/share/solana/install/active_release/bin:$PATH; \
+                 {build_cmd}"
+            ),
+        ],
+        verbose,
+    )?;
+
+    Ok(used_docker)
+}
+
+fn build_sp1(
+    workspace_root: &Path,
+    rel_cwd: &str,
+    reproducible: bool,
+    verbose: bool,
+    rust_image: &str,
+) -> Result<bool> {
+    let mut used_docker = false;
+
+    if !reproducible {
+        match which("cargo-prove") {
+            Ok(_) => {
+                vlog(verbose, "SP1: cargo prove build (local)");
+                let status = Command::new("cargo")
+                    .args(["prove", "build"])
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .status();
+
+                match status {
+                    Ok(s) if s.success() => return Ok(false),
+                    Ok(s) => bail!("local `cargo prove build` failed (exit code {:?})", s.code()),
+                    Err(err) => {
+                        eprintln!(
+                            "[kas] local 'cargo prove build' could not be executed: {err}\n\
+                             [kas] Falling back to Docker-based SP1 build.\n\
+                             [kas] Tip: install SP1 locally for faster builds:\n\
+                             [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
+                        );
+                    }
+                }
+            }
+            Err(_) => {
+                eprintln!(
+                    "[kas] 'cargo prove' (cargo-prove) not found locally; falling back to Docker-based SP1 build.\n\
+                     [kas] Tip: install SP1 locally for faster builds:\n\
+                     [kas]   curl -sSL https://sp1up.succinct.xyz | bash && sp1up"
+                );
+            }
+        }
+    } else {
+        vlog(verbose, "SP1: reproducible mode -> using Docker");
+    }
+
+    which("docker").context("docker is required for SP1 build")?;
+    used_docker = true;
+
+    let inner = if rel_cwd.is_empty() {
+        "cargo prove build".to_string()
+    } else {
+        format!("cd {rel_cwd} && cargo prove build")
+    };
+
+    let script = format!(
+        "set -euo pipefail; \
+         apt-get update -qq; apt-get install -y -qq curl git ca-certificates build-essential; \
+         if ! command -v cargo >/dev/null 2>&1; then curl https://sh.rustup.rs -sSf | sh -s -- -y; fi; \
+         . $HOME/.cargo/env; \
+         export PATH=$HOME/.cargo/bin:$PATH; \
+         curl -sSL https://sp1up.succinct.xyz | bash; \
+         source /root/.bashrc; \
+         sp1up; \
+         {inner}"
+    );
+
+    docker_run(
+        &[
+            "run",
+            "--rm",
+            "-v",
+            &format!("{}:/work", workspace_root.display()),
+            "-w",
+            "/work",
+            rust_image,
+            "bash",
+            "-lc",
+            &script,
+        ],
+        verbose,
+    )?;
+
+    Ok(used_docker)
+}
+
+/* ---------- metadata & selection ---------- */
 
 fn cargo_metadata_json() -> Result<Json> {
     let out = Command::new("cargo")
@@ -412,32 +422,34 @@ fn cargo_metadata_json() -> Result<Json> {
 
 fn select_primary_package(meta: &Json) -> Result<(CargoPackage, Vec<CargoPackage>)> {
     let cwd = env::current_dir()?.canonicalize()?;
-    let pkgs_val = meta["packages"].as_array().unwrap_or(&vec![]).clone();
-    let mut pkgs: Vec<CargoPackage> = Vec::new();
+    let pkgs_val = meta["packages"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+
+    let mut pkgs: Vec<CargoPackage> = Vec::with_capacity(pkgs_val.len());
     for p in pkgs_val {
-        pkgs.push(serde_json::from_value(p.clone())?);
+        pkgs.push(serde_json::from_value(p)?);
     }
-    let root_manifest =
-        PathBuf::from(meta["workspace_root"].as_str().unwrap_or(".")).join("Cargo.toml");
-    let mut primary: Option<CargoPackage> = None;
-    for p in &pkgs {
-        if Path::new(&p.manifest_path) == root_manifest {
-            primary = Some(p.clone());
-            break;
-        }
+
+    let workspace_root = PathBuf::from(meta["workspace_root"].as_str().unwrap_or("."));
+    let root_manifest = workspace_root.join("Cargo.toml");
+
+    // Prefer workspace root manifest package
+    if let Some(p) = pkgs.iter().find(|p| Path::new(&p.manifest_path) == root_manifest) {
+        return Ok((p.clone(), pkgs));
     }
-    if primary.is_none() {
-        let cwd_manifest = cwd.join("Cargo.toml");
-        for p in &pkgs {
-            if Path::new(&p.manifest_path) == cwd_manifest {
-                primary = Some(p.clone());
-                break;
-            }
-        }
+    // Otherwise prefer current directory package
+    let cwd_manifest = cwd.join("Cargo.toml");
+    if let Some(p) = pkgs.iter().find(|p| Path::new(&p.manifest_path) == cwd_manifest) {
+        return Ok((p.clone(), pkgs));
     }
-    let primary = primary.unwrap_or_else(|| pkgs.first().expect("no packages").clone());
+    // Fallback to first package
+    let primary = pkgs.first().cloned().expect("no packages");
     Ok((primary, pkgs))
 }
+
+/* ---------- artifact discovery & staging ---------- */
 
 // Return (expected_sbf_files, sp1_bin_names)
 fn derive_expected_artifacts(targets: &Vec<CargoTarget>) -> (Vec<String>, Vec<String>) {
@@ -454,7 +466,7 @@ fn derive_expected_artifacts(targets: &Vec<CargoTarget>) -> (Vec<String>, Vec<St
         let name = t.name.replace('-', "_");
         let has = |s: &str| t.kind.iter().any(|k| k == s) || t.crate_types.iter().any(|c| c == s);
 
-        // SBF shared objects only
+        // SBF shared objects
         if has("cdylib") || has("dylib") {
             let cand = format!("{name}.so");
             if seen.insert(format!("sbf::{cand}")) {
@@ -462,29 +474,35 @@ fn derive_expected_artifacts(targets: &Vec<CargoTarget>) -> (Vec<String>, Vec<St
             }
         }
 
-        // SP1 bins (stage later, separately)
-        if has("bin") {
-            if seen.insert(format!("bin::{name}")) {
-                sp1_bins.push(name);
-            }
+        // SP1 bins
+        if has("bin") && seen.insert(format!("bin::{name}")) {
+            sp1_bins.push(name);
         }
     }
 
     (sbf, sp1_bins)
 }
 
-fn stage_copy_unique(src: &Path, stage_dir: &Path, staged: &mut Vec<PathBuf>, verbose: bool) -> Result<()> {
+fn stage_copy_unique(
+    src: &Path,
+    stage_dir: &Path,
+    staged: &mut Vec<PathBuf>,
+    verbose: bool,
+) -> Result<()> {
     let dest = stage_dir.join(src.file_name().unwrap());
     if dest.exists() {
-        if dest.is_file() {
-            // Count pre-existing staged artifacts so packaging works on repeat runs.
-            staged.push(dest.clone());
-            vlog(verbose, &format!("    -> already staged {}, counting existing", dest.display()));
-            return Ok(());
-        } else {
+        if !dest.is_file() {
             bail!("staging destination exists and is not a file: {}", dest.display());
         }
+        // Count pre-existing staged artifacts so packaging works on repeat runs.
+        staged.push(dest.clone());
+        vlog(
+            verbose,
+            &format!("    -> already staged {}, counting existing", dest.display()),
+        );
+        return Ok(());
     }
+
     fs::copy(src, &dest)?;
     staged.push(dest.clone());
     vlog(verbose, &format!("    -> staged {}", src.display()));
@@ -501,6 +519,8 @@ fn stage_expected(
     for fname in expected_filenames {
         let mut found = false;
         vlog(verbose, &format!("searching for expected SBF file: {fname}"));
+
+        // Direct lookups
         for r in roots {
             let p = r.join(fname);
             vlog(verbose, &format!("  - check {}", p.display()));
@@ -512,24 +532,28 @@ fn stage_expected(
                 vlog(verbose, "    -> not found here");
             }
         }
-        if !found {
-            for r in roots {
-                let pat = format!("{}/**/{}", r.display(), fname);
-                vlog(verbose, &format!("  - glob {pat}"));
-                for entry in glob(&pat)? {
-                    if let Ok(p) = entry {
-                        if p.is_file() {
-                            stage_copy_unique(&p, stage_dir, staged, verbose)?;
-                            found = true;
-                            break;
-                        }
+        if found {
+            continue;
+        }
+
+        // Glob fallback within each root
+        for r in roots {
+            let pat = format!("{}/**/{}", r.display(), fname);
+            vlog(verbose, &format!("  - glob {pat}"));
+            for entry in glob(&pat)? {
+                if let Ok(p) = entry {
+                    if p.is_file() {
+                        stage_copy_unique(&p, stage_dir, staged, verbose)?;
+                        found = true;
+                        break;
                     }
                 }
-                if found {
-                    break;
-                }
+            }
+            if found {
+                break;
             }
         }
+
         if !found {
             vlog(verbose, &format!("  ! {} not found in any root", fname));
         }
@@ -537,7 +561,7 @@ fn stage_expected(
     Ok(())
 }
 
-// Only check the single canonical SP1 release directory and the bin name (no .elf fallback)
+// Only check the canonical SP1 release directory and the bin name (no .elf fallback)
 fn stage_sp1_bins(
     bin_names: &Vec<String>,
     release_dir: &Path,
@@ -548,7 +572,6 @@ fn stage_sp1_bins(
     if bin_names.is_empty() {
         return Ok(());
     }
-
     for name in bin_names {
         let candidate = release_dir.join(name);
         vlog(verbose, &format!("SP1 check {}", candidate.display()));
@@ -561,9 +584,14 @@ fn stage_sp1_bins(
     Ok(())
 }
 
+/* ---------- docker helpers ---------- */
+
 fn docker_run(args: &[&str], verbose: bool) -> Result<()> {
     let mut cmd = Command::new("docker");
-    cmd.args(args).stdin(Stdio::null()).stdout(Stdio::inherit()).stderr(Stdio::inherit());
+    cmd.args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
     vlog(verbose, &format!("docker {}", args.join(" ")));
     let status = cmd.status()?;
     if !status.success() {
@@ -574,7 +602,6 @@ fn docker_run(args: &[&str], verbose: bool) -> Result<()> {
 
 // Final ownership fix: use uid:gid derived from the /work mount, always try at the end.
 fn docker_fix_ownership(workspace_root: &Path, image: &str, verbose: bool) -> Result<()> {
-    // Try to run a minimal shell to chown, even if previous docker commands failed.
     which("docker").context("docker is required to fix ownership after docker builds")?;
     let script = "set -eu; OWNER=$(stat -c '%u:%g' /work 2>/dev/null || echo 0:0); chown -R \"$OWNER\" /work";
     docker_run(
@@ -585,7 +612,7 @@ fn docker_fix_ownership(workspace_root: &Path, image: &str, verbose: bool) -> Re
             &format!("{}:/work", workspace_root.display()),
             "-w",
             "/work",
-            image, // use rust_image by default (Debian-based; has /bin/sh + coreutils)
+            image, // Debian-based; has /bin/sh + coreutils
             "sh",
             "-lc",
             script,
