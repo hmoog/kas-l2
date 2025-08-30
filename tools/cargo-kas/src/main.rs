@@ -178,20 +178,10 @@ fn build_program(
 
     // ---- Stage ONLY SBF artifacts ----
     let mut staged: Vec<PathBuf> = Vec::new();
-    let solana_search_roots = [
-        // canonical Solana outputs
-        workspace_root.join("target/deploy"),
-        workspace_root.join("target/verifiable"),
-        workspace_root.join("target/sbf-solana-solana/release"),
-        workspace_root.join("target/sbpf-solana-solana/release"),
-        // local cwd variants
-        cwd.join("target/deploy"),
-        cwd.join("target/verifiable"),
-        cwd.join("target/sbf-solana-solana/release"),
-        cwd.join("target/sbpf-solana-solana/release"),
-    ];
+    // The SBF artifact is always here: target/sbpf-solana-solana/release/<package-name>.so
+    let solana_search_roots = [workspace_root.join("target/sbpf-solana-solana/release")];
     if verbose {
-        eprintln!("[kas] SBF artifact search roots:");
+        eprintln!("[kas] SBF artifact dir:");
         for r in &solana_search_roots {
             eprintln!("   - {}", r.display());
         }
