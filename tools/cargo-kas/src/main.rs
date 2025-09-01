@@ -9,7 +9,7 @@ use std::env;
 #[command(
     bin_name = "cargo-kas",
     version,
-    about = "Dockerized builder/packager for kas artifacts"
+    about = "builder/packager for kas artifacts"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
     }
 
     match Cli::parse_from(args).cmd {
-        Cmd::BuildProgram(args) => build_program::handle(args),
+        Cmd::BuildProgram(args) => build_program::cmd(args),
     }
 }
 

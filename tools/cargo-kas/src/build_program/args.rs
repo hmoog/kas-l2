@@ -6,9 +6,9 @@ pub struct Args {
     #[arg(long)]
     pub name: Option<String>,
     #[arg(long)]
-    pub skip_prove: bool,
-    #[arg(long)]
     pub skip_sbf: bool,
+    #[arg(long)]
+    pub skip_sp1: bool,
     #[arg(long)]
     pub reproducible: bool,
     #[arg(long)]
