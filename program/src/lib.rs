@@ -37,15 +37,16 @@ macro_rules! entrypoint {
                 let acct_count = $crate::sp1_zkvm::io::read::<u64>() as usize;
 
                 // First pass: stable backing memory
-                let mut account_keys:   Vec<$crate::pubkey::Pubkey> = Vec::with_capacity(acct_count);
-                let mut account_owners: Vec<$crate::pubkey::Pubkey> = Vec::with_capacity(acct_count);
+                let mut account_keys: Vec<$crate::pubkey::Pubkey> = Vec::with_capacity(acct_count);
+                let mut account_owners: Vec<$crate::pubkey::Pubkey> =
+                    Vec::with_capacity(acct_count);
 
-                let mut is_signer_flags:   Vec<bool> = Vec::with_capacity(acct_count);
+                let mut is_signer_flags: Vec<bool> = Vec::with_capacity(acct_count);
                 let mut is_writable_flags: Vec<bool> = Vec::with_capacity(acct_count);
-                let mut is_exec_flags:     Vec<bool> = Vec::with_capacity(acct_count);
+                let mut is_exec_flags: Vec<bool> = Vec::with_capacity(acct_count);
 
-                let mut lamports_boxes: Vec<Box<u64>>  = Vec::with_capacity(acct_count);
-                let mut data_boxes:     Vec<Box<[u8]>> = Vec::with_capacity(acct_count);
+                let mut lamports_boxes: Vec<Box<u64>> = Vec::with_capacity(acct_count);
+                let mut data_boxes: Vec<Box<[u8]>> = Vec::with_capacity(acct_count);
 
                 for _ in 0..acct_count {
                     // duplicate flag + padding (8 bytes total)
@@ -90,10 +91,16 @@ macro_rules! entrypoint {
                 let program_id = $crate::pubkey::Pubkey::new_from_array(pid_bytes);
 
                 // Second pass: build AccountInfo
-                let mut accounts: Vec<$crate::account_info::AccountInfo> = Vec::with_capacity(acct_count);
-                for (i, (lam_box, data_box)) in lamports_boxes.iter_mut().zip(data_boxes.iter_mut()).enumerate() {
-                    let lamports_cell: Rc<RefCell<&mut u64>>  = Rc::new(RefCell::new(&mut **lam_box));
-                    let data_cell:     Rc<RefCell<&mut [u8]>> = Rc::new(RefCell::new(&mut **data_box));
+                let mut accounts: Vec<$crate::account_info::AccountInfo> =
+                    Vec::with_capacity(acct_count);
+                for (i, (lam_box, data_box)) in lamports_boxes
+                    .iter_mut()
+                    .zip(data_boxes.iter_mut())
+                    .enumerate()
+                {
+                    let lamports_cell: Rc<RefCell<&mut u64>> =
+                        Rc::new(RefCell::new(&mut **lam_box));
+                    let data_cell: Rc<RefCell<&mut [u8]>> = Rc::new(RefCell::new(&mut **data_box));
                     #[allow(deprecated)]
                     let info = $crate::account_info::AccountInfo {
                         key: &account_keys[i],

@@ -1,4 +1,3 @@
-use crate::RuntimeContext;
 use crate::builtin::abort::Abort;
 use crate::builtin::cpi::CPI;
 use crate::builtin::sol_alloc_free::SolAllocFree;
@@ -6,10 +5,10 @@ use crate::builtin::sol_log::SolLog;
 use crate::builtin::sol_log_64::SolLog64;
 use crate::builtin::sol_memcpy::SolMemcpy;
 use crate::builtin::sol_panic::SolPanic;
-use crate::program::Program;
-use solana_sbpf::elf::Executable;
+use crate::errors::VMResult;
+use crate::executable::Executable;
+use crate::{Program, Prover, RuntimeContext};
 use solana_sbpf::program::BuiltinProgram;
-use solana_sbpf::verifier::RequisiteVerifier;
 use solana_sbpf::vm::Config;
 use std::fs;
 use std::sync::Arc;
@@ -45,17 +44,37 @@ impl Loader {
         }
     }
 
-    pub fn load_elf_file(&self, id: [u8; 32], path: &str) -> Program {
-        self.load_elf_bytes(id, fs::read(path).expect("failed to file").as_slice())
+    pub fn load_program(&self, id: [u8; 32], bytes: Vec<u8>) -> VMResult<Program> {
+        let mut bytes = &bytes[..];
+
+        Ok(Program {
+            executable: Executable::new(
+                id,
+                Self::read_binary_segment(&mut bytes),
+                &self.builtin_program,
+            )?,
+            prover: Prover::new(id, Self::read_binary_segment(&mut bytes)),
+        })
     }
 
-    pub fn load_elf_bytes(&self, id: [u8; 32], elf_bytes: &[u8]) -> Program {
-        let executable =
-            Executable::from_elf(elf_bytes, self.builtin_program.clone()).expect("load executable");
-        executable
-            .verify::<RequisiteVerifier>()
-            .expect("verify elf");
+    pub fn load_program_file(&self, id: [u8; 32], path: &str) -> VMResult<Program> {
+        self.load_program(id, fs::read(path)?)
+    }
 
-        Program { id, executable }
+    fn read_binary_segment<'a>(cursor: &mut &'a [u8]) -> &'a [u8] {
+        if cursor.len() < 8 {
+            panic!("Truncated length header");
+        }
+
+        let (len_bytes, rest) = cursor.split_at(8);
+        let len = u64::from_le_bytes(len_bytes.try_into().unwrap()) as usize;
+
+        if rest.len() < len {
+            panic!("Truncated segment: expected {}, have {}", len, rest.len());
+        }
+
+        let (segment, rest) = rest.split_at(len);
+        *cursor = rest;
+        segment
     }
 }

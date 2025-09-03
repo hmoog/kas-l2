@@ -3338,6 +3338,7 @@ dependencies = [
 name = "kas-l2-vm"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "blake3",
  "dotenv",
  "kas-l2-vm-macros",

@@ -9,3 +9,4 @@ blake3 = "1.8.2"
 kas-l2-vm-macros = { path = "../vm-macros" }
 sp1-sdk = "5.2.1"
 dotenv = "0.15.0"
+anyhow = "1.0.99"

@@ -1,15 +1,15 @@
-use std::{env, fs};
+use crate::utils::cargo::CargoTarget;
+use crate::utils::{cargo, docker};
+use crate::vlog;
+use anyhow::{bail, Context};
+use clap::Args as ClapArgs;
+use glob::glob;
 use std::collections::HashSet;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use anyhow::{bail, Context};
-use clap::Args as ClapArgs;
-use glob::glob;
+use std::{env, fs};
 use which::which;
-use crate::utils::{cargo, docker};
-use crate::utils::cargo::CargoTarget;
-use crate::vlog;
 
 #[derive(ClapArgs, Debug)]
 pub struct Args {
@@ -84,7 +84,7 @@ impl TryFrom<Args> for Builder {
         let target_dir = args
             .out_dir
             .clone()
-            .unwrap_or_else(|| PathBuf::from("target/kas"));
+            .unwrap_or_else(|| workspace_root.join("target").join("kas"));
         let target_file = target_dir.join(format!("{target_name}.kas"));
         let staging_dir = target_dir.join("_staging").join(&target_name);
 
