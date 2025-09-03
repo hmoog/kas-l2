@@ -1,8 +1,9 @@
 use crate::errors::VMError::{SP1Verification, SP1};
 use crate::errors::VMResult;
-use crate::Account;
+use solana_sbpf::error::ProgramResult;
 use sp1_sdk::{EnvProver, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, SP1VerifyingKey};
 use std::cell::OnceCell;
+use kas_l2_program::account_info::AccountInfo;
 
 pub struct Prover {
     pub id: [u8; 32],
@@ -23,14 +24,12 @@ impl Prover {
 
     pub fn prove(
         &self,
-        accounts: &[Account],
+        acts: &[AccountInfo],
         ix_data: &[u8],
+        _effects_transcript: (u64, ProgramResult),
     ) -> VMResult<SP1ProofWithPublicValues> {
         self.client()
-            .prove(
-                self.proving_key(),
-                &self.serialize_inputs(accounts, ix_data),
-            )
+            .prove(self.proving_key(), &self.serialize_inputs(acts, ix_data))
             .run()
             .map_err(SP1)
     }
@@ -41,7 +40,7 @@ impl Prover {
             .map_err(SP1Verification)
     }
 
-    pub fn execute(&self, accounts: &[Account], ix_data: &[u8]) {
+    pub fn execute(&self, accounts: &[AccountInfo], ix_data: &[u8]) {
         let result = self
             .client()
             .execute(&self.elf_bytes, &self.serialize_inputs(accounts, ix_data))
@@ -75,7 +74,7 @@ impl Prover {
         self.client.get_or_init(EnvProver::new)
     }
 
-    fn serialize_inputs(&self, accounts: &[Account], ix_data: &[u8]) -> SP1Stdin {
+    fn serialize_inputs(&self, accounts: &[AccountInfo], ix_data: &[u8]) -> SP1Stdin {
         let mut stdin = SP1Stdin::new();
 
         stdin.write(&(accounts.len() as u64));

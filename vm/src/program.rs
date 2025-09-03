@@ -1,8 +1,9 @@
 use crate::errors::VMResult;
 use crate::Prover;
-use crate::{Account, Executable, RuntimeContext};
+use crate::{Executable, RuntimeContext};
 use solana_sbpf::error::ProgramResult;
 use sp1_sdk::SP1ProofWithPublicValues;
+use kas_l2_program::account_info::AccountInfo;
 
 pub struct Program {
     pub executable: Executable,
@@ -13,7 +14,7 @@ impl Program {
     pub fn execute(
         &self,
         ctx: &mut RuntimeContext,
-        accounts: &[Account],
+        accounts: &[AccountInfo],
         ix_data: &[u8],
         interpreted: bool,
     ) -> (u64, ProgramResult) {
@@ -23,11 +24,14 @@ impl Program {
     pub fn prove(
         &self,
         ctx: &mut RuntimeContext,
-        accounts: &[Account],
+        accounts: &[AccountInfo],
         ix_data: &[u8],
     ) -> VMResult<SP1ProofWithPublicValues> {
-        let _result = self.execute(ctx, accounts, ix_data, false);
-        self.prover().prove(accounts, ix_data)
+        self.prover.prove(
+            accounts,
+            ix_data,
+            self.execute(ctx, accounts, ix_data, false),
+        )
     }
 
     pub fn verify(&self, proof: &SP1ProofWithPublicValues) -> VMResult<()> {

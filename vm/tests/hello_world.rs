@@ -6,8 +6,12 @@ use std::sync::Arc;
 fn test_vm() {
     let loader = Loader::new(Config::default());
 
+    println!("=====================");
+    println!(" STEP 1: Load Program");
+    println!("=====================\n");
+
     println!(
-        "loading program from {}",
+        "-> Loading program from:\n   {}",
         concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas")
     );
 
@@ -16,15 +20,19 @@ fn test_vm() {
             [0; 32],
             concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas"),
         )
-        .expect("failed to load program");
+        .expect("\n❌ Failed to load program");
 
-    println!("executing program");
+    println!("\n✔ Program successfully loaded.\n");
+
+    println!("========================");
+    println!(" STEP 2: Execute Program");
+    println!("========================\n");
 
     let (used_gas, return_value) = program.execute(
         &mut RuntimeContext::new(
             Arc::new(InMemoryAppRegistry::new()),
             RuntimeState::default(),
-            10000000,
+            10_000_000,
         ),
         &[],
         &[],
@@ -32,27 +40,41 @@ fn test_vm() {
     );
 
     if return_value.is_err() {
-        panic!("program execution failed with error: {return_value:?} and used gas: {used_gas}" );
+        panic!(
+            "\n❌ Program execution failed.\n   Error: {return_value:?}\n   Gas used: {used_gas}"
+        );
     }
-    println!("program returned: {return_value:?} and used gas: {used_gas}");
+    println!("\n✔ Program executed successfully.");
+    println!("   → Return value: {return_value:?}");
+    println!("   → Gas used: {used_gas}\n");
 
-    println!("proving program");
+    println!("======================");
+    println!(" STEP 3: Prove Program");
+    println!("======================\n");
 
     let proof = program
         .prove(
             &mut RuntimeContext::new(
                 Arc::new(InMemoryAppRegistry::new()),
                 RuntimeState::default(),
-                10000000,
+                10_000_000,
             ),
             &[],
             &[],
         )
-        .expect("failed to generate proof");
+        .expect("❌ Failed to generate proof");
 
-    println!("verifying proof");
+    println!("\n✔ Proof successfully generated.\n");
 
-    program.verify(&proof).expect("failed to verify proof");
+    println!("=======================");
+    println!(" STEP 4: Verify Program");
+    println!("=======================\n");
 
-    println!("Done.");
+    program.verify(&proof).expect("❌ Failed to verify proof");
+
+    println!("✔ Proof successfully verified.\n");
+
+    println!("==================");
+    println!(" ✅ All steps done!");
+    println!("==================");
 }

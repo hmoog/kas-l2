@@ -3341,6 +3341,7 @@ dependencies = [
  "anyhow",
  "blake3",
  "dotenv",
+ "kas-l2-program",
  "kas-l2-vm-macros",
  "solana-sbpf",
  "sp1-sdk",

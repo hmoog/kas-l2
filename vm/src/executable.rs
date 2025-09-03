@@ -1,4 +1,3 @@
-use crate::account::Account;
 use crate::errors::VMResult;
 use crate::RuntimeContext;
 use solana_sbpf::aligned_memory::AlignedMemory;
@@ -10,6 +9,7 @@ use solana_sbpf::program::{BuiltinProgram, SBPFVersion};
 use solana_sbpf::verifier::RequisiteVerifier;
 use solana_sbpf::vm::EbpfVm;
 use std::sync::Arc;
+use kas_l2_program::account_info::AccountInfo;
 
 pub struct Executable {
     pub id: [u8; 32],
@@ -30,7 +30,7 @@ impl Executable {
     pub fn execute(
         &self,
         ctx: &mut RuntimeContext,
-        accounts: &[Account],
+        accounts: &[AccountInfo],
         ix_data: &[u8],
         interpreted: bool,
     ) -> (u64, ProgramResult) {
@@ -71,7 +71,7 @@ impl Executable {
         vm.execute_program(&self.executable, interpreted)
     }
 
-    fn build_input_mem(input_mem: &mut [u8], _accounts: &[Account], ix_data: &[u8]) -> usize {
+    fn build_input_mem(input_mem: &mut [u8], _accounts: &[AccountInfo], ix_data: &[u8]) -> usize {
         let need = 8 + 8 + ix_data.len() + 32;
         assert!(input_mem.len() >= need);
         let mut off = 0;

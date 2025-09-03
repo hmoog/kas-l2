@@ -9,7 +9,6 @@ mod builtin {
     pub mod sol_panic;
 }
 
-mod account;
 mod errors;
 mod executable;
 mod loader;
@@ -18,7 +17,6 @@ mod prover;
 mod runtime_context;
 mod runtime_state;
 
-pub use account::Account;
 pub use app_registry::{AppRegistry, InMemoryAppRegistry};
 pub use executable::Executable;
 pub use loader::Loader;
