@@ -3335,6 +3335,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-runtime"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "kas-l2-program",
+ "kas-l2-runtime-macros",
+ "kas-l2-vm",
+ "solana-sbpf",
+]
+
+[[package]]
+name = "kas-l2-runtime-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "kas-l2-vm"
 version = "0.1.0"
 dependencies = [
@@ -3342,17 +3361,8 @@ dependencies = [
  "blake3",
  "dotenv",
  "kas-l2-program",
- "kas-l2-vm-macros",
  "solana-sbpf",
  "sp1-sdk",
-]
-
-[[package]]
-name = "kas-l2-vm-macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]

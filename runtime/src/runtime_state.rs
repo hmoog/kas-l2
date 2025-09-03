@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use blake3;
 
 #[derive(Clone)]
 pub struct RuntimeState {

@@ -1,10 +1,10 @@
-use kas_l2_vm::{InMemoryAppRegistry, Loader, RuntimeContext, RuntimeState};
-use solana_sbpf::vm::Config;
+use kas_l2_vm::Config;
 use std::sync::Arc;
+use kas_l2_runtime::{InMemoryAppRegistry, Runtime, RuntimeContext, RuntimeState};
 
 #[test]
 fn test_vm() {
-    let loader = Loader::new(Config::default());
+    let runtime = Runtime::new(Config::default());
 
     println!("=====================");
     println!(" STEP 1: Load Program");
@@ -15,7 +15,7 @@ fn test_vm() {
         concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas")
     );
 
-    let program = loader
+    let program = runtime.vm
         .load_program_file(
             [0; 32],
             concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas"),

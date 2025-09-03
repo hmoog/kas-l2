@@ -1,5 +1,4 @@
 use crate::errors::VMResult;
-use crate::RuntimeContext;
 use solana_sbpf::aligned_memory::AlignedMemory;
 use solana_sbpf::ebpf;
 use solana_sbpf::elf::Executable as ElfExecutable;
@@ -7,20 +6,20 @@ use solana_sbpf::error::ProgramResult;
 use solana_sbpf::memory_region::{MemoryMapping, MemoryRegion};
 use solana_sbpf::program::{BuiltinProgram, SBPFVersion};
 use solana_sbpf::verifier::RequisiteVerifier;
-use solana_sbpf::vm::EbpfVm;
+use solana_sbpf::vm::{ContextObject, EbpfVm};
 use std::sync::Arc;
 use kas_l2_program::account_info::AccountInfo;
 
-pub struct Executable {
+pub struct Executable<C: ContextObject> {
     pub id: [u8; 32],
-    pub executable: ElfExecutable<RuntimeContext>,
+    pub executable: ElfExecutable<C>,
 }
 
-impl Executable {
+impl<C: ContextObject> Executable<C> {
     pub fn new(
         id: [u8; 32],
         program_bytes: &[u8],
-        builtin_program: &Arc<BuiltinProgram<RuntimeContext>>,
+        builtin_program: &Arc<BuiltinProgram<C>>,
     ) -> VMResult<Self> {
         let executable = ElfExecutable::from_elf(program_bytes, builtin_program.clone())?;
         executable.verify::<RequisiteVerifier>()?;
@@ -29,14 +28,13 @@ impl Executable {
 
     pub fn execute(
         &self,
-        ctx: &mut RuntimeContext,
+        ctx: &mut C,
         accounts: &[AccountInfo],
         ix_data: &[u8],
         interpreted: bool,
     ) -> (u64, ProgramResult) {
         const HEAP_SIZE: usize = 32 * 1024; // 32 KiB heap size
-        ctx.heap_cursor = ebpf::MM_HEAP_START;
-        ctx.heap_end = ebpf::MM_HEAP_START + HEAP_SIZE as u64;
+        // TODO: dynamically size this based on context?
 
         let mut input_mem = vec![0u8; 0x1000];
         let _ = Self::build_input_mem(&mut input_mem, accounts, ix_data);

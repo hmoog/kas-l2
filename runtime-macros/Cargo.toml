@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-vm-macros"
+name = "kas-l2-runtime-macros"
 version = "0.1.0"
 edition = "2021"
 
