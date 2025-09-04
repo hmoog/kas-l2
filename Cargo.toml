@@ -1,4 +1,4 @@
 [workspace]
 resolver = "3"
-members = ["tools/cargo-kas", "vm", "runtime-macros", "program", "runtime", "program/examples/hello-world"]
-default-members = ["vm", "runtime-macros", "program", "runtime"]
+members = ["tools/cargo-kas", "crates/vm", "crates/runtime-macros", "crates/program", "crates/runtime", "crates/program/examples/hello-world"]
+default-members = ["crates/vm", "crates/runtime-macros", "crates/program", "crates/runtime"]

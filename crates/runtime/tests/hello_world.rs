@@ -12,13 +12,13 @@ fn test_vm() {
 
     println!(
         "-> Loading program from:\n   {}",
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas")
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/kas/hello_world.kas")
     );
 
     let program = runtime.vm
         .load_program_file(
             [0; 32],
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../target/kas/hello_world.kas"),
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/kas/hello_world.kas"),
         )
         .expect("\n❌ Failed to load program");
 
