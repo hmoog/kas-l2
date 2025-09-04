@@ -15,4 +15,7 @@ name = "prover"
 path = "src/lib.rs"
 
 [dependencies]
-kas-l2-program = { path = "../.." }
+solana-program = "3.0.0"
+
+[patch.crates-io]
+solana-program-entrypoint = { path = "../../patches/solana-program-entrypoint" }

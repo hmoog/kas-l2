@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 blake3 = "1.8.2"
 solana-sbpf = "0.12.2"
-kas-l2-program = { path = "../program" }
+solana-program = "3.0.0"
 kas-l2-vm = { path = "../vm" }
 kas-l2-runtime-macros = { path = "../runtime-macros" }

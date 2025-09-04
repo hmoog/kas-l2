@@ -8,7 +8,7 @@ use solana_sbpf::program::{BuiltinProgram, SBPFVersion};
 use solana_sbpf::verifier::RequisiteVerifier;
 use solana_sbpf::vm::{ContextObject, EbpfVm};
 use std::sync::Arc;
-use kas_l2_program::account_info::AccountInfo;
+use solana_program::account_info::AccountInfo;
 
 pub struct Executable<C: ContextObject> {
     pub id: [u8; 32],

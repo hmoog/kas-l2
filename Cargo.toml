@@ -1,4 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["tools/cargo-kas", "crates/vm", "crates/runtime-macros", "crates/program", "crates/runtime", "crates/program/examples/hello-world"]
-default-members = ["crates/vm", "crates/runtime-macros", "crates/program", "crates/runtime"]
+members = ["tools/cargo-kas", "crates/vm", "crates/runtime-macros", "crates/runtime"]
+default-members = ["crates/vm", "crates/runtime-macros", "crates/runtime"]
+exclude = ["examples/hello-world"]
+
+[patch.crates-io]
+solana-program-entrypoint = { path = "patches/solana-program-entrypoint" }

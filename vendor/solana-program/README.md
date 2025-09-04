@@ -1,1 +1,0 @@
-# vendored solana-program crate

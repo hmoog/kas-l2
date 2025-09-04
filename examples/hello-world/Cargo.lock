@@ -400,7 +400,7 @@ checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 name = "hello_world"
 version = "0.1.0"
 dependencies = [
- "kas-l2-program",
+ "solana-program",
 ]
 
 [[package]]
@@ -449,14 +449,6 @@ dependencies = [
  "once_cell",
  "sha2",
  "signature",
-]
-
-[[package]]
-name = "kas-l2-program"
-version = "0.1.0"
-dependencies = [
- "solana-program",
- "sp1-zkvm",
 ]
 
 [[package]]
@@ -1257,14 +1249,13 @@ dependencies = [
 [[package]]
 name = "solana-program-entrypoint"
 version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6557cf5b5e91745d1667447438a1baa7823c6086e4ece67f8e6ebfa7a8f72660"
 dependencies = [
  "solana-account-info",
  "solana-define-syscall",
  "solana-msg",
  "solana-program-error",
  "solana-pubkey",
+ "sp1-zkvm",
 ]
 
 [[package]]

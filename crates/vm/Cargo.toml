@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 solana-sbpf = "0.12.2"
 blake3 = "1.8.2"
-kas-l2-program = { path = "../program" }
+solana-program = "3.0.0"
 sp1-sdk = "5.2.1"
 dotenv = "0.15.0"
 anyhow = "1.0.99"

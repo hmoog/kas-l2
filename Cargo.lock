@@ -2759,13 +2759,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
-name = "hello_world"
-version = "0.1.0"
-dependencies = [
- "kas-l2-program",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3325,23 +3318,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-program"
-version = "0.1.0"
-dependencies = [
- "base64ct",
- "getrandom 0.2.16",
- "solana-program",
- "sp1-zkvm",
-]
-
-[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "kas-l2-program",
  "kas-l2-runtime-macros",
  "kas-l2-vm",
+ "solana-program",
  "solana-sbpf",
 ]
 
@@ -3360,7 +3343,7 @@ dependencies = [
  "anyhow",
  "blake3",
  "dotenv",
- "kas-l2-program",
+ "solana-program",
  "solana-sbpf",
  "sp1-sdk",
 ]
@@ -5802,14 +5785,13 @@ dependencies = [
 [[package]]
 name = "solana-program-entrypoint"
 version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6557cf5b5e91745d1667447438a1baa7823c6086e4ece67f8e6ebfa7a8f72660"
 dependencies = [
  "solana-account-info",
  "solana-define-syscall",
  "solana-msg",
  "solana-program-error",
  "solana-pubkey",
+ "sp1-zkvm",
 ]
 
 [[package]]

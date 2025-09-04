@@ -3,7 +3,7 @@ use crate::errors::VMResult;
 use solana_sbpf::error::ProgramResult;
 use sp1_sdk::{EnvProver, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, SP1VerifyingKey};
 use std::cell::OnceCell;
-use kas_l2_program::account_info::AccountInfo;
+use solana_program::account_info::AccountInfo;
 
 pub struct Prover {
     pub id: [u8; 32],
