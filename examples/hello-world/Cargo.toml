@@ -16,6 +16,7 @@ path = "src/lib.rs"
 
 [dependencies]
 solana-program = "3.0.0"
+base64ct = { version = "=1.7.3", default-features = false }
 
 [patch.crates-io]
 solana-address = { git = "https://github.com/hmoog/solana-sdk-sp1", branch = "patch", package = "solana-address" }
