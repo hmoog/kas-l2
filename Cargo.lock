@@ -3318,6 +3318,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-dependency-graph"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
+]
+
+[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3334,6 +3341,13 @@ version = "0.1.0"
 dependencies = [
  "quote",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "kas-l2-runtime-scheduler"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
 ]
 
 [[package]]
@@ -5785,13 +5799,14 @@ dependencies = [
 [[package]]
 name = "solana-program-entrypoint"
 version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6557cf5b5e91745d1667447438a1baa7823c6086e4ece67f8e6ebfa7a8f72660"
 dependencies = [
  "solana-account-info",
  "solana-define-syscall",
  "solana-msg",
  "solana-program-error",
  "solana-pubkey",
- "sp1-zkvm",
 ]
 
 [[package]]
@@ -6207,17 +6222,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp1-lib"
-version = "5.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e1fe81b6f87134f9170cb642f948ae41e0ee1cd3785e0cb665add5b67106d1a"
-dependencies = [
- "bincode",
- "serde",
- "sp1-primitives",
-]
-
-[[package]]
 name = "sp1-primitives"
 version = "5.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6504,23 +6508,6 @@ dependencies = [
  "strum_macros",
  "sysinfo",
  "tracing",
-]
-
-[[package]]
-name = "sp1-zkvm"
-version = "5.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18636018d03fcee05736c3a214eeb7c831c5ba2ef08b1bcffbfdb108998e7663"
-dependencies = [
- "cfg-if",
- "getrandom 0.2.16",
- "getrandom 0.3.3",
- "lazy_static",
- "libm",
- "rand 0.8.5",
- "sha2",
- "sp1-lib",
- "sp1-primitives",
 ]
 
 [[package]]
