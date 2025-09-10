@@ -3318,13 +3318,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-dependency-graph"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
-]
-
-[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [

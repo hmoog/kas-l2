@@ -1,33 +1,69 @@
-use crate::batch::Batch;
-use crate::task::Task;
-use crossbeam_deque::Injector;
-use std::sync::Arc;
+use std::{
+    collections::{HashMap, hash_map::Entry},
+    sync::Arc,
+};
 
-pub struct Scheduler<T: Task> {
-    injector: Arc<Injector<T>>,
+use crossbeam_deque::Injector;
+
+use crate::{
+    resource_guard::ResourceGuard,
+    scheduled_element::ScheduledElement,
+    types::{AccessType, Element, Guards},
+};
+
+pub struct Scheduler<E: Element> {
+    scheduled_elements: Vec<Arc<ScheduledElement<E>>>,
+    latest_guards: HashMap<E::ResourceID, Arc<ResourceGuard<E>>>,
+    injector: Arc<Injector<Arc<ScheduledElement<E>>>>,
 }
 
-impl<T: Task> Scheduler<T> {
+impl<E: Element> Scheduler<E> {
     pub fn new() -> Self {
         Self {
+            scheduled_elements: Vec::new(),
+            latest_guards: HashMap::new(),
             injector: Arc::new(Injector::new()),
         }
     }
 
-    pub fn schedule(&self, batch: Batch<T>) {
-        for task in batch.tasks() {
-            for resource_id in task.write_locks() {}
+    pub fn schedule(&mut self, elements: Vec<E>) {
+        for (i, element) in elements.into_iter().enumerate() {
+            let guards = self.fetch_guards(i, &element);
 
-            for resource_id in task.read_locks() {}
-            task.execute();
+            self.scheduled_elements
+                .push(ScheduledElement::new(element, guards, &self.injector));
         }
     }
 
-    pub fn submit(&self, task: T) {
-        self.injector.push(task);
-    }
+    fn fetch_guards(&mut self, index: usize, element: &E) -> Guards<E> {
+        let mut prev_guards = Vec::new();
+        let mut guards = Vec::new();
 
-    pub fn injector(&self) -> &Arc<Injector<T>> {
-        &self.injector
+        let mut collect = |locks: &[E::ResourceID], access: AccessType| {
+            for res in locks {
+                let (prev_guard, guard) = match self.latest_guards.entry(res.clone()) {
+                    Entry::Occupied(entry) if entry.get().owner_index == index => {
+                        continue; // skip duplicate for the same element
+                    }
+                    Entry::Occupied(mut entry) => {
+                        let guard = Arc::new(ResourceGuard::new(access, index));
+                        let prev_guard = Some(entry.insert(guard.clone()));
+                        (prev_guard, guard)
+                    }
+                    Entry::Vacant(entry) => {
+                        let guard = Arc::new(ResourceGuard::new(access, index));
+                        (None, entry.insert(guard).clone())
+                    }
+                };
+
+                prev_guards.push(prev_guard);
+                guards.push(guard);
+            }
+        };
+
+        collect(element.write_locks(), AccessType::WriteAccess);
+        collect(element.read_locks(), AccessType::ReadAccess);
+
+        (prev_guards, guards)
     }
 }
