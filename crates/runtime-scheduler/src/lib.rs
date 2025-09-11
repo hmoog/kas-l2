@@ -1,5 +1,11 @@
 mod atomic;
-mod resource_guard;
-mod scheduled_element;
+mod batch;
+mod guard;
+mod scheduled_task;
 mod scheduler;
-mod types;
+mod task;
+
+pub use batch::Batch;
+pub use scheduled_task::ScheduledTask;
+pub use scheduler::Scheduler;
+pub use task::Task;

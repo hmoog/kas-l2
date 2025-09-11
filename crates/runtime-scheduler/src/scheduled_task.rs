@@ -6,23 +6,23 @@ use std::sync::{
 use crossbeam_deque::Injector;
 
 use crate::{
-    resource_guard::ResourceGuard,
-    types::{Element, Guards},
+    guard::{Guard, Guards},
+    task::Task,
 };
 
-pub struct ScheduledElement<E: Element> {
-    pub element: E,
+pub struct ScheduledTask<E: Task> {
+    element: E,
     is_done: AtomicBool,
     pending_requests: AtomicU64,
-    lock_requests: Vec<Arc<ResourceGuard<E>>>,
-    injector: Arc<Injector<Arc<ScheduledElement<E>>>>,
+    lock_requests: Vec<Arc<Guard<E>>>,
+    injector: Arc<Injector<Arc<ScheduledTask<E>>>>,
 }
 
-impl<E: Element> ScheduledElement<E> {
+impl<E: Task> ScheduledTask<E> {
     pub fn new(
         element: E,
         guards: Guards<E>,
-        injector: &Arc<Injector<Arc<ScheduledElement<E>>>>,
+        injector: &Arc<Injector<Arc<ScheduledTask<E>>>>,
     ) -> Arc<Self> {
         let this = Arc::new(Self {
             element,
@@ -48,10 +48,8 @@ impl<E: Element> ScheduledElement<E> {
         this
     }
 
-    pub fn notify_ready(self: &Arc<Self>) {
-        if self.pending_requests.fetch_sub(1, Ordering::AcqRel) - 1 == 0 {
-            self.injector.push(self.clone())
-        }
+    pub fn element(&self) -> &E {
+        &self.element
     }
 
     pub fn done(&self) {
@@ -61,6 +59,12 @@ impl<E: Element> ScheduledElement<E> {
             .is_ok()
         {
             self.lock_requests.iter().for_each(|x| x.done());
+        }
+    }
+
+    pub(crate) fn notify_ready(self: &Arc<Self>) {
+        if self.pending_requests.fetch_sub(1, Ordering::AcqRel) - 1 == 0 {
+            self.injector.push(self.clone())
         }
     }
 }
