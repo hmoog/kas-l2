@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
-use crate::{
-    atomic::{AtomicEnum, AtomicWeak},
-    scheduled_task::ScheduledTask,
-    task::Task,
-};
+use kas_l2_atomic::{AtomicEnum, AtomicWeak};
+
+use crate::{scheduled_task::ScheduledTask, task::Task};
 
 pub struct Guard<T: Task> {
     pub status: AtomicEnum<Status>,
@@ -34,9 +32,7 @@ impl<T: Task> Guard<T> {
                     successor.ready();
                 }
             }
-            Status::Done => {
-                successor.ready();
-            }
+            Status::Done => successor.ready(),
             _ => {} // do nothing, the successor will be notified when anything changes
         }
     }

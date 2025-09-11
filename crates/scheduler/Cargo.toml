@@ -1,0 +1,8 @@
+[package]
+name = "kas-l2-scheduler"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-deque = "0.8.6"
+kas-l2-atomic = { path = "../atomic" }

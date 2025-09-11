@@ -1,5 +1,5 @@
 use crossbeam_deque::Steal;
-use kas_l2_runtime_scheduler::{Scheduler, Task};
+use kas_l2_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_scheduler() {
@@ -9,10 +9,10 @@ pub fn test_scheduler() {
         read_locks: vec![3, 4],
     }]);
 
-    let injector = batch.injector();
+    let pending_tasks = batch.pending_tasks();
 
     // Steal an element
-    match injector.steal() {
+    match pending_tasks.ready.steal() {
         Steal::Success(task) => {
             println!("Got task with id {}", task.element().id);
             task.done()

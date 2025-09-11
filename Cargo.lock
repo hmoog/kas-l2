@@ -3318,6 +3318,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-atomic"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3337,10 +3344,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-runtime-scheduler"
+name = "kas-l2-scheduler"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
+ "kas-l2-atomic",
 ]
 
 [[package]]
@@ -3353,6 +3361,13 @@ dependencies = [
  "solana-program",
  "solana-sbpf",
  "sp1-sdk",
+]
+
+[[package]]
+name = "kas-l2-workerpool"
+version = "0.1.0"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]

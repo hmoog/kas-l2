@@ -2,43 +2,43 @@ use std::{
     collections::{HashMap, hash_map::Entry},
     sync::Arc,
 };
-use std::sync::atomic::AtomicU64;
-use crossbeam_deque::Injector;
 
 use crate::{
+    PendingTasks,
     guard::{Guard, Guards, Type},
     scheduled_task::ScheduledTask,
     task::Task,
 };
 
 pub struct Batch<T: Task> {
+    guards: HashMap<T::ResourceID, Arc<Guard<T>>>,
     scheduled_elements: Vec<Arc<ScheduledTask<T>>>,
-    latest_guards: HashMap<T::ResourceID, Arc<Guard<T>>>,
-    injector: Arc<Injector<Arc<ScheduledTask<T>>>>,
-    pending_tasks: Arc<AtomicU64>,
+    pending_tasks: Arc<PendingTasks<T>>,
 }
 
 impl<E: Task> Batch<E> {
     pub fn new(elements: Vec<E>) -> Self {
         let mut this = Self {
             scheduled_elements: Vec::new(),
-            latest_guards: HashMap::new(),
-            injector: Arc::new(Injector::new()),
-            pending_tasks: Arc::new(AtomicU64::new(elements.len() as u64)),
+            guards: HashMap::new(),
+            pending_tasks: Arc::new(PendingTasks::new(elements.len() as u64)),
         };
 
         for (i, element) in elements.into_iter().enumerate() {
             let guards = this.guards(i, &element);
 
-            this.scheduled_elements
-                .push(ScheduledTask::new(element, guards, &this.injector));
+            this.scheduled_elements.push(ScheduledTask::new(
+                element,
+                guards,
+                this.pending_tasks.clone(),
+            ));
         }
 
         this
     }
 
-    pub fn injector(&self) -> Arc<Injector<Arc<ScheduledTask<E>>>> {
-        self.injector.clone()
+    pub fn pending_tasks(&self) -> Arc<PendingTasks<E>> {
+        self.pending_tasks.clone()
     }
 
     fn guards(&mut self, index: usize, element: &E) -> Guards<E> {
@@ -47,7 +47,7 @@ impl<E: Task> Batch<E> {
 
         let mut collect = |locks: &[E::ResourceID], access: Type| {
             for res in locks {
-                let (prev_guard, guard) = match self.latest_guards.entry(res.clone()) {
+                let (prev_guard, guard) = match self.guards.entry(res.clone()) {
                     Entry::Occupied(entry) if entry.get().owner_index == index => {
                         continue; // skip duplicate for the same element
                     }
