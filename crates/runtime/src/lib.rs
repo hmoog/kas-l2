@@ -12,7 +12,6 @@ mod builtin {
 mod runtime_context;
 mod runtime_state;
 mod runtime;
-mod account_storage;
 
 pub use app_registry::{AppRegistry, InMemoryAppRegistry};
 pub use runtime_context::RuntimeContext;

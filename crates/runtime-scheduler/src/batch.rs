@@ -11,15 +11,15 @@ use crate::{
 };
 
 pub struct Batch<T: Task> {
+    scheduled_tasks: Vec<Arc<ScheduledTask<T>>>,
     guards: HashMap<T::ResourceID, Arc<Guard<T>>>,
-    scheduled_elements: Vec<Arc<ScheduledTask<T>>>,
     pending_tasks: Arc<PendingTasks<T>>,
 }
 
 impl<E: Task> Batch<E> {
     pub fn new(elements: Vec<E>) -> Self {
         let mut this = Self {
-            scheduled_elements: Vec::new(),
+            scheduled_tasks: Vec::new(),
             guards: HashMap::new(),
             pending_tasks: Arc::new(PendingTasks::new(elements.len() as u64)),
         };
@@ -27,7 +27,7 @@ impl<E: Task> Batch<E> {
         for (i, element) in elements.into_iter().enumerate() {
             let guards = this.guards(i, &element);
 
-            this.scheduled_elements.push(ScheduledTask::new(
+            this.scheduled_tasks.push(ScheduledTask::new(
                 element,
                 guards,
                 this.pending_tasks.clone(),

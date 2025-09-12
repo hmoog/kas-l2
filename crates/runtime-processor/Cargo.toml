@@ -1,0 +1,8 @@
+[package]
+name = "kas-l2-runtime-processor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-utils = "0.8.21"
+crossbeam-deque = "0.8.6"
