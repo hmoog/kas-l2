@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
+use crossbeam_deque::{Injector, Steal, Worker as Queue};
 use intrusive_collections::LinkedList;
-use kas_l2_runtime_scheduler::{Batch, ScheduledTask, Task};
+use kas_l2_causal_scheduler::{Batch, ScheduledTask, Task};
 
 use crate::global_queue::linked_list_element::*;
 
@@ -21,7 +21,7 @@ impl<T: Task> GlobalQueue<T> {
 
     pub fn steal(
         &mut self,
-        local_queue: &WorkerQueue<Arc<ScheduledTask<T>>>,
+        local_queue: &Queue<Arc<ScheduledTask<T>>>,
     ) -> Option<Arc<ScheduledTask<T>>> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
@@ -42,13 +42,13 @@ impl<T: Task> GlobalQueue<T> {
                 curr_element.move_next();
             }
 
-            if !self.update_global_queue() {
+            if !self.update() {
                 break None;
             }
         }
     }
 
-    fn update_global_queue(&mut self) -> bool {
+    fn update(&mut self) -> bool {
         let mut updated = false;
         loop {
             match self.injector.steal() {

@@ -3334,6 +3334,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-causal-executor"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+ "intrusive-collections",
+ "kas-l2-atomic",
+ "kas-l2-causal-scheduler",
+]
+
+[[package]]
+name = "kas-l2-causal-scheduler"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
+ "kas-l2-atomic",
+]
+
+[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3345,30 +3364,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-runtime-batch-processor"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-utils",
- "intrusive-collections",
- "kas-l2-atomic",
- "kas-l2-runtime-scheduler",
-]
-
-[[package]]
 name = "kas-l2-runtime-macros"
 version = "0.1.0"
 dependencies = [
  "quote",
  "syn 2.0.106",
-]
-
-[[package]]
-name = "kas-l2-runtime-scheduler"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
- "kas-l2-atomic",
 ]
 
 [[package]]

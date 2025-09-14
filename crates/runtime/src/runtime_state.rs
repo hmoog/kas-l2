@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use blake3;
-
 #[derive(Clone)]
 pub struct RuntimeState {
     pub state_root: blake3::Hash,

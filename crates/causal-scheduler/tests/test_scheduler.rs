@@ -1,5 +1,5 @@
 use crossbeam_deque::Steal;
-use kas_l2_runtime_scheduler::{Scheduler, Task};
+use kas_l2_causal_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_scheduler() {

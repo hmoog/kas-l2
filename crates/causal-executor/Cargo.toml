@@ -1,10 +1,10 @@
 [package]
-name = "kas-l2-runtime-batch-processor"
+name = "kas-l2-causal-executor"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-runtime-scheduler = { path = "../runtime-scheduler" }
+kas-l2-causal-scheduler = { path = "../causal-scheduler" }
 kas-l2-atomic = { path = "../atomic" }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"
