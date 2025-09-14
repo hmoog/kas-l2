@@ -19,6 +19,7 @@ impl<T: Task> WorkersAPI<T> {
         worker_count: usize,
         processor: P,
     ) -> (Arc<Self>, Vec<JoinHandle<()>>) {
+        // create owned instance
         let mut this = Self {
             stealers: vec![],
             unparkers: vec![],
@@ -41,6 +42,7 @@ impl<T: Task> WorkersAPI<T> {
         let this = Arc::new(this);
         let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
 
+        // return shared instance + handles
         (this, handles)
     }
 
@@ -67,9 +69,12 @@ impl<T: Task> WorkersAPI<T> {
     }
 
     pub fn shutdown(&self) {
+        // trigger shutdown signal
         self.shutdown.open();
+
+        // wake all workers so they can exit
         for unparker in &self.unparkers {
-            unparker.unpark(); // wake all workers so they can exit
+            unparker.unpark();
         }
     }
 

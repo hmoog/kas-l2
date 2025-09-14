@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use crossbeam_deque::{Injector, Steal, Worker as Queue};
+use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 use kas_l2_causal_scheduler::{Batch, ScheduledTask, Task};
 
-use crate::global_queue::linked_list_element::*;
+use crate::batch_injector::linked_list_element::*;
 
-pub struct GlobalQueue<T: Task> {
+pub struct BatchInjector<T: Task> {
     queue: LinkedList<Adapter<Arc<Batch<T>>>>,
     injector: Arc<Injector<Arc<Batch<T>>>>,
 }
 
-impl<T: Task> GlobalQueue<T> {
+impl<T: Task> BatchInjector<T> {
     pub fn new(injector: Arc<Injector<Arc<Batch<T>>>>) -> Self {
         Self {
             queue: LinkedList::new(Adapter::new()),
@@ -21,10 +21,11 @@ impl<T: Task> GlobalQueue<T> {
 
     pub fn steal(
         &mut self,
-        local_queue: &Queue<Arc<ScheduledTask<T>>>,
+        local_queue: &WorkerQueue<Arc<ScheduledTask<T>>>,
     ) -> Option<Arc<ScheduledTask<T>>> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
+            curr_element.move_next();
             while let Some(batch) = curr_element.get() {
                 let pending_tasks = batch.pending_tasks();
                 if pending_tasks.is_done() {

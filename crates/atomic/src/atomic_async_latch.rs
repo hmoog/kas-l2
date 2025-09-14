@@ -45,3 +45,9 @@ impl AtomicAsyncLatch {
         notified.await;
     }
 }
+
+impl Default for AtomicAsyncLatch {
+    fn default() -> Self {
+        Self::new()
+    }
+}

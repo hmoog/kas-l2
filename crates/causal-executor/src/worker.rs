@@ -4,7 +4,7 @@ use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_causal_scheduler::{Batch, ScheduledTask, Task};
 
-use crate::{global_queue::GlobalQueue, processor::Processor, workers_api::WorkersAPI};
+use crate::{batch_injector::BatchInjector, processor::Processor, workers_api::WorkersAPI};
 
 pub struct Worker<T: Task, P: Processor<T>> {
     id: usize,
@@ -42,21 +42,27 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
     }
 
     fn run(self, workers_api: Arc<WorkersAPI<T>>) {
-        let mut global_queue = GlobalQueue::new(self.injector);
+        println!("worker {} started ", self.id);
+
+        let mut batch_injector = BatchInjector::new(self.injector);
 
         while !workers_api.is_shutdown() {
             match self
                 .local_queue
                 .pop()
-                .or_else(|| global_queue.steal(&self.local_queue))
+                .or_else(|| batch_injector.steal(&self.local_queue))
                 .or_else(|| workers_api.steal(self.id))
             {
                 Some(task) => {
                     (self.processor)(task.element());
                     task.done();
                 }
-                None => self.parker.park(),
+                None => {
+                    self.parker.park();
+                }
             }
         }
+
+        println!("worker {} stopped ", self.id);
     }
 }

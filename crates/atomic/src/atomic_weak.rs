@@ -40,6 +40,12 @@ impl<T> AtomicWeak<T> {
     }
 }
 
+impl<T> Default for AtomicWeak<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Drop for AtomicWeak<T> {
     fn drop(&mut self) {
         let raw = *self.ptr.get_mut();
