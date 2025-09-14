@@ -42,8 +42,6 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
     }
 
     fn run(self, workers_api: Arc<WorkersAPI<T>>) {
-        println!("worker {} started ", self.id);
-
         let mut batch_injector = BatchInjector::new(self.injector);
 
         while !workers_api.is_shutdown() {
@@ -62,7 +60,5 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
                 }
             }
         }
-
-        println!("worker {} stopped ", self.id);
     }
 }

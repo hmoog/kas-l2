@@ -3,7 +3,8 @@ use kas_l2_causal_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_scheduler() {
-    let batch = Scheduler::schedule(vec![
+    let scheduler = Scheduler::<Transaction>::new();
+    let batch = scheduler.schedule(vec![
         Transaction {
             id: 0,
             write_locks: vec![1],

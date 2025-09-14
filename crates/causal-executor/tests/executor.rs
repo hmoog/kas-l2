@@ -3,11 +3,12 @@ use kas_l2_causal_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_executor() {
-    let executor = Executor::new(1, |tx: &Transaction| {
+    let scheduler = Scheduler::<Transaction>::new();
+    let executor = Executor::new(4, |tx: &Transaction| {
         println!("Executing task with id {}", tx.id);
     });
 
-    executor.execute(Scheduler::schedule(vec![
+    executor.execute(scheduler.schedule(vec![
         Transaction {
             id: 0,
             write_locks: vec![1],
@@ -22,6 +23,19 @@ pub fn test_executor() {
             id: 2,
             write_locks: vec![],
             read_locks: vec![3],
+        },
+    ]));
+
+    executor.execute(scheduler.schedule(vec![
+        Transaction {
+            id: 0,
+            write_locks: vec![1],
+            read_locks: vec![3],
+        },
+        Transaction {
+            id: 1,
+            write_locks: vec![10, 20],
+            read_locks: vec![],
         },
     ]));
 
