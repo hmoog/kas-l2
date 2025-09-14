@@ -1,9 +1,10 @@
 mod build_program;
 mod utils;
 
+use std::env;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::env;
 
 #[derive(Parser)]
 #[command(

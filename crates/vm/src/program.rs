@@ -1,10 +1,8 @@
-use crate::errors::VMResult;
-use crate::Prover;
-use crate::{Executable};
-use solana_sbpf::error::ProgramResult;
-use solana_sbpf::vm::ContextObject;
-use sp1_sdk::SP1ProofWithPublicValues;
 use solana_program::account_info::AccountInfo;
+use solana_sbpf::{error::ProgramResult, vm::ContextObject};
+use sp1_sdk::SP1ProofWithPublicValues;
+
+use crate::{Executable, Prover, errors::VMResult};
 
 pub struct Program<C: ContextObject> {
     pub executable: Executable<C>,

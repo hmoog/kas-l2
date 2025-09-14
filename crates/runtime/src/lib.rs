@@ -9,11 +9,11 @@ mod builtin {
     pub mod sol_panic;
 }
 
+mod runtime;
 mod runtime_context;
 mod runtime_state;
-mod runtime;
 
 pub use app_registry::{AppRegistry, InMemoryAppRegistry};
+pub use runtime::Runtime;
 pub use runtime_context::RuntimeContext;
 pub use runtime_state::RuntimeState;
-pub use runtime::Runtime;

@@ -1,9 +1,9 @@
-use std::error::Error;
-use std::io;
+use std::{error::Error, io};
 
-use crate::runtime_context::RuntimeContext;
 use kas_l2_runtime_macros::builtin;
 use solana_sbpf::memory_region::MemoryMapping;
+
+use crate::runtime_context::RuntimeContext;
 
 #[builtin]
 impl SolPanic {

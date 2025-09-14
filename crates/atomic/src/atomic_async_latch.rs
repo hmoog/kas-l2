@@ -1,4 +1,5 @@
 use std::sync::atomic::{AtomicBool, Ordering};
+
 use tokio::sync::Notify;
 
 /// A one-shot async latch.

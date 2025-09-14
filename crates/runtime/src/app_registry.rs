@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 pub trait AppRegistry: Send + Sync {
     fn load_app_elf(&self, app_id: u64) -> Option<Arc<Vec<u8>>>;

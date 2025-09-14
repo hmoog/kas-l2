@@ -1,15 +1,20 @@
-use crate::utils::cargo::CargoTarget;
-use crate::utils::{cargo, docker};
-use crate::vlog;
-use anyhow::{bail, Context};
+use std::{
+    collections::HashSet,
+    env, fs,
+    io::{BufWriter, Write},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
+
+use anyhow::{Context, bail};
 use clap::Args as ClapArgs;
 use glob::glob;
-use std::collections::HashSet;
-use std::io::{BufWriter, Write};
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::{env, fs};
 use which::which;
+
+use crate::{
+    utils::{cargo, cargo::CargoTarget, docker},
+    vlog,
+};
 
 #[derive(ClapArgs, Debug)]
 pub struct Args {
@@ -194,7 +199,10 @@ impl Builder {
                 "run",
                 "--rm",
                 "-v",
-                &format!("{}:/work", self.workspace_root.to_string_lossy().to_string()),
+                &format!(
+                    "{}:/work",
+                    self.workspace_root.to_string_lossy().to_string()
+                ),
                 "-w",
                 "/work",
                 &self.args.solana_image,

@@ -38,7 +38,11 @@ impl<T: Task> Guard<T> {
     }
 
     pub fn ready(&self) {
-        if self.status.compare_exchange(Status::Waiting, Status::Ready).is_ok() {
+        if self
+            .status
+            .compare_exchange(Status::Waiting, Status::Ready)
+            .is_ok()
+        {
             if let Some(owner) = self.owner.load().upgrade() {
                 owner.notify_ready();
             }
@@ -54,7 +58,11 @@ impl<T: Task> Guard<T> {
     }
 
     pub fn done(&self) {
-        if self.status.compare_exchange(Status::Ready, Status::Done).is_ok() {
+        if self
+            .status
+            .compare_exchange(Status::Ready, Status::Done)
+            .is_ok()
+        {
             if let Some(successor) = self.successor.load().upgrade() {
                 successor.ready();
             }

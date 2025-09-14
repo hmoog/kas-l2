@@ -1,8 +1,12 @@
-use crate::vlog;
-use anyhow::{bail, Context, Result};
-use std::path::Path;
-use std::process::{Command, Stdio};
+use std::{
+    path::Path,
+    process::{Command, Stdio},
+};
+
+use anyhow::{Context, Result, bail};
 use which::which;
+
+use crate::vlog;
 
 pub fn run(args: &[&str], verbose: bool) -> Result<()> {
     vlog(verbose, &format!("docker {}", args.join(" ")));

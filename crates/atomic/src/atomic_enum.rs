@@ -1,8 +1,8 @@
 use std::{
+    convert::TryFrom,
     marker::PhantomData,
     sync::atomic::{AtomicU8, Ordering},
 };
-use std::convert::TryFrom;
 
 pub struct AtomicEnum<T: Into<u8> + TryFrom<u8>> {
     inner: AtomicU8,

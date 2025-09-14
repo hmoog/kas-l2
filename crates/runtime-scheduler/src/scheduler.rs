@@ -1,4 +1,5 @@
 use std::sync::Arc;
+
 use crate::{batch::Batch, task::Task};
 
 pub struct Scheduler;

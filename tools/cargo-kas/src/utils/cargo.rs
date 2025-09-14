@@ -1,9 +1,12 @@
-use anyhow::{bail, Context};
+use std::{
+    env,
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
+
+use anyhow::{Context, bail};
 use serde::Deserialize;
 use serde_json::Value as Json;
-use std::env;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 
 pub fn metadata_json() -> anyhow::Result<Json> {
     let out = Command::new("cargo")

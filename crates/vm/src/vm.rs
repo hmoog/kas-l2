@@ -1,11 +1,8 @@
+use std::{fs, sync::Arc};
 
-use crate::errors::VMResult;
-use crate::executable::Executable;
-use crate::{Program, Prover};
-use solana_sbpf::program::BuiltinProgram;
-use solana_sbpf::vm::{ContextObject};
-use std::fs;
-use std::sync::Arc;
+use solana_sbpf::{program::BuiltinProgram, vm::ContextObject};
+
+use crate::{Program, Prover, errors::VMResult, executable::Executable};
 
 pub struct VM<C: ContextObject> {
     pub builtin_program: Arc<BuiltinProgram<C>>,

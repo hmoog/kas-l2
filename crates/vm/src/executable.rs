@@ -1,14 +1,18 @@
-use crate::errors::VMResult;
-use solana_sbpf::aligned_memory::AlignedMemory;
-use solana_sbpf::ebpf;
-use solana_sbpf::elf::Executable as ElfExecutable;
-use solana_sbpf::error::ProgramResult;
-use solana_sbpf::memory_region::{MemoryMapping, MemoryRegion};
-use solana_sbpf::program::{BuiltinProgram, SBPFVersion};
-use solana_sbpf::verifier::RequisiteVerifier;
-use solana_sbpf::vm::{ContextObject, EbpfVm};
 use std::sync::Arc;
+
 use solana_program::account_info::AccountInfo;
+use solana_sbpf::{
+    aligned_memory::AlignedMemory,
+    ebpf,
+    elf::Executable as ElfExecutable,
+    error::ProgramResult,
+    memory_region::{MemoryMapping, MemoryRegion},
+    program::{BuiltinProgram, SBPFVersion},
+    verifier::RequisiteVerifier,
+    vm::{ContextObject, EbpfVm},
+};
+
+use crate::errors::VMResult;
 
 pub struct Executable<C: ContextObject> {
     pub id: [u8; 32],

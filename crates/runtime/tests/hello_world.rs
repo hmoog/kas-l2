@@ -1,6 +1,7 @@
-use kas_l2_vm::Config;
 use std::sync::Arc;
+
 use kas_l2_runtime::{InMemoryAppRegistry, Runtime, RuntimeContext, RuntimeState};
+use kas_l2_vm::Config;
 
 #[test]
 fn test_vm() {
@@ -12,13 +13,20 @@ fn test_vm() {
 
     println!(
         "-> Loading program from:\n   {}",
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/hello-world/target/kas/hello_world.kas")
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/hello-world/target/kas/hello_world.kas"
+        )
     );
 
-    let program = runtime.vm
+    let program = runtime
+        .vm
         .load_program_file(
             [0; 32],
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/hello-world/target/kas/hello_world.kas"),
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../examples/hello-world/target/kas/hello_world.kas"
+            ),
         )
         .expect("\n❌ Failed to load program");
 

@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use solana_sbpf::vm::ContextObject;
 
-use crate::app_registry::AppRegistry;
-use crate::runtime_state::RuntimeState;
+use crate::{app_registry::AppRegistry, runtime_state::RuntimeState};
 
 pub struct RuntimeContext {
     pub runtime_state: RuntimeState,

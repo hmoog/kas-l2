@@ -1,8 +1,6 @@
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicPtr, Ordering},
-    },
+use std::sync::{
+    Arc,
+    atomic::{AtomicPtr, Ordering},
 };
 
 pub struct AtomicArc<T> {

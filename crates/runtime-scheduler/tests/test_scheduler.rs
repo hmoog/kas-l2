@@ -3,19 +3,23 @@ use kas_l2_runtime_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_scheduler() {
-    let batch = Scheduler::schedule(vec![Transaction {
-        id: 0,
-        write_locks: vec![1],
-        read_locks: vec![3],
-    }, Transaction {
-        id: 1,
-        write_locks: vec![1, 2],
-        read_locks: vec![],
-    }, Transaction {
-        id: 2,
-        write_locks: vec![],
-        read_locks: vec![3],
-    }]);
+    let batch = Scheduler::schedule(vec![
+        Transaction {
+            id: 0,
+            write_locks: vec![1],
+            read_locks: vec![3],
+        },
+        Transaction {
+            id: 1,
+            write_locks: vec![1, 2],
+            read_locks: vec![],
+        },
+        Transaction {
+            id: 2,
+            write_locks: vec![],
+            read_locks: vec![3],
+        },
+    ]);
 
     let pending_tasks = batch.pending_tasks();
 

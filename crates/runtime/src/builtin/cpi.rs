@@ -1,11 +1,13 @@
-use std::error::Error;
-use std::io;
+use std::{error::Error, io};
+
+use blake3;
+use kas_l2_runtime_macros::builtin;
+use solana_sbpf::{
+    error::StableResult,
+    memory_region::{AccessType, MemoryMapping},
+};
 
 use crate::runtime_context::RuntimeContext;
-use kas_l2_runtime_macros::builtin;
-use solana_sbpf::error::StableResult;
-use solana_sbpf::memory_region::{AccessType, MemoryMapping};
-use blake3;
 
 #[builtin]
 impl CPI {
