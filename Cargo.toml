@@ -1,5 +1,5 @@
 [workspace]
 resolver = "3"
-members = ["tools/cargo-kas", "crates/atomic", "crates/vm", "crates/runtime-macros", "crates/runtime", "crates/runtime-scheduler", "crates/runtime-processor"]
-default-members = ["crates/vm", "crates/runtime-macros", "crates/runtime", "crates/runtime-scheduler", "crates/runtime-processor"]
+members = ["tools/cargo-kas", "crates/atomic", "crates/vm", "crates/runtime-macros", "crates/runtime", "crates/runtime-scheduler", "crates/runtime-batch-processor"]
+default-members = ["crates/vm", "crates/runtime-macros", "crates/runtime", "crates/runtime-scheduler", "crates/runtime-batch-processor"]
 exclude = ["examples/hello-world"]

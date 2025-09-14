@@ -3345,15 +3345,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-runtime-macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
-name = "kas-l2-runtime-processor"
+name = "kas-l2-runtime-batch-processor"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
@@ -3361,6 +3353,14 @@ dependencies = [
  "intrusive-collections",
  "kas-l2-atomic",
  "kas-l2-runtime-scheduler",
+]
+
+[[package]]
+name = "kas-l2-runtime-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]

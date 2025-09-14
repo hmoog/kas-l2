@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-runtime-processor"
+name = "kas-l2-runtime-batch-processor"
 version = "0.1.0"
 edition = "2021"
 

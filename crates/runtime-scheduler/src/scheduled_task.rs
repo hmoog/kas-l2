@@ -57,7 +57,7 @@ impl<E: Task> ScheduledTask<E> {
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
             .is_ok()
         {
-            self.guards.iter().for_each(|x| x.done());
+            self.guards.iter().for_each(|guard| guard.done());
 
             if self.pending_tasks.count.fetch_sub(1, Ordering::AcqRel) == 1 {
                 self.pending_tasks.done.open()
