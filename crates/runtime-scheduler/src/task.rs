@@ -1,7 +1,7 @@
 use std::hash::Hash;
 
-pub trait Task {
-    type ResourceID: Eq + Hash + Clone;
+pub trait Task: Send + Sync + 'static {
+    type ResourceID: Eq + Hash + Clone + Sync + Send + 'static;
 
     fn read_locks(&self) -> &[Self::ResourceID];
 

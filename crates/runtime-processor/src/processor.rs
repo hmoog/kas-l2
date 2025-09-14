@@ -1,5 +1,7 @@
 use std::{sync::Arc, thread::JoinHandle};
-use crate::task::Task;
+
+use kas_l2_runtime_scheduler::Task;
+
 use crate::worker_manager::WorkerManager;
 
 pub struct Processor<T: Task> {

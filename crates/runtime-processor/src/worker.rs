@@ -1,88 +1,56 @@
-use std::{
-    sync::{Arc, atomic::Ordering},
-    thread,
-    thread::JoinHandle,
-};
+use std::{sync::Arc, thread, thread::JoinHandle};
 
-use crossbeam_deque::{Steal, Worker as WorkerQueue};
+use crossbeam_deque::{Injector, Worker as WorkerQueue};
 use crossbeam_utils::sync::Parker;
-use crate::task::Task;
-use crate::worker_manager::WorkerManager;
+use kas_l2_runtime_scheduler::{Batch, ScheduledTask, Task};
 
+use crate::{task_scheduler::TaskScheduler, worker_manager::WorkerManager};
+
+/// Represents a worker thread responsible for executing scheduled tasks.
 pub struct Worker<T: Task> {
     pub(crate) id: usize,
-    pub(crate) queue: WorkerQueue<T>,
+    pub(crate) queue: WorkerQueue<Arc<ScheduledTask<T>>>,
     pub(crate) parker: Parker,
+    pub(crate) batch_injector: Arc<Injector<Arc<Batch<T>>>>,
 }
 
+/// Public API
 impl<T: Task> Worker<T> {
+    /// Creates a new worker with the specified ID.
     pub(crate) fn new(id: usize) -> Self {
         Self {
             id,
             queue: WorkerQueue::new_fifo(),
             parker: Parker::new(),
+            batch_injector: Arc::new(Injector::new()),
         }
     }
 
+    /// Starts the worker thread, returning its join handle.
     pub(crate) fn start(self, settings: Arc<WorkerManager<T>>) -> JoinHandle<()> {
         thread::spawn(move || self.run(settings))
     }
+}
 
-    pub(crate) fn run(self, settings: Arc<WorkerManager<T>>) {
-        let mut injectors_version = settings.injectors_version.load(Ordering::Relaxed);
-        let mut injectors = settings.injectors.load();
+/// Internal methods
+impl<T: Task> Worker<T> {
+    /// The main execution loop for the worker, processing tasks until shutdown is signaled.
+    fn run(self, worker_manager: Arc<WorkerManager<T>>) {
+        let mut task_scheduler = TaskScheduler::new(
+            self.id,
+            worker_manager.clone(),
+            self.queue,
+            self.batch_injector,
+        );
 
-        while !settings.shutdown.is_open() {
-            // 1. Run local
-            if let Some(_task) = self.queue.pop() {
-                // TODO: RUN TASK
-                continue;
+        while !worker_manager.shutdown.is_open() {
+            match task_scheduler.pop_task() {
+                Some(task) => {
+                    // TODO: Execute Task before marking done
+                    task.done();
+                },
+                None => self.parker.park(),
             }
-
-            // 2. Scan injectors oldest → newest
-            let mut found = false;
-            for injector in injectors.iter() {
-                match injector.steal_batch_and_pop(&self.queue) {
-                    Steal::Success(_task) => {
-                        // TODO: RUN TASK
-                        found = true;
-                        break;
-                    }
-                    Steal::Retry => continue,
-                    Steal::Empty => {}
-                }
-            }
-            if found {
-                continue;
-            }
-
-            // 3. Steal from other workers
-            for (j, stealer) in settings.stealers.iter().enumerate() {
-                if j == self.id {
-                    continue;
-                }
-                match stealer.steal() {
-                    Steal::Success(_task) => {
-                        // TODO: RUN TASK
-                        found = true;
-                        break;
-                    }
-                    Steal::Retry => continue,
-                    Steal::Empty => {}
-                }
-            }
-            if found {
-                continue;
-            }
-
-            // 4. check if there are new injectors
-            if injectors_version != settings.injectors_version.load(Ordering::Acquire) {
-                injectors_version = settings.injectors_version.load(Ordering::Relaxed);
-                injectors = settings.injectors.load();
-                continue;
-            }
-
-            self.parker.park();
         }
     }
 }

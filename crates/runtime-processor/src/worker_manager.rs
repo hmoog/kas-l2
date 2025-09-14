@@ -1,29 +1,29 @@
-use std::{
-    sync::{Arc, atomic::AtomicU64},
-    thread::JoinHandle,
-};
+use std::{sync::Arc, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Stealer};
 use crossbeam_utils::sync::Unparker;
-use kas_l2_atomic::{AtomicArc, AtomicAsyncLatch};
-use crate::task::Task;
+use kas_l2_atomic::AtomicAsyncLatch;
+use kas_l2_runtime_scheduler::{Batch, ScheduledTask, Task};
+
 use crate::worker::Worker;
 
+/// Manages a pool of workers and facilitates task distribution among them.
 pub struct WorkerManager<T: Task> {
-    pub(crate) injectors: AtomicArc<Vec<Injector<T>>>,
-    pub(crate) injectors_version: AtomicU64,
-    pub(crate) stealers: Vec<Stealer<T>>,
+    pub(crate) stealers: Vec<Stealer<Arc<ScheduledTask<T>>>>,
     pub(crate) unparkers: Vec<Unparker>,
+    pub(crate) batch_injectors: Vec<Arc<Injector<Arc<Batch<T>>>>>,
     pub(crate) shutdown: AtomicAsyncLatch,
 }
 
+/// Public API
 impl<T: Task> WorkerManager<T> {
+    /// Spawns a specified number of worker threads and returns the manager along with their join
+    /// handles.
     pub fn spawn(worker_count: usize) -> (Arc<Self>, Vec<JoinHandle<()>>) {
         let mut this = Self {
-            injectors: AtomicArc::new(Arc::new(vec![])),
-            injectors_version: AtomicU64::new(0),
             stealers: vec![],
             unparkers: vec![],
+            batch_injectors: vec![],
             shutdown: AtomicAsyncLatch::new(),
         };
 
@@ -31,39 +31,34 @@ impl<T: Task> WorkerManager<T> {
         this.start_workers(workers)
     }
 
-    // pub fn register_injector(&self, injector: Injector<T>) {
-    //     // Load the current list
-    //     let mut injectors = (*self.injectors.load()).clone();
-    //
-    //     // Append new one
-    //     injectors.push(injector);
-    //
-    //     // Replace atomically
-    //     self.injectors.store(Arc::new(injectors));
-    //
-    //     // Bump version so workers refresh
-    //     self.injectors_version.fetch_add(1, std::sync::atomic::Ordering::Release);
-    //
-    //     // Wake sleeping workers
-    //     for u in &self.unparkers {
-    //         u.unpark();
-    //     }
-    // }
+    /// Injects a batch of tasks into all workers for processing.
+    pub fn inject_batch(&self, batch: Arc<Batch<T>>) {
+        for (batch_injector, unparker) in self.batch_injectors.iter().zip(&self.unparkers) {
+            batch_injector.push(batch.clone()); // broadcast Arc to each worker
+            unparker.unpark(); // wake worker so it discovers sooner
+        }
+    }
+}
 
+/// Internal methods
+impl<T: Task> WorkerManager<T> {
+    /// Creates the specified number of workers and initializes their associated components.
     fn create_workers(&mut self, worker_count: usize) -> Vec<Worker<T>> {
-        (0..worker_count).map(|id| self.create_worker(id)).collect()
+        (0..worker_count)
+            .map(|id| {
+                let worker = Worker::new(id);
+                self.stealers.push(worker.queue.stealer());
+                self.unparkers.push(worker.parker.unparker().clone());
+                self.batch_injectors.push(worker.batch_injector.clone());
+                worker
+            })
+            .collect()
     }
 
+    /// Starts the provided workers, returning an `Arc` to the manager and their join handles.
     fn start_workers(self, workers: Vec<Worker<T>>) -> (Arc<Self>, Vec<JoinHandle<()>>) {
         let this = Arc::new(self);
         let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
         (this, handles)
-    }
-
-    fn create_worker(&mut self, id: usize) -> Worker<T> {
-        let worker = Worker::new(id);
-        self.stealers.push(worker.queue.stealer());
-        self.unparkers.push(worker.parker.unparker().clone());
-        worker
     }
 }

@@ -3194,6 +3194,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "intrusive-collections"
+version = "0.9.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "189d0897e4cbe8c75efedf3502c18c887b05046e59d28404d4d8e46cbc4d1e86"
+dependencies = [
+ "memoffset",
+]
+
+[[package]]
 name = "io-uring"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3349,7 +3358,9 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+ "intrusive-collections",
  "kas-l2-atomic",
+ "kas-l2-runtime-scheduler",
 ]
 
 [[package]]
