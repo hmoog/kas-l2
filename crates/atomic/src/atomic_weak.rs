@@ -11,9 +11,9 @@ pub struct AtomicWeak<T> {
 }
 
 impl<T> AtomicWeak<T> {
-    pub fn new() -> Self {
+    pub fn new(value: Weak<T>) -> Self {
         Self {
-            ptr: AtomicPtr::new(ptr::null_mut()),
+            ptr: AtomicPtr::new(Weak::into_raw(value) as *mut T),
         }
     }
 
@@ -42,7 +42,9 @@ impl<T> AtomicWeak<T> {
 
 impl<T> Default for AtomicWeak<T> {
     fn default() -> Self {
-        Self::new()
+        Self {
+            ptr: AtomicPtr::new(ptr::null_mut()),
+        }
     }
 }
 

@@ -1,0 +1,7 @@
+[package]
+name = "kas-l2-causal-resource"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-atomic = { path = "../atomic" }

@@ -23,18 +23,20 @@ impl<E: Task> ScheduledTask<E> {
         guards: Guards<E>,
         pending_tasks: Arc<PendingTasks<E>>,
     ) -> Arc<Self> {
-        let this = Arc::new(Self {
-            element,
-            pending_guards: AtomicU64::new(guards.1.len() as u64),
-            is_done: AtomicBool::new(false),
-            guards: guards.1,
-            pending_tasks,
-        });
+        let this = Arc::new_cyclic(|weak| {
+            guards
+                .1
+                .iter()
+                .for_each(|request| request.owner.store(weak.clone()));
 
-        // wire up ownership first (so notifications work correctly)
-        for request in this.guards.iter() {
-            request.owner.store(Arc::downgrade(&this));
-        }
+            Self {
+                element,
+                pending_guards: AtomicU64::new(guards.1.len() as u64),
+                is_done: AtomicBool::new(false),
+                guards: guards.1,
+                pending_tasks,
+            }
+        });
 
         // connect new requests to old ones to be notified when they are done
         for (prev_guard, guard) in guards.0.into_iter().zip(this.guards.iter()) {

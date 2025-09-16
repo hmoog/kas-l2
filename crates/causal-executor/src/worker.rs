@@ -46,8 +46,7 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
 
         while !workers_api.is_shutdown() {
             match self
-                .local_queue
-                .pop()
+                .steal()
                 .or_else(|| batch_injector.steal(&self.local_queue))
                 .or_else(|| workers_api.steal(self.id))
             {
@@ -60,5 +59,8 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
                 }
             }
         }
+    }
+    fn steal(&self) -> Option<Arc<ScheduledTask<T>>> {
+        self.local_queue.pop()
     }
 }

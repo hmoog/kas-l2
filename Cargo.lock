@@ -3345,6 +3345,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-causal-resource"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-atomic",
+]
+
+[[package]]
 name = "kas-l2-causal-scheduler"
 version = "0.1.0"
 dependencies = [

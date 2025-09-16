@@ -1,7 +1,7 @@
 extern crate core;
 
-use std::thread::sleep;
-use std::time::Duration;
+use std::{thread::sleep, time::Duration};
+
 use kas_l2_causal_executor::Executor;
 use kas_l2_causal_scheduler::{Scheduler, Task};
 
