@@ -7,7 +7,7 @@ use kas_l2_causal_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_executor() {
-    let scheduler = Scheduler::<Transaction>::new();
+    let mut scheduler = Scheduler::<Transaction>::new();
     let batch1 = scheduler.schedule(vec![
         Transaction {
             id: 0,

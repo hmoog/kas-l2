@@ -4,7 +4,8 @@ use std::{
 };
 
 use crate::{
-    access_type::AccessType, consumer::Consumer, resource::Resource, resource_id::ResourceID,
+    access_type::AccessType, consumer::Consumer, guards_setup::GuardsSetup, resource::Resource,
+    resource_id::ResourceID,
 };
 
 pub struct Provider<R: ResourceID, N: Consumer> {
@@ -18,13 +19,13 @@ impl<R: ResourceID, N: Consumer> Provider<R, N> {
         }
     }
 
-    fn request_access(&mut self, notifier: Weak<N>, writes: &[R], reads: &[R]) -> Guards<E> {
-        let mut guards = Vec::new();
+    pub fn access(&mut self, notifier: Weak<N>, writes: &[R], reads: &[R]) -> GuardsSetup<N> {
+        let mut new_guards = Vec::new();
         let mut prev_guards = Vec::new();
 
-        let mut collect = move |locks: &[R], access: AccessType| {
+        let mut collect = |locks: &[R], access: AccessType| {
             for res in locks {
-                let (prev_guard, guard) = match self.guards.entry(res.clone()) {
+                let (guard, prev_guard) = match self.guards.entry(res.clone()) {
                     Entry::Occupied(entry) if entry.get().was_last_accessed_by(&notifier) => {
                         continue; // skip duplicate for the same element
                     }
@@ -37,14 +38,14 @@ impl<R: ResourceID, N: Consumer> Provider<R, N> {
                     }
                 };
 
+                new_guards.push(guard);
                 prev_guards.push(prev_guard);
-                guards.push(guard);
             }
         };
 
         collect(writes, AccessType::Write);
         collect(reads, AccessType::Read);
 
-        (guards, prev_guards)
+        GuardsSetup::new(new_guards, prev_guards)
     }
 }

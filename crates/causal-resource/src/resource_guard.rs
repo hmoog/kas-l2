@@ -42,7 +42,9 @@ impl<N: Consumer> ResourceGuard<N> {
             .is_ok()
         {
             if let Some(owner) = self.notifier.load().upgrade() {
-                owner.notify_ready();
+                owner.notify();
+            } else {
+                eprintln!("ResourceGuard::ready: notifier is gone");
             }
 
             if self.access_type.load() == AccessType::Read {
@@ -75,12 +77,6 @@ pub enum Status {
     Ready = 1,
     Done = 2,
 }
-
-pub type PrevGuards<E> = Vec<Option<Arc<ResourceGuard<E>>>>;
-
-pub type NewGuards<E> = Vec<Arc<ResourceGuard<E>>>;
-
-pub type Guards<E> = (PrevGuards<E>, NewGuards<E>);
 
 mod traits {
     use super::Status;

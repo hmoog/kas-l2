@@ -3357,6 +3357,7 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "kas-l2-atomic",
+ "kas-l2-causal-resource",
 ]
 
 [[package]]

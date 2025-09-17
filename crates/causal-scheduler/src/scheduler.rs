@@ -1,20 +1,22 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 
-use crate::{batch::Batch, task::Task};
+use kas_l2_causal_resource::Provider;
+
+use crate::{ScheduledTask, batch::Batch, task::Task};
 
 pub struct Scheduler<T: Task> {
-    _marker: PhantomData<T>,
+    resource_provider: Provider<T::ResourceID, ScheduledTask<T>>,
 }
 
 impl<T: Task> Scheduler<T> {
     pub fn new() -> Self {
         Self {
-            _marker: PhantomData,
+            resource_provider: Provider::new(),
         }
     }
 
-    pub fn schedule<E: Task>(&self, elements: Vec<E>) -> Arc<Batch<E>> {
-        Arc::new(Batch::new(elements))
+    pub fn schedule(&mut self, elements: Vec<T>) -> Arc<Batch<T>> {
+        Arc::new(Batch::new(elements, &mut self.resource_provider))
     }
 }
 

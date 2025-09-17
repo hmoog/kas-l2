@@ -1,7 +1,5 @@
-use std::hash::Hash;
-
 pub trait Task: Send + Sync + 'static {
-    type ResourceID: Eq + Hash + Clone + Sync + Send + 'static;
+    type ResourceID: kas_l2_causal_resource::ResourceID;
 
     fn read_locks(&self) -> &[Self::ResourceID];
 

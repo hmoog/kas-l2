@@ -1,5 +1,4 @@
 mod batch;
-mod guard;
 mod pending_tasks;
 mod scheduled_task;
 mod scheduler;

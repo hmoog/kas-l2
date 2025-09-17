@@ -3,15 +3,13 @@ use std::sync::{
     atomic::{AtomicBool, AtomicU64, Ordering},
 };
 
-use crate::{
-    PendingTasks,
-    guard::{Guard, Guards},
-    task::Task,
-};
+use kas_l2_causal_resource::{Consumer, ResourceGuard};
+
+use crate::{PendingTasks, task::Task};
 
 pub struct ScheduledTask<E: Task> {
     element: E,
-    guards: Vec<Arc<Guard<E>>>,
+    guards: Arc<Vec<Arc<ResourceGuard<ScheduledTask<E>>>>>,
     pending_guards: AtomicU64,
     is_done: AtomicBool,
     pending_tasks: Arc<PendingTasks<E>>,
@@ -19,34 +17,17 @@ pub struct ScheduledTask<E: Task> {
 
 impl<E: Task> ScheduledTask<E> {
     pub(crate) fn new(
-        element: E,
-        guards: Guards<E>,
+        task: E,
+        guards: Arc<Vec<Arc<ResourceGuard<ScheduledTask<E>>>>>,
         pending_tasks: Arc<PendingTasks<E>>,
-    ) -> Arc<Self> {
-        let this = Arc::new_cyclic(|weak| {
-            guards
-                .1
-                .iter()
-                .for_each(|request| request.owner.store(weak.clone()));
-
-            Self {
-                element,
-                pending_guards: AtomicU64::new(guards.1.len() as u64),
-                is_done: AtomicBool::new(false),
-                guards: guards.1,
-                pending_tasks,
-            }
-        });
-
-        // connect new requests to old ones to be notified when they are done
-        for (prev_guard, guard) in guards.0.into_iter().zip(this.guards.iter()) {
-            match prev_guard {
-                None => guard.ready(),
-                Some(prev_guard) => prev_guard.extend(guard),
-            }
+    ) -> Self {
+        Self {
+            element: task,
+            pending_guards: AtomicU64::new(guards.len() as u64),
+            is_done: AtomicBool::new(false),
+            guards,
+            pending_tasks,
         }
-
-        this
     }
 
     pub fn element(&self) -> &E {
@@ -66,8 +47,10 @@ impl<E: Task> ScheduledTask<E> {
             }
         }
     }
+}
 
-    pub(crate) fn notify_ready(self: &Arc<Self>) {
+impl<T: Task> Consumer for ScheduledTask<T> {
+    fn notify(self: &Arc<Self>) {
         if self.pending_guards.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.pending_tasks.ready.push(self.clone())
         }
