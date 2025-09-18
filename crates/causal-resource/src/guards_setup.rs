@@ -1,17 +1,17 @@
 use std::sync::{Arc, Weak};
 
-use crate::{consumer::Consumer, resource_guard::ResourceGuard};
+use crate::{guard_consumer::GuardConsumer, guard::Guard};
 
 #[must_use = "a GuardsSetup wires guards when dropped - don't ignore it"]
-pub struct GuardsSetup<C: Consumer> {
-    pub guards: Arc<Vec<Arc<ResourceGuard<C>>>>,
+pub struct GuardsSetup<C: GuardConsumer> {
+    pub guards: Arc<Vec<Arc<Guard<C>>>>,
     _activator: Activator<C>,
 }
 
-impl<C: Consumer> GuardsSetup<C> {
+impl<C: GuardConsumer> GuardsSetup<C> {
     pub fn new(
-        guards: Vec<Arc<ResourceGuard<C>>>,
-        prev_guards: Vec<Option<Arc<ResourceGuard<C>>>>,
+        guards: Vec<Arc<Guard<C>>>,
+        prev_guards: Vec<Option<Arc<Guard<C>>>>,
     ) -> Self {
         let guards = Arc::new(guards);
         Self {
@@ -23,20 +23,20 @@ impl<C: Consumer> GuardsSetup<C> {
         }
     }
 
-    pub fn setup(&self, consumer: Weak<C>) -> Arc<Vec<Arc<ResourceGuard<C>>>> {
+    pub fn setup(&self, consumer: Weak<C>) -> Arc<Vec<Arc<Guard<C>>>> {
         for guard in self.guards.iter() {
-            guard.notifier.store(consumer.clone());
+            guard.consumer.store(consumer.clone());
         }
         self.guards.clone()
     }
 }
 
-struct Activator<C: Consumer> {
-    guards: Arc<Vec<Arc<ResourceGuard<C>>>>,
-    prev_guards: Vec<Option<Arc<ResourceGuard<C>>>>,
+struct Activator<C: GuardConsumer> {
+    guards: Arc<Vec<Arc<Guard<C>>>>,
+    prev_guards: Vec<Option<Arc<Guard<C>>>>,
 }
 
-impl<C: Consumer> Drop for Activator<C> {
+impl<C: GuardConsumer> Drop for Activator<C> {
     fn drop(&mut self) {
         for (prev_guard, guard) in self.prev_guards.drain(..).zip(self.guards.iter()) {
             match prev_guard {

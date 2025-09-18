@@ -53,7 +53,7 @@ impl<T: Task> WorkersAPI<T> {
         }
     }
 
-    pub fn steal(self: &Arc<Self>, worker_id: usize) -> Option<Arc<ScheduledTask<T>>> {
+    pub fn steal_task_from_other_workers(self: &Arc<Self>, worker_id: usize) -> Option<Arc<ScheduledTask<T>>> {
         for (id, other) in self.stealers.iter().enumerate() {
             if id != worker_id {
                 loop {

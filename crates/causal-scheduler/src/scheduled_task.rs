@@ -3,13 +3,13 @@ use std::sync::{
     atomic::{AtomicBool, AtomicU64, Ordering},
 };
 
-use kas_l2_causal_resource::{Consumer, ResourceGuard};
+use kas_l2_causal_resource::{GuardConsumer, Guard};
 
 use crate::{PendingTasks, task::Task};
 
 pub struct ScheduledTask<E: Task> {
     element: E,
-    guards: Arc<Vec<Arc<ResourceGuard<ScheduledTask<E>>>>>,
+    guards: Arc<Vec<Arc<Guard<ScheduledTask<E>>>>>,
     pending_guards: AtomicU64,
     is_done: AtomicBool,
     pending_tasks: Arc<PendingTasks<E>>,
@@ -18,7 +18,7 @@ pub struct ScheduledTask<E: Task> {
 impl<E: Task> ScheduledTask<E> {
     pub(crate) fn new(
         task: E,
-        guards: Arc<Vec<Arc<ResourceGuard<ScheduledTask<E>>>>>,
+        guards: Arc<Vec<Arc<Guard<ScheduledTask<E>>>>>,
         pending_tasks: Arc<PendingTasks<E>>,
     ) -> Self {
         Self {
@@ -49,8 +49,9 @@ impl<E: Task> ScheduledTask<E> {
     }
 }
 
-impl<T: Task> Consumer for ScheduledTask<T> {
-    fn notify(self: &Arc<Self>) {
+impl<T: Task> GuardConsumer for ScheduledTask<T> {
+    type GuardID = usize;
+    fn notify(self: &Arc<Self>, _key: &Self::GuardID) {
         if self.pending_guards.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.pending_tasks.ready.push(self.clone())
         }

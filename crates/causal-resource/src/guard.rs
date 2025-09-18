@@ -2,26 +2,28 @@ use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::{AtomicEnum, AtomicWeak};
 
-use crate::{access_type::AccessType, consumer::Consumer};
+use crate::{access_type::AccessType, guard_consumer::GuardConsumer};
 
-pub struct ResourceGuard<N: Consumer> {
+pub struct Guard<N: GuardConsumer> {
     pub status: AtomicEnum<Status>,
     pub access_type: AtomicEnum<AccessType>,
-    pub successor: AtomicWeak<ResourceGuard<N>>,
-    pub notifier: AtomicWeak<N>,
+    pub successor: AtomicWeak<Guard<N>>,
+    pub consumer: AtomicWeak<N>,
+    pub guard_id: N::GuardID,
 }
 
-impl<N: Consumer> ResourceGuard<N> {
-    pub fn new(notifier: Weak<N>, access_type: AccessType) -> Self {
+impl<N: GuardConsumer> Guard<N> {
+    pub fn new(consumer: Weak<N>, guard_id: N::GuardID, access_type: AccessType) -> Self {
         Self {
             access_type: AtomicEnum::new(access_type),
             status: AtomicEnum::new(Status::Waiting),
             successor: AtomicWeak::default(),
-            notifier: AtomicWeak::new(notifier),
+            consumer: AtomicWeak::new(consumer),
+            guard_id,
         }
     }
 
-    pub fn extend(&self, successor: &Arc<ResourceGuard<N>>) {
+    pub fn extend(&self, successor: &Arc<Guard<N>>) {
         self.successor.store(Arc::downgrade(successor));
 
         match self.status.load() {
@@ -41,8 +43,8 @@ impl<N: Consumer> ResourceGuard<N> {
             .compare_exchange(Status::Waiting, Status::Ready)
             .is_ok()
         {
-            if let Some(owner) = self.notifier.load().upgrade() {
-                owner.notify();
+            if let Some(owner) = self.consumer.load().upgrade() {
+                owner.notify(&self.guard_id);
             } else {
                 eprintln!("ResourceGuard::ready: notifier is gone");
             }

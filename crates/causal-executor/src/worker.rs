@@ -25,6 +25,10 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
         }
     }
 
+    pub(crate) fn start(self, workers_api: Arc<WorkersAPI<T>>) -> JoinHandle<()> {
+        thread::spawn(move || self.run(workers_api))
+    }
+
     pub(crate) fn stealer(&self) -> Stealer<Arc<ScheduledTask<T>>> {
         self.local_queue.stealer()
     }
@@ -37,10 +41,6 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
         self.injector.clone()
     }
 
-    pub(crate) fn start(self, workers_api: Arc<WorkersAPI<T>>) -> JoinHandle<()> {
-        thread::spawn(move || self.run(workers_api))
-    }
-
     fn run(self, workers_api: Arc<WorkersAPI<T>>) {
         let mut batch_injector = BatchInjector::new(self.injector);
 
@@ -49,7 +49,7 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
                 .local_queue
                 .pop()
                 .or_else(|| batch_injector.steal(&self.local_queue))
-                .or_else(|| workers_api.steal(self.id))
+                .or_else(|| workers_api.steal_task_from_other_workers(self.id))
             {
                 Some(task) => {
                     (self.processor)(task.element());

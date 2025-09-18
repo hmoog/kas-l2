@@ -1,14 +1,15 @@
 mod access_type;
-mod consumer;
+mod guard_consumer;
 mod guards_setup;
 mod provider;
 mod resource;
-mod resource_guard;
+mod guard;
 mod resource_id;
+mod guards;
 
 pub use access_type::AccessType;
-pub use consumer::Consumer;
+pub use guard_consumer::GuardConsumer;
 pub use guards_setup::GuardsSetup;
 pub use provider::Provider;
-pub use resource_guard::ResourceGuard;
+pub use guard::Guard;
 pub use resource_id::ResourceID;

@@ -4,15 +4,15 @@ use std::{
 };
 
 use crate::{
-    access_type::AccessType, consumer::Consumer, guards_setup::GuardsSetup, resource::Resource,
+    access_type::AccessType, guard_consumer::GuardConsumer, guards_setup::GuardsSetup, resource::Resource,
     resource_id::ResourceID,
 };
 
-pub struct Provider<R: ResourceID, N: Consumer> {
+pub struct Provider<R: ResourceID, N: GuardConsumer<GuardID=usize>> {
     guards: HashMap<R, Resource<N>>,
 }
 
-impl<R: ResourceID, N: Consumer> Provider<R, N> {
+impl<R: ResourceID, N: GuardConsumer<GuardID=usize>> Provider<R, N> {
     pub fn new() -> Self {
         Self {
             guards: HashMap::new(),
@@ -29,11 +29,11 @@ impl<R: ResourceID, N: Consumer> Provider<R, N> {
                     Entry::Occupied(entry) if entry.get().was_last_accessed_by(&notifier) => {
                         continue; // skip duplicate for the same element
                     }
-                    Entry::Occupied(mut entry) => entry.get_mut().access(notifier.clone(), access),
+                    Entry::Occupied(mut entry) => entry.get_mut().access(notifier.clone(), 0, access),
                     Entry::Vacant(entry) => {
                         entry
                             .insert(Resource::new())
-                            .access(notifier.clone(), access)
+                            .access(notifier.clone(), 0, access)
                         // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                     }
                 };
