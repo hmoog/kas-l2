@@ -1,5 +1,5 @@
 use crossbeam_deque::Steal;
-use kas_l2_scheduler::{Scheduler, Transaction};
+use kas_l2_scheduler::{Scheduler};
 
 #[test]
 pub fn test_scheduler() {
@@ -28,7 +28,7 @@ pub fn test_scheduler() {
         // Steal an element
         match pending_tasks.scheduled_tasks.steal() {
             Steal::Success(task) => {
-                println!("Got task with id {}", task.task().id);
+                println!("Got task with id {}", task.transaction().id);
                 task.mark_done()
             }
             Steal::Empty => {
@@ -47,7 +47,7 @@ struct Transaction {
     write_locks: Vec<u32>,
 }
 
-impl Transaction for Transaction {
+impl kas_l2_core::Transaction for Transaction {
     type ResourceID = u32;
 
     fn read_locks(&self) -> &[Self::ResourceID] {

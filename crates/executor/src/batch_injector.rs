@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 use kas_l2_core::Transaction;
-use kas_l2_scheduler::{Batch, ScheduledTask};
+use kas_l2_scheduler::{Batch, ScheduledTransaction};
 
 use crate::batch_injector::linked_list_element::*;
 
@@ -22,8 +22,8 @@ impl<T: Transaction> BatchInjector<T> {
 
     pub fn steal(
         &mut self,
-        local_queue: &WorkerQueue<Arc<ScheduledTask<T>>>,
-    ) -> Option<Arc<ScheduledTask<T>>> {
+        local_queue: &WorkerQueue<Arc<ScheduledTransaction<T>>>,
+    ) -> Option<Arc<ScheduledTransaction<T>>> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();

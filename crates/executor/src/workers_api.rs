@@ -4,12 +4,12 @@ use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_core::Transaction;
-use kas_l2_scheduler::{Batch, ScheduledTask};
+use kas_l2_scheduler::{Batch, ScheduledTransaction};
 
 use crate::{processor::Processor, worker::Worker};
 
 pub struct WorkersAPI<T: Transaction> {
-    stealers: Vec<Stealer<Arc<ScheduledTask<T>>>>,
+    stealers: Vec<Stealer<Arc<ScheduledTransaction<T>>>>,
     unparkers: Vec<Unparker>,
     injectors: Vec<Arc<Injector<Arc<Batch<T>>>>>,
     shutdown: AtomicAsyncLatch,
@@ -57,7 +57,7 @@ impl<T: Transaction> WorkersAPI<T> {
     pub fn steal_task_from_other_workers(
         self: &Arc<Self>,
         worker_id: usize,
-    ) -> Option<Arc<ScheduledTask<T>>> {
+    ) -> Option<Arc<ScheduledTransaction<T>>> {
         for (id, other) in self.stealers.iter().enumerate() {
             if id != worker_id {
                 loop {

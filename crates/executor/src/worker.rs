@@ -3,13 +3,13 @@ use std::{sync::Arc, thread, thread::JoinHandle};
 use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_core::Transaction;
-use kas_l2_scheduler::{Batch, ScheduledTask};
+use kas_l2_scheduler::{Batch, ScheduledTransaction};
 
 use crate::{batch_injector::BatchInjector, processor::Processor, workers_api::WorkersAPI};
 
 pub struct Worker<T: Transaction, P: Processor<T>> {
     id: usize,
-    local_queue: WorkerQueue<Arc<ScheduledTask<T>>>,
+    local_queue: WorkerQueue<Arc<ScheduledTransaction<T>>>,
     injector: Arc<Injector<Arc<Batch<T>>>>,
     processor: P,
     parker: Parker,
@@ -30,7 +30,7 @@ impl<T: Transaction, P: Processor<T>> Worker<T, P> {
         thread::spawn(move || self.run(workers_api))
     }
 
-    pub(crate) fn stealer(&self) -> Stealer<Arc<ScheduledTask<T>>> {
+    pub(crate) fn stealer(&self) -> Stealer<Arc<ScheduledTransaction<T>>> {
         self.local_queue.stealer()
     }
 
@@ -53,7 +53,7 @@ impl<T: Transaction, P: Processor<T>> Worker<T, P> {
                 .or_else(|| workers_api.steal_task_from_other_workers(self.id))
             {
                 Some(task) => {
-                    (self.processor)(task.task());
+                    (self.processor)(task.transaction());
                     task.mark_done();
                 }
                 None => {

@@ -9,10 +9,10 @@ use std::{
 use crossbeam_deque::Injector;
 use kas_l2_atomic::AtomicAsyncLatch;
 
-use crate::{ScheduledTask, Transaction};
+use crate::{ScheduledTransaction, Transaction};
 
 pub struct BatchAPI<T: Transaction> {
-    pub scheduled_tasks: Injector<Arc<ScheduledTask<T>>>,
+    pub scheduled_tasks: Injector<Arc<ScheduledTransaction<T>>>,
     pending_tasks: AtomicU64,
     is_done: AtomicAsyncLatch,
 }

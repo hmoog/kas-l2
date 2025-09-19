@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, hash_map::Entry},
     sync::Arc,
 };
-use kas_l2_core::ResourceID;
+use kas_l2_core::{ResourceID, Transaction};
 use kas_l2_resource::{AccessType};
 
 use crate::{ResourcesConsumer, resource_meta::ResourceMeta, resources_access::ResourcesAccess};
@@ -18,7 +18,7 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
         }
     }
 
-    pub fn resources(&mut self, writes: &[R], reads: &[R]) -> Arc<ResourcesAccess<C>> {
+    pub fn provide<T: Transaction<ResourceID=R>>(&mut self, transaction: &T) -> Arc<ResourcesAccess<C>> {
         let mut new_resources = Vec::new();
 
         let resources = Arc::new_cyclic(|guards| {
@@ -46,8 +46,8 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
                 }
             };
 
-            collect(writes, AccessType::Write);
-            collect(reads, AccessType::Read);
+            collect(transaction.write_locks(), AccessType::Write);
+            collect(transaction.read_locks(), AccessType::Read);
 
             ResourcesAccess::new(new_resources.len())
         });

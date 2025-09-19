@@ -3,24 +3,24 @@ use std::sync::Arc;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_resource_provider::{ResourcesAccess, ResourcesConsumer};
 
-use crate::{BatchAPI, ResourceProvider, Transaction};
+use crate::{BatchAPI, Transaction};
 
-pub struct ScheduledTask<T: Transaction> {
-    task: T,
-    resources: Arc<ResourcesAccess<ScheduledTask<T>>>,
+pub struct ScheduledTransaction<T: Transaction> {
+    transaction: T,
+    resources: Arc<ResourcesAccess<ScheduledTransaction<T>>>,
     batch_api: Arc<BatchAPI<T>>,
     is_done: AtomicAsyncLatch,
 }
 
-impl<T: Transaction> ScheduledTask<T> {
+impl<T: Transaction> ScheduledTransaction<T> {
     pub(crate) fn new(
-        task: T,
-        resources: &mut ResourceProvider<T>,
+        transaction: T,
+        resources: Arc<ResourcesAccess<ScheduledTransaction<T>>>,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {
         let this = Arc::new(Self {
-            resources: resources.resources(task.write_locks(), task.read_locks()),
-            task,
+            resources,
+            transaction,
             batch_api,
             is_done: AtomicAsyncLatch::new(),
         });
@@ -28,8 +28,8 @@ impl<T: Transaction> ScheduledTask<T> {
         this
     }
 
-    pub fn task(&self) -> &T {
-        &self.task
+    pub fn transaction(&self) -> &T {
+        &self.transaction
     }
 
     pub fn mark_done(&self) {
@@ -40,7 +40,7 @@ impl<T: Transaction> ScheduledTask<T> {
     }
 }
 
-impl<T: Transaction> ResourcesConsumer for ScheduledTask<T> {
+impl<T: Transaction> ResourcesConsumer for ScheduledTransaction<T> {
     fn resources_available(self: &Arc<Self>) {
         self.batch_api.scheduled_tasks.push(self.clone())
     }
