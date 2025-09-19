@@ -22,9 +22,12 @@ impl AtomicAsyncLatch {
 
     /// Open the latch (transition from false → true).
     /// Wakes all current waiters. Idempotent.
-    pub fn open(&self) {
+    pub fn open(&self) -> bool {
         if !self.ready.swap(true, Ordering::SeqCst) {
             self.notify.notify_waiters();
+            true
+        } else {
+            false
         }
     }
 

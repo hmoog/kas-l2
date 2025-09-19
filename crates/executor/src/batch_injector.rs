@@ -27,14 +27,14 @@ impl<T: Task> BatchInjector<T> {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
             while let Some(batch) = curr_element.get() {
-                let pending_tasks = batch.api();
-                if pending_tasks.is_done() {
+                let batch = batch.api();
+                if batch.is_done() {
                     curr_element.remove();
                     continue;
                 }
 
                 loop {
-                    match pending_tasks.ready.steal_batch_and_pop(local_queue) {
+                    match batch.scheduled_tasks.steal_batch_and_pop(local_queue) {
                         Steal::Success(task) => return Some(task),
                         Steal::Retry => continue,
                         Steal::Empty => break,

@@ -7,7 +7,14 @@ use kas_l2_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_executor() {
-    let mut scheduler = Scheduler::<Transaction>::new();
+    let mut scheduler = Scheduler::new();
+
+    let executor = Executor::new(4, |tx: &Transaction| {
+        println!("Executing transaction with id {}", tx.id);
+        sleep(tx.duration);
+        println!("Finished transaction with id {}", tx.id);
+    });
+
     let batch1 = scheduler.schedule(vec![
         Transaction {
             id: 0,
@@ -28,6 +35,8 @@ pub fn test_executor() {
             read_locks: vec![3],
         },
     ]);
+    executor.execute(batch1);
+
     let batch2 = scheduler.schedule(vec![
         Transaction {
             id: 3,
@@ -42,13 +51,6 @@ pub fn test_executor() {
             read_locks: vec![],
         },
     ]);
-
-    let executor = Executor::new(4, |tx: &Transaction| {
-        println!("Executing transaction with id {}", tx.id);
-        sleep(tx.duration);
-        println!("Finished transaction with id {}", tx.id);
-    });
-    executor.execute(batch1);
     executor.execute(batch2);
 
     sleep(Duration::from_secs(1));

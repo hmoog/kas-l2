@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use kas_l2_resource_provider::ResourceProvider;
-
-use crate::{ScheduledTask, batch::Batch, task::Task};
+use crate::{Batch, ResourceProvider, Task};
 
 pub struct Scheduler<T: Task> {
-    resource_provider: ResourceProvider<T::ResourceID, ScheduledTask<T>>,
+    resource_provider: ResourceProvider<T>,
 }
 
 impl<T: Task> Scheduler<T> {
@@ -15,8 +13,8 @@ impl<T: Task> Scheduler<T> {
         }
     }
 
-    pub fn schedule(&mut self, elements: Vec<T>) -> Arc<Batch<T>> {
-        Arc::new(Batch::new(elements, &mut self.resource_provider))
+    pub fn schedule(&mut self, tasks: Vec<T>) -> Arc<Batch<T>> {
+        Arc::new(Batch::new(tasks, &mut self.resource_provider))
     }
 }
 

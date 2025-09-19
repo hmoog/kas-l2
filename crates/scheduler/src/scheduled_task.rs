@@ -1,30 +1,28 @@
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
+use std::sync::Arc;
 
-use kas_l2_resource_provider::{ResourceProvider, ResourcesAccess, ResourcesConsumer};
+use kas_l2_atomic::AtomicAsyncLatch;
+use kas_l2_resource_provider::{ResourcesAccess, ResourcesConsumer};
 
-use crate::{BatchAPI, task::Task};
+use crate::{BatchAPI, ResourceProvider, Task};
 
 pub struct ScheduledTask<T: Task> {
-    resources: Arc<ResourcesAccess<ScheduledTask<T>>>,
     task: T,
+    resources: Arc<ResourcesAccess<ScheduledTask<T>>>,
     batch_api: Arc<BatchAPI<T>>,
-    is_done: AtomicBool,
+    is_done: AtomicAsyncLatch,
 }
 
 impl<T: Task> ScheduledTask<T> {
     pub(crate) fn new(
         task: T,
-        resources: &mut ResourceProvider<T::ResourceID, ScheduledTask<T>>,
+        resources: &mut ResourceProvider<T>,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {
         let this = Arc::new(Self {
             resources: resources.resources(task.write_locks(), task.read_locks()),
             task,
             batch_api,
-            is_done: AtomicBool::new(false),
+            is_done: AtomicAsyncLatch::new(),
         });
         this.resources.init(&this);
         this
@@ -35,22 +33,15 @@ impl<T: Task> ScheduledTask<T> {
     }
 
     pub fn mark_done(&self) {
-        if self
-            .is_done
-            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .is_ok()
-        {
+        if self.is_done.open() {
             self.resources.release();
-
-            if self.batch_api.count.fetch_sub(1, Ordering::AcqRel) == 1 {
-                self.batch_api.done.open()
-            }
+            self.batch_api.decrease_pending_tasks();
         }
     }
 }
 
 impl<T: Task> ResourcesConsumer for ScheduledTask<T> {
     fn resources_available(self: &Arc<Self>) {
-        self.batch_api.ready.push(self.clone())
+        self.batch_api.scheduled_tasks.push(self.clone())
     }
 }

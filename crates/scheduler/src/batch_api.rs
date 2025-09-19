@@ -12,29 +12,35 @@ use kas_l2_atomic::AtomicAsyncLatch;
 use crate::{ScheduledTask, Task};
 
 pub struct BatchAPI<T: Task> {
-    pub ready: Injector<Arc<ScheduledTask<T>>>,
-    pub(crate) count: AtomicU64,
-    pub(crate) done: AtomicAsyncLatch,
+    pub scheduled_tasks: Injector<Arc<ScheduledTask<T>>>,
+    pending_tasks: AtomicU64,
+    is_done: AtomicAsyncLatch,
 }
 
 impl<T: Task> BatchAPI<T> {
     pub(crate) fn new(pending_tasks: u64) -> Self {
         Self {
-            ready: Injector::new(),
-            count: AtomicU64::new(pending_tasks),
-            done: AtomicAsyncLatch::new(),
+            scheduled_tasks: Injector::new(),
+            pending_tasks: AtomicU64::new(pending_tasks),
+            is_done: AtomicAsyncLatch::new(),
         }
     }
 
-    pub fn count(&self) -> u64 {
-        self.count.load(Ordering::Acquire)
+    pub fn pending_tasks(&self) -> u64 {
+        self.pending_tasks.load(Ordering::Acquire)
     }
 
     pub fn is_done(&self) -> bool {
-        self.done.is_open()
+        self.is_done.is_open()
     }
 
     pub fn wait(&self) -> impl Future<Output = ()> + '_ {
-        self.done.wait()
+        self.is_done.wait()
+    }
+
+    pub(crate) fn decrease_pending_tasks(&self) {
+        if self.pending_tasks.fetch_sub(1, Ordering::AcqRel) == 1 {
+            self.is_done.open();
+        }
     }
 }

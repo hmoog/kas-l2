@@ -26,7 +26,7 @@ pub fn test_scheduler() {
 
     for _ in 0..3 {
         // Steal an element
-        match pending_tasks.ready.steal() {
+        match pending_tasks.scheduled_tasks.steal() {
             Steal::Success(task) => {
                 println!("Got task with id {}", task.task().id);
                 task.mark_done()
