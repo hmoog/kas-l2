@@ -1,5 +1,5 @@
-pub trait Task: Send + Sync + 'static {
-    type ResourceID: kas_l2_resource::ResourceID;
+pub trait Transaction: Send + Sync + 'static {
+    type ResourceID: crate::ResourceID;
 
     fn read_locks(&self) -> &[Self::ResourceID];
 

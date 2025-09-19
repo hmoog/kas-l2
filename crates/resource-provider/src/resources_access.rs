@@ -39,7 +39,7 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
 }
 
 impl<C: ResourcesConsumer> ResourceConsumer for ResourcesAccess<C> {
-    type ConsumerGuardID = usize;
+    type ResourceID = usize;
     fn notify(self: &Arc<Self>, guard: Arc<ResourceAccess<ResourcesAccess<C>>>) {
         self.resources
             .get(guard.consumer_id)

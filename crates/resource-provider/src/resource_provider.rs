@@ -2,8 +2,8 @@ use std::{
     collections::{HashMap, hash_map::Entry},
     sync::Arc,
 };
-
-use kas_l2_resource::{AccessType, ResourceID};
+use kas_l2_core::ResourceID;
+use kas_l2_resource::{AccessType};
 
 use crate::{ResourcesConsumer, resource_meta::ResourceMeta, resources_access::ResourcesAccess};
 

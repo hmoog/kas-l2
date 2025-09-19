@@ -1,9 +1,8 @@
 extern crate core;
 
 use std::{thread::sleep, time::Duration};
-
 use kas_l2_executor::Executor;
-use kas_l2_scheduler::{Scheduler, Task};
+use kas_l2_scheduler::{Scheduler};
 
 #[test]
 pub fn test_executor() {
@@ -65,7 +64,7 @@ struct Transaction {
     write_locks: Vec<u32>,
 }
 
-impl Task for Transaction {
+impl kas_l2_core::Transaction for Transaction {
     type ResourceID = u32;
 
     fn read_locks(&self) -> &[Self::ResourceID] {

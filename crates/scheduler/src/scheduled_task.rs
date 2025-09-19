@@ -3,16 +3,16 @@ use std::sync::Arc;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_resource_provider::{ResourcesAccess, ResourcesConsumer};
 
-use crate::{BatchAPI, ResourceProvider, Task};
+use crate::{BatchAPI, ResourceProvider, Transaction};
 
-pub struct ScheduledTask<T: Task> {
+pub struct ScheduledTask<T: Transaction> {
     task: T,
     resources: Arc<ResourcesAccess<ScheduledTask<T>>>,
     batch_api: Arc<BatchAPI<T>>,
     is_done: AtomicAsyncLatch,
 }
 
-impl<T: Task> ScheduledTask<T> {
+impl<T: Transaction> ScheduledTask<T> {
     pub(crate) fn new(
         task: T,
         resources: &mut ResourceProvider<T>,
@@ -40,7 +40,7 @@ impl<T: Task> ScheduledTask<T> {
     }
 }
 
-impl<T: Task> ResourcesConsumer for ScheduledTask<T> {
+impl<T: Transaction> ResourcesConsumer for ScheduledTask<T> {
     fn resources_available(self: &Arc<Self>) {
         self.batch_api.scheduled_tasks.push(self.clone())
     }

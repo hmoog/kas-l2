@@ -3,18 +3,19 @@ use std::{sync::Arc, thread::JoinHandle};
 use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_scheduler::{Batch, ScheduledTask, Task};
+use kas_l2_core::Transaction;
+use kas_l2_scheduler::{Batch, ScheduledTask};
 
 use crate::{processor::Processor, worker::Worker};
 
-pub struct WorkersAPI<T: Task> {
+pub struct WorkersAPI<T: Transaction> {
     stealers: Vec<Stealer<Arc<ScheduledTask<T>>>>,
     unparkers: Vec<Unparker>,
     injectors: Vec<Arc<Injector<Arc<Batch<T>>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
-impl<T: Task> WorkersAPI<T> {
+impl<T: Transaction> WorkersAPI<T> {
     pub fn new_with_workers<P: Processor<T>>(
         worker_count: usize,
         processor: P,

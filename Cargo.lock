@@ -3334,6 +3334,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-core"
+version = "0.1.0"
+
+[[package]]
 name = "kas-l2-executor"
 version = "0.1.0"
 dependencies = [
@@ -3341,6 +3345,7 @@ dependencies = [
  "crossbeam-utils",
  "intrusive-collections",
  "kas-l2-atomic",
+ "kas-l2-core",
  "kas-l2-scheduler",
 ]
 
@@ -3356,6 +3361,7 @@ name = "kas-l2-resource-provider"
 version = "0.1.0"
 dependencies = [
  "kas-l2-atomic",
+ "kas-l2-core",
  "kas-l2-resource",
 ]
 
@@ -3384,6 +3390,7 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "kas-l2-atomic",
+ "kas-l2-core",
  "kas-l2-resource",
  "kas-l2-resource-provider",
 ]

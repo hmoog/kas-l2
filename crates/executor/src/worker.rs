@@ -2,11 +2,12 @@ use std::{sync::Arc, thread, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_scheduler::{Batch, ScheduledTask, Task};
+use kas_l2_core::Transaction;
+use kas_l2_scheduler::{Batch, ScheduledTask};
 
 use crate::{batch_injector::BatchInjector, processor::Processor, workers_api::WorkersAPI};
 
-pub struct Worker<T: Task, P: Processor<T>> {
+pub struct Worker<T: Transaction, P: Processor<T>> {
     id: usize,
     local_queue: WorkerQueue<Arc<ScheduledTask<T>>>,
     injector: Arc<Injector<Arc<Batch<T>>>>,
@@ -14,7 +15,7 @@ pub struct Worker<T: Task, P: Processor<T>> {
     parker: Parker,
 }
 
-impl<T: Task, P: Processor<T>> Worker<T, P> {
+impl<T: Transaction, P: Processor<T>> Worker<T, P> {
     pub(crate) fn new(id: usize, processor: P) -> Self {
         Self {
             id,

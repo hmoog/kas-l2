@@ -10,14 +10,14 @@ pub struct ResourceAccess<C: ResourceConsumer> {
     pub prev: AtomicOptionArc<ResourceAccess<C>>,
     pub successor: AtomicWeak<ResourceAccess<C>>,
     pub consumer: AtomicWeak<C>,
-    pub consumer_id: C::ConsumerGuardID,
+    pub consumer_id: C::ResourceID,
 }
 
 impl<C: ResourceConsumer> ResourceAccess<C> {
     pub fn new(
         prev: Option<Arc<ResourceAccess<C>>>,
         consumer: Weak<C>,
-        consumer_guard_id: C::ConsumerGuardID,
+        consumer_guard_id: C::ResourceID,
         access_type: AccessType,
     ) -> Self {
         Self {

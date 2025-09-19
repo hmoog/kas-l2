@@ -14,7 +14,7 @@ impl<C: ResourceConsumer> ResourceMeta<C> {
     pub fn access(
         &mut self,
         consumer: Weak<C>,
-        id: C::ConsumerGuardID,
+        id: C::ResourceID,
         acc: AccessType,
     ) -> Arc<ResourceAccess<C>> {
         let guard = Arc::new(ResourceAccess::new(

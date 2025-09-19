@@ -1,5 +1,5 @@
 use crossbeam_deque::Steal;
-use kas_l2_scheduler::{Scheduler, Task};
+use kas_l2_scheduler::{Scheduler, Transaction};
 
 #[test]
 pub fn test_scheduler() {
@@ -47,7 +47,7 @@ struct Transaction {
     write_locks: Vec<u32>,
 }
 
-impl Task for Transaction {
+impl Transaction for Transaction {
     type ResourceID = u32;
 
     fn read_locks(&self) -> &[Self::ResourceID] {

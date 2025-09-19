@@ -9,15 +9,15 @@ use std::{
 use crossbeam_deque::Injector;
 use kas_l2_atomic::AtomicAsyncLatch;
 
-use crate::{ScheduledTask, Task};
+use crate::{ScheduledTask, Transaction};
 
-pub struct BatchAPI<T: Task> {
+pub struct BatchAPI<T: Transaction> {
     pub scheduled_tasks: Injector<Arc<ScheduledTask<T>>>,
     pending_tasks: AtomicU64,
     is_done: AtomicAsyncLatch,
 }
 
-impl<T: Task> BatchAPI<T> {
+impl<T: Transaction> BatchAPI<T> {
     pub(crate) fn new(pending_tasks: u64) -> Self {
         Self {
             scheduled_tasks: Injector::new(),
