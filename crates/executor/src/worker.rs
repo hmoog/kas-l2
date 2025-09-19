@@ -2,7 +2,7 @@ use std::{sync::Arc, thread, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_causal_scheduler::{Batch, ScheduledTask, Task};
+use kas_l2_scheduler::{Batch, ScheduledTask, Task};
 
 use crate::{batch_injector::BatchInjector, processor::Processor, workers_api::WorkersAPI};
 
@@ -52,8 +52,8 @@ impl<T: Task, P: Processor<T>> Worker<T, P> {
                 .or_else(|| workers_api.steal_task_from_other_workers(self.id))
             {
                 Some(task) => {
-                    (self.processor)(task.element());
-                    task.done();
+                    (self.processor)(task.task());
+                    task.mark_done();
                 }
                 None => {
                     self.parker.park();

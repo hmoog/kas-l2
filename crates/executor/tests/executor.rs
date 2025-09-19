@@ -2,8 +2,8 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
-use kas_l2_causal_executor::Executor;
-use kas_l2_causal_scheduler::{Scheduler, Task};
+use kas_l2_executor::Executor;
+use kas_l2_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_executor() {

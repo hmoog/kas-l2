@@ -1,10 +1,10 @@
 [package]
-name = "kas-l2-causal-executor"
+name = "kas-l2-executor"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-causal-scheduler = { path = "../causal-scheduler" }
+kas-l2-scheduler = { path = "../scheduler" }
 kas-l2-atomic = { path = "../atomic" }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"

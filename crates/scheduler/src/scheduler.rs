@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use kas_l2_causal_resource::Provider;
+use kas_l2_resource::ResourceProvider;
 
 use crate::{ScheduledTask, batch::Batch, task::Task};
 
 pub struct Scheduler<T: Task> {
-    resource_provider: Provider<T::ResourceID, ScheduledTask<T>>,
+    resource_provider: ResourceProvider<T::ResourceID, ScheduledTask<T>>,
 }
 
 impl<T: Task> Scheduler<T> {
     pub fn new() -> Self {
         Self {
-            resource_provider: Provider::new(),
+            resource_provider: ResourceProvider::new(),
         }
     }
 

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
-use kas_l2_causal_scheduler::{Batch, ScheduledTask, Task};
+use kas_l2_scheduler::{Batch, ScheduledTask, Task};
 
 use crate::batch_injector::linked_list_element::*;
 
@@ -27,7 +27,7 @@ impl<T: Task> BatchInjector<T> {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
             while let Some(batch) = curr_element.get() {
-                let pending_tasks = batch.pending_tasks();
+                let pending_tasks = batch.api();
                 if pending_tasks.is_done() {
                     curr_element.remove();
                     continue;

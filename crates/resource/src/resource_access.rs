@@ -1,29 +1,36 @@
 use std::sync::{Arc, Weak};
 
-use kas_l2_atomic::{AtomicEnum, AtomicWeak};
+use kas_l2_atomic::{AtomicEnum, AtomicOptionArc, AtomicWeak};
 
-use crate::{access_type::AccessType, guard_consumer::GuardConsumer};
+use crate::{access_type::AccessType, resource_consumer::GuardConsumer};
 
-pub struct Guard<N: GuardConsumer> {
+pub struct ResourceAccess<C: GuardConsumer> {
     pub status: AtomicEnum<Status>,
     pub access_type: AtomicEnum<AccessType>,
-    pub successor: AtomicWeak<Guard<N>>,
-    pub consumer: AtomicWeak<N>,
-    pub guard_id: N::GuardID,
+    pub prev: AtomicOptionArc<ResourceAccess<C>>,
+    pub successor: AtomicWeak<ResourceAccess<C>>,
+    pub consumer: AtomicWeak<C>,
+    pub consumer_id: C::ConsumerGuardID,
 }
 
-impl<N: GuardConsumer> Guard<N> {
-    pub fn new(consumer: Weak<N>, guard_id: N::GuardID, access_type: AccessType) -> Self {
+impl<C: GuardConsumer> ResourceAccess<C> {
+    pub fn new(
+        prev: Option<Arc<ResourceAccess<C>>>,
+        consumer: Weak<C>,
+        consumer_guard_id: C::ConsumerGuardID,
+        access_type: AccessType,
+    ) -> Self {
         Self {
+            prev: AtomicOptionArc::new(prev),
             access_type: AtomicEnum::new(access_type),
             status: AtomicEnum::new(Status::Waiting),
             successor: AtomicWeak::default(),
             consumer: AtomicWeak::new(consumer),
-            guard_id,
+            consumer_id: consumer_guard_id,
         }
     }
 
-    pub fn extend(&self, successor: &Arc<Guard<N>>) {
+    pub fn extend(&self, successor: &Arc<ResourceAccess<C>>) {
         self.successor.store(Arc::downgrade(successor));
 
         match self.status.load() {
@@ -37,14 +44,14 @@ impl<N: GuardConsumer> Guard<N> {
         }
     }
 
-    pub fn ready(&self) {
+    pub fn ready(self: &Arc<Self>) {
         if self
             .status
             .compare_exchange(Status::Waiting, Status::Ready)
             .is_ok()
         {
             if let Some(owner) = self.consumer.load().upgrade() {
-                owner.notify(&self.guard_id);
+                owner.notify(self.clone());
             } else {
                 eprintln!("ResourceGuard::ready: notifier is gone");
             }

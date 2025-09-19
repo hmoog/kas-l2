@@ -1,9 +1,9 @@
 use crossbeam_deque::Steal;
-use kas_l2_causal_scheduler::{Scheduler, Task};
+use kas_l2_scheduler::{Scheduler, Task};
 
 #[test]
 pub fn test_scheduler() {
-    let scheduler = Scheduler::<Transaction>::new();
+    let mut scheduler = Scheduler::<Transaction>::new();
     let batch = scheduler.schedule(vec![
         Transaction {
             id: 0,
@@ -22,14 +22,14 @@ pub fn test_scheduler() {
         },
     ]);
 
-    let pending_tasks = batch.pending_tasks();
+    let pending_tasks = batch.api();
 
     for _ in 0..3 {
         // Steal an element
         match pending_tasks.ready.steal() {
             Steal::Success(task) => {
-                println!("Got task with id {}", task.element().id);
-                task.done()
+                println!("Got task with id {}", task.task().id);
+                task.mark_done()
             }
             Steal::Empty => {
                 panic!("Injector was empty!");

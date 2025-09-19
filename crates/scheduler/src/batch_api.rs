@@ -11,13 +11,13 @@ use kas_l2_atomic::AtomicAsyncLatch;
 
 use crate::{ScheduledTask, Task};
 
-pub struct PendingTasks<T: Task> {
+pub struct BatchAPI<T: Task> {
     pub ready: Injector<Arc<ScheduledTask<T>>>,
     pub(crate) count: AtomicU64,
     pub(crate) done: AtomicAsyncLatch,
 }
 
-impl<T: Task> PendingTasks<T> {
+impl<T: Task> BatchAPI<T> {
     pub(crate) fn new(pending_tasks: u64) -> Self {
         Self {
             ready: Injector::new(),
