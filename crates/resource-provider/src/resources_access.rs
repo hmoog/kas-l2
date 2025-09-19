@@ -4,7 +4,7 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
-use kas_l2_resource::{GuardConsumer, ResourceAccess};
+use kas_l2_resource::{ResourceAccess, ResourceConsumer};
 
 use crate::ResourcesConsumer;
 
@@ -38,7 +38,7 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
     }
 }
 
-impl<C: ResourcesConsumer> GuardConsumer for ResourcesAccess<C> {
+impl<C: ResourcesConsumer> ResourceConsumer for ResourcesAccess<C> {
     type ConsumerGuardID = usize;
     fn notify(self: &Arc<Self>, guard: Arc<ResourceAccess<ResourcesAccess<C>>>) {
         self.resources

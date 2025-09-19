@@ -1,12 +1,12 @@
 use std::sync::{Arc, Weak};
 
-use kas_l2_resource::{AccessType, GuardConsumer, ResourceAccess};
+use kas_l2_resource::{AccessType, ResourceAccess, ResourceConsumer};
 
-pub struct ResourceMeta<C: GuardConsumer> {
+pub struct ResourceMeta<C: ResourceConsumer> {
     last_guard: Option<Arc<ResourceAccess<C>>>,
 }
 
-impl<C: GuardConsumer> ResourceMeta<C> {
+impl<C: ResourceConsumer> ResourceMeta<C> {
     pub fn new() -> Self {
         Self { last_guard: None }
     }
