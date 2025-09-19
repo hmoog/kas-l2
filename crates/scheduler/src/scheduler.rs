@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_resource::ResourceProvider;
+use kas_l2_resource_provider::ResourceProvider;
 
 use crate::{ScheduledTask, batch::Batch, task::Task};
 

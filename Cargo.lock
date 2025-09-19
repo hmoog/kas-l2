@@ -3352,6 +3352,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-resource-provider"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-atomic",
+ "kas-l2-resource",
+]
+
+[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3377,6 +3385,7 @@ dependencies = [
  "crossbeam-deque",
  "kas-l2-atomic",
  "kas-l2-resource",
+ "kas-l2-resource-provider",
 ]
 
 [[package]]

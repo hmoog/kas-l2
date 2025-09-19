@@ -4,8 +4,9 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
+use kas_l2_resource::{GuardConsumer, ResourceAccess};
 
-use crate::{ResourceAccess, GuardConsumer, ResourcesConsumer};
+use crate::ResourcesConsumer;
 
 pub struct ResourcesAccess<C: ResourcesConsumer> {
     consumer: AtomicWeak<C>,
@@ -40,7 +41,10 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
 impl<C: ResourcesConsumer> GuardConsumer for ResourcesAccess<C> {
     type ConsumerGuardID = usize;
     fn notify(self: &Arc<Self>, guard: Arc<ResourceAccess<ResourcesAccess<C>>>) {
-        self.resources.get(guard.consumer_id).unwrap().store(Arc::downgrade(&guard));
+        self.resources
+            .get(guard.consumer_id)
+            .unwrap()
+            .store(Arc::downgrade(&guard));
 
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
             if let Some(consumer) = self.consumer.load().upgrade() {

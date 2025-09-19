@@ -7,3 +7,4 @@ edition = "2021"
 crossbeam-deque = "0.8.6"
 kas-l2-atomic = { path = "../atomic" }
 kas-l2-resource = { path = "../resource" }
+kas-l2-resource-provider = { path = "../resource-provider" }

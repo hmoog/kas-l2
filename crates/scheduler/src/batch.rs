@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_resource::{ResourceProvider};
+use kas_l2_resource_provider::ResourceProvider;
 
 use crate::{BatchAPI, scheduled_task::ScheduledTask, task::Task};
 
@@ -9,19 +9,23 @@ pub struct Batch<T: Task> {
     api: Arc<BatchAPI<T>>,
 }
 
-impl<E: Task> Batch<E> {
-    pub fn new(elements: Vec<E>, provider: &mut ResourceProvider<E::ResourceID, ScheduledTask<E>>) -> Self {
+impl<T: Task> Batch<T> {
+    pub fn new(
+        tasks: Vec<T>,
+        resources: &mut ResourceProvider<T::ResourceID, ScheduledTask<T>>,
+    ) -> Self {
         let mut this = Self {
             scheduled_tasks: Vec::new(),
-            api: Arc::new(BatchAPI::new(elements.len() as u64)),
+            api: Arc::new(BatchAPI::new(tasks.len() as u64)),
         };
-        for element in elements {
-            this.scheduled_tasks.push(ScheduledTask::new(element, provider, this.api.clone()))
+        for element in tasks {
+            this.scheduled_tasks
+                .push(ScheduledTask::new(element, resources, this.api.clone()))
         }
         this
     }
 
-    pub fn api(&self) -> Arc<BatchAPI<E>> {
+    pub fn api(&self) -> Arc<BatchAPI<T>> {
         self.api.clone()
     }
 }

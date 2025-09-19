@@ -3,7 +3,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use kas_l2_resource::{ResourceProvider, ResourcesAccess, ResourcesConsumer};
+use kas_l2_resource_provider::{ResourceProvider, ResourcesAccess, ResourcesConsumer};
 
 use crate::{BatchAPI, task::Task};
 

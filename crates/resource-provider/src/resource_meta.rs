@@ -1,6 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::{access_type::AccessType, resource_access::ResourceAccess, resource_consumer::GuardConsumer};
+use kas_l2_resource::{AccessType, GuardConsumer, ResourceAccess};
 
 pub struct ResourceMeta<C: GuardConsumer> {
     last_guard: Option<Arc<ResourceAccess<C>>>,
@@ -11,8 +11,18 @@ impl<C: GuardConsumer> ResourceMeta<C> {
         Self { last_guard: None }
     }
 
-    pub fn access(&mut self, consumer: Weak<C>, id: C::ConsumerGuardID, acc: AccessType) -> Arc<ResourceAccess<C>> {
-        let guard = Arc::new(ResourceAccess::new(self.last_guard.take(), consumer, id, acc));
+    pub fn access(
+        &mut self,
+        consumer: Weak<C>,
+        id: C::ConsumerGuardID,
+        acc: AccessType,
+    ) -> Arc<ResourceAccess<C>> {
+        let guard = Arc::new(ResourceAccess::new(
+            self.last_guard.take(),
+            consumer,
+            id,
+            acc,
+        ));
         self.last_guard = Some(guard.clone());
         guard
     }

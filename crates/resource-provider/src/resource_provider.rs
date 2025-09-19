@@ -3,10 +3,9 @@ use std::{
     sync::Arc,
 };
 
-use crate::{
-    ResourcesConsumer, access_type::AccessType, resource_meta::ResourceMeta, resource_id::ResourceID,
-    resources_access::ResourcesAccess,
-};
+use kas_l2_resource::{AccessType, ResourceID};
+
+use crate::{ResourcesConsumer, resource_meta::ResourceMeta, resources_access::ResourcesAccess};
 
 pub struct ResourceProvider<R: ResourceID, C: ResourcesConsumer> {
     guards: HashMap<R, ResourceMeta<ResourcesAccess<C>>>,
@@ -30,11 +29,9 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
                             continue; // TODO: CHANGE TO ERROR
                         }
                         Entry::Occupied(mut entry) => {
-                            entry.get_mut().access(
-                                guards.clone(),
-                                new_resources.len(),
-                                access,
-                            )
+                            entry
+                                .get_mut()
+                                .access(guards.clone(), new_resources.len(), access)
                         }
                         Entry::Vacant(entry) => {
                             entry.insert(ResourceMeta::new()).access(
