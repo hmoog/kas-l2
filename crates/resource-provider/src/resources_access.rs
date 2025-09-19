@@ -23,7 +23,7 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
         }
     }
 
-    pub fn init(self: &Arc<Self>, consumer: &Arc<C>) {
+    pub fn wire_up_consumer(self: &Arc<Self>, consumer: &Arc<C>) {
         self.consumer.store(Arc::downgrade(consumer));
 
         if self.pending_resources.load(Ordering::Acquire) == 0 {

@@ -1,9 +1,11 @@
 use crossbeam_deque::Steal;
-use kas_l2_scheduler::{Scheduler};
+use kas_l2_resource_provider::ResourceProvider;
+use kas_l2_scheduler::Scheduler;
 
 #[test]
 pub fn test_scheduler() {
-    let mut scheduler = Scheduler::<Transaction>::new();
+    let resource_provider = ResourceProvider::default();
+    let mut scheduler = Scheduler::new(resource_provider);
     let batch = scheduler.schedule(vec![
         Transaction {
             id: 0,
@@ -22,11 +24,11 @@ pub fn test_scheduler() {
         },
     ]);
 
-    let pending_tasks = batch.api();
+    let api = batch.api();
 
     for _ in 0..3 {
         // Steal an element
-        match pending_tasks.scheduled_tasks.steal() {
+        match api.scheduled_tasks().steal() {
             Steal::Success(task) => {
                 println!("Got task with id {}", task.transaction().id);
                 task.mark_done()

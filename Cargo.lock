@@ -3393,6 +3393,7 @@ dependencies = [
  "kas-l2-core",
  "kas-l2-resource",
  "kas-l2-resource-provider",
+ "tap",
 ]
 
 [[package]]

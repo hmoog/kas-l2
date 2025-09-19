@@ -12,7 +12,7 @@ use kas_l2_atomic::AtomicAsyncLatch;
 use crate::{ScheduledTransaction, Transaction};
 
 pub struct BatchAPI<T: Transaction> {
-    pub scheduled_tasks: Injector<Arc<ScheduledTransaction<T>>>,
+    scheduled_tasks: Injector<Arc<ScheduledTransaction<T>>>,
     pending_tasks: AtomicU64,
     is_done: AtomicAsyncLatch,
 }
@@ -24,6 +24,10 @@ impl<T: Transaction> BatchAPI<T> {
             pending_tasks: AtomicU64::new(pending_tasks),
             is_done: AtomicAsyncLatch::new(),
         }
+    }
+
+    pub fn scheduled_tasks(&self) -> &Injector<Arc<ScheduledTransaction<T>>> {
+        &self.scheduled_tasks
     }
 
     pub fn pending_tasks(&self) -> u64 {
