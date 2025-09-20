@@ -9,6 +9,7 @@ use kas_l2_core::Transaction;
 pub use scheduled_transaction::ScheduledTransaction;
 pub use scheduler::Scheduler;
 
+/// A resource provider specialized for `ScheduledTransaction<T>`.
 pub type ResourceProvider<T> = kas_l2_resource_provider::ResourceProvider<
     <T as Transaction>::ResourceID,
     ScheduledTransaction<T>,

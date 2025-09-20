@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use crossbeam_deque::Injector;
+use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
 
 use crate::{ScheduledTransaction, Transaction};
@@ -18,6 +18,25 @@ pub struct BatchAPI<T: Transaction> {
 }
 
 impl<T: Transaction> BatchAPI<T> {
+    pub fn steal_scheduled_transactions(
+        &self,
+        dest: &Worker<Arc<ScheduledTransaction<T>>>,
+    ) -> Steal<Arc<ScheduledTransaction<T>>> {
+        self.scheduled_tasks.steal_batch_and_pop(dest)
+    }
+
+    pub fn pending_transactions(&self) -> u64 {
+        self.pending_tasks.load(Ordering::Acquire)
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.is_done.is_open()
+    }
+
+    pub fn wait_done(&self) -> impl Future<Output = ()> + '_ {
+        self.is_done.wait()
+    }
+
     pub(crate) fn new(pending_tasks: u64) -> Self {
         Self {
             scheduled_tasks: Injector::new(),
@@ -26,23 +45,11 @@ impl<T: Transaction> BatchAPI<T> {
         }
     }
 
-    pub fn scheduled_tasks(&self) -> &Injector<Arc<ScheduledTransaction<T>>> {
-        &self.scheduled_tasks
+    pub(crate) fn schedule_transaction(&self, tx: Arc<ScheduledTransaction<T>>) {
+        self.scheduled_tasks.push(tx);
     }
 
-    pub fn pending_tasks(&self) -> u64 {
-        self.pending_tasks.load(Ordering::Acquire)
-    }
-
-    pub fn is_done(&self) -> bool {
-        self.is_done.is_open()
-    }
-
-    pub fn wait(&self) -> impl Future<Output = ()> + '_ {
-        self.is_done.wait()
-    }
-
-    pub(crate) fn decrease_pending_tasks(&self) {
+    pub(crate) fn transaction_done(&self) {
         if self.pending_tasks.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.is_done.open();
         }

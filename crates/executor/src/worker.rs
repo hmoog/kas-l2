@@ -2,12 +2,12 @@ use std::{sync::Arc, thread, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_core::Transaction;
+use kas_l2_core::{Transaction, TransactionProcessor};
 use kas_l2_scheduler::{Batch, ScheduledTransaction};
 
-use crate::{batch_injector::BatchInjector, processor::Processor, workers_api::WorkersAPI};
+use crate::{batch_injector::BatchInjector, workers_api::WorkersAPI};
 
-pub struct Worker<T: Transaction, P: Processor<T>> {
+pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
     local_queue: WorkerQueue<Arc<ScheduledTransaction<T>>>,
     injector: Arc<Injector<Arc<Batch<T>>>>,
@@ -15,7 +15,7 @@ pub struct Worker<T: Transaction, P: Processor<T>> {
     parker: Parker,
 }
 
-impl<T: Transaction, P: Processor<T>> Worker<T, P> {
+impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
     pub(crate) fn new(id: usize, processor: P) -> Self {
         Self {
             id,
@@ -53,8 +53,7 @@ impl<T: Transaction, P: Processor<T>> Worker<T, P> {
                 .or_else(|| workers_api.steal_task_from_other_workers(self.id))
             {
                 Some(task) => {
-                    (self.processor)(task.transaction());
-                    task.mark_done();
+                    task.process(&self.processor);
                 }
                 None => {
                     self.parker.park();
