@@ -2,44 +2,44 @@ use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::{AtomicEnum, AtomicOptionArc, AtomicWeak};
 
-use crate::{AccessType, ResourceConsumer, ResourceStatus};
+use crate::resource::{
+    access_status::AccessStatus, access_type::AccessType, resource_consumer::ResourceConsumer,
+};
 
-pub struct ResourceAccess<C: ResourceConsumer> {
-    pub status: AtomicEnum<ResourceStatus>,
+pub struct ResourceProvider<C: ResourceConsumer> {
+    pub status: AtomicEnum<AccessStatus>,
     pub access_type: AtomicEnum<AccessType>,
-    pub prev: AtomicOptionArc<ResourceAccess<C>>,
-    pub successor: AtomicWeak<ResourceAccess<C>>,
-    pub consumer: AtomicWeak<C>,
-    pub consumer_id: C::ResourceID,
+    pub consumer: (AtomicWeak<C>, C::ResourceID),
+    pub prev: AtomicOptionArc<Self>,
+    pub next: AtomicWeak<Self>,
 }
 
-impl<C: ResourceConsumer> ResourceAccess<C> {
+impl<C: ResourceConsumer> ResourceProvider<C> {
     pub fn new(
-        prev: Option<Arc<ResourceAccess<C>>>,
+        prev: Option<Arc<ResourceProvider<C>>>,
         consumer: Weak<C>,
         consumer_guard_id: C::ResourceID,
         access_type: AccessType,
     ) -> Self {
         Self {
-            prev: AtomicOptionArc::new(prev),
             access_type: AtomicEnum::new(access_type),
-            status: AtomicEnum::new(ResourceStatus::Waiting),
-            successor: AtomicWeak::default(),
-            consumer: AtomicWeak::new(consumer),
-            consumer_id: consumer_guard_id,
+            status: AtomicEnum::new(AccessStatus::Waiting),
+            consumer: (AtomicWeak::new(consumer), consumer_guard_id),
+            prev: AtomicOptionArc::new(prev),
+            next: AtomicWeak::default(),
         }
     }
 
-    pub fn extend(&self, successor: &Arc<ResourceAccess<C>>) {
-        self.successor.store(Arc::downgrade(successor));
+    pub fn extend(&self, successor: &Arc<ResourceProvider<C>>) {
+        self.next.store(Arc::downgrade(successor));
 
         match self.status.load() {
-            ResourceStatus::Ready if self.access_type.load() == AccessType::Read => {
+            AccessStatus::Ready if self.access_type.load() == AccessType::Read => {
                 if successor.access_type.load() == AccessType::Read {
                     successor.ready();
                 }
             }
-            ResourceStatus::Done => successor.ready(),
+            AccessStatus::Done => successor.ready(),
             _ => {} // do nothing, the successor will be notified when anything changes
         }
     }
@@ -47,17 +47,17 @@ impl<C: ResourceConsumer> ResourceAccess<C> {
     pub fn ready(self: &Arc<Self>) {
         if self
             .status
-            .compare_exchange(ResourceStatus::Waiting, ResourceStatus::Ready)
+            .compare_exchange(AccessStatus::Waiting, AccessStatus::Ready)
             .is_ok()
         {
-            if let Some(owner) = self.consumer.load().upgrade() {
+            if let Some(owner) = self.consumer.0.load().upgrade() {
                 owner.notify(self.clone());
             } else {
                 eprintln!("ResourceGuard::ready: notifier is gone");
             }
 
             if self.access_type.load() == AccessType::Read {
-                if let Some(successor) = self.successor.load().upgrade() {
+                if let Some(successor) = self.next.load().upgrade() {
                     if successor.access_type.load() == AccessType::Read {
                         successor.ready();
                     }
@@ -69,10 +69,10 @@ impl<C: ResourceConsumer> ResourceAccess<C> {
     pub fn done(&self) {
         if self
             .status
-            .compare_exchange(ResourceStatus::Ready, ResourceStatus::Done)
+            .compare_exchange(AccessStatus::Ready, AccessStatus::Done)
             .is_ok()
         {
-            if let Some(successor) = self.successor.load().upgrade() {
+            if let Some(successor) = self.next.load().upgrade() {
                 successor.ready();
             }
         }

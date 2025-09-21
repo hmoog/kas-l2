@@ -3,11 +3,11 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_executor::Executor;
-use kas_l2_scheduler::{ResourceProvider, Scheduler};
+use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
 #[test]
 pub fn test_executor() {
-    let resource_provider = ResourceProvider::default();
+    let resource_provider = ResourcesManager::default();
     let mut scheduler = Scheduler::new(resource_provider);
     let executor = Executor::new(4, |tx: &Transaction| {
         println!("Executing transaction with id {}", tx.id);

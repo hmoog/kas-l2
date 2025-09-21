@@ -1,9 +1,0 @@
-[package]
-name = "kas-l2-resource-provider"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-kas-l2-atomic = { path = "../atomic" }
-kas-l2-core = { path = "../core" }
-kas-l2-resource = { path = "../resource" }

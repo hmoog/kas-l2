@@ -4,17 +4,19 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
-use kas_l2_resource::{ResourceAccess, ResourceConsumer};
 
-use crate::ResourcesConsumer;
+use crate::{
+    ResourcesConsumer,
+    resource::{resource_consumer::ResourceConsumer, resource_provider::ResourceProvider},
+};
 
-pub struct ResourcesAccess<C: ResourcesConsumer> {
+pub struct ResourcesProvider<C: ResourcesConsumer> {
     consumer: AtomicWeak<C>,
-    resources: Vec<AtomicWeak<ResourceAccess<Self>>>,
+    resources: Vec<AtomicWeak<ResourceProvider<Self>>>,
     pending_resources: AtomicU64,
 }
 
-impl<C: ResourcesConsumer> ResourcesAccess<C> {
+impl<C: ResourcesConsumer> ResourcesProvider<C> {
     pub fn new(size: usize) -> Self {
         Self {
             pending_resources: AtomicU64::new(size as u64),
@@ -23,7 +25,7 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
         }
     }
 
-    pub fn wire_up_consumer(self: &Arc<Self>, consumer: &Arc<C>) {
+    pub fn init_consumer(self: &Arc<Self>, consumer: &Arc<C>) {
         self.consumer.store(Arc::downgrade(consumer));
 
         if self.pending_resources.load(Ordering::Acquire) == 0 {
@@ -33,18 +35,20 @@ impl<C: ResourcesConsumer> ResourcesAccess<C> {
 
     pub fn release(&self) {
         for resource in &self.resources {
-            resource.load().upgrade().unwrap().done()
+            if let Some(resource) = resource.load().upgrade() {
+                resource.done();
+            }
         }
     }
 }
 
-impl<C: ResourcesConsumer> ResourceConsumer for ResourcesAccess<C> {
+impl<C: ResourcesConsumer> ResourceConsumer for ResourcesProvider<C> {
     type ResourceID = usize;
-    fn notify(self: &Arc<Self>, guard: Arc<ResourceAccess<ResourcesAccess<C>>>) {
+    fn notify(self: &Arc<Self>, resource: Arc<ResourceProvider<ResourcesProvider<C>>>) {
         self.resources
-            .get(guard.consumer_id)
+            .get(resource.consumer.1)
             .unwrap()
-            .store(Arc::downgrade(&guard));
+            .store(Arc::downgrade(&resource));
 
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
             if let Some(consumer) = self.consumer.load().upgrade() {

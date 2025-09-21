@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{BatchAPI, ResourceProvider, ScheduledTransaction, Transaction};
+use crate::{BatchAPI, ResourcesManager, ScheduledTransaction, Transaction};
 
 pub struct Batch<T: Transaction> {
     scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
@@ -16,7 +16,7 @@ impl<T: Transaction> Batch<T> {
         &self.api
     }
 
-    pub(crate) fn new(transactions: Vec<T>, resources: &mut ResourceProvider<T>) -> Self {
+    pub(crate) fn new(transactions: Vec<T>, resources: &mut ResourcesManager<T>) -> Self {
         let api = Arc::new(BatchAPI::new(transactions.len() as u64));
         let scheduled_transactions = transactions
             .into_iter()

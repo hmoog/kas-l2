@@ -3334,6 +3334,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-causal-resources"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-atomic",
+ "kas-l2-core",
+]
+
+[[package]]
 name = "kas-l2-core"
 version = "0.1.0"
 
@@ -3347,22 +3355,6 @@ dependencies = [
  "kas-l2-atomic",
  "kas-l2-core",
  "kas-l2-scheduler",
-]
-
-[[package]]
-name = "kas-l2-resource"
-version = "0.1.0"
-dependencies = [
- "kas-l2-atomic",
-]
-
-[[package]]
-name = "kas-l2-resource-provider"
-version = "0.1.0"
-dependencies = [
- "kas-l2-atomic",
- "kas-l2-core",
- "kas-l2-resource",
 ]
 
 [[package]]
@@ -3390,9 +3382,8 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "kas-l2-atomic",
+ "kas-l2-causal-resources",
  "kas-l2-core",
- "kas-l2-resource",
- "kas-l2-resource-provider",
  "tap",
 ]
 

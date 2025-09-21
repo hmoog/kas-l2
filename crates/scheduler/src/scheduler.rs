@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use crate::{Batch, ResourceProvider, Transaction};
+use crate::{Batch, ResourcesManager, Transaction};
 
 pub struct Scheduler<T: Transaction> {
-    resource_provider: ResourceProvider<T>,
+    resource_provider: ResourcesManager<T>,
 }
 
 impl<T: Transaction> Scheduler<T> {
-    pub fn new(resource_provider: ResourceProvider<T>) -> Self {
+    pub fn new(resource_provider: ResourcesManager<T>) -> Self {
         Self { resource_provider }
     }
 

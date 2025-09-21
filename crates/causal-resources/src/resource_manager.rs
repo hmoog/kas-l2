@@ -4,39 +4,38 @@ use std::{
 };
 
 use kas_l2_core::{ResourceID, Transaction};
-use kas_l2_resource::AccessType;
 
-use crate::{ResourcesConsumer, resource_meta::ResourceMeta, resources_access::ResourcesAccess};
+use crate::{
+    ResourcesConsumer,
+    resource::{Resource, access_type::AccessType},
+    resources_provider::ResourcesProvider,
+};
 
-pub struct ResourceProvider<R: ResourceID, C: ResourcesConsumer> {
-    guards: HashMap<R, ResourceMeta<ResourcesAccess<C>>>,
+pub struct ResourceManager<R: ResourceID, C: ResourcesConsumer> {
+    guards: HashMap<R, Resource<ResourcesProvider<C>>>,
 }
 
-impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
+impl<R: ResourceID, C: ResourcesConsumer> ResourceManager<R, C> {
     pub fn provide<T: Transaction<ResourceID = R>>(
         &mut self,
         transaction: &T,
-    ) -> Arc<ResourcesAccess<C>> {
+    ) -> Arc<ResourcesProvider<C>> {
         let mut new_resources = Vec::new();
 
         let resources = Arc::new_cyclic(|guards| {
             let mut collect = |resources: &[R], access: AccessType| {
                 for res_id in resources {
                     new_resources.push(match self.guards.entry(res_id.clone()) {
-                        Entry::Occupied(entry) if entry.get().was_accessed_by(guards) => {
+                        Entry::Occupied(entry) if entry.get().was_last_accessed_by(guards) => {
                             continue; // TODO: CHANGE TO ERROR
                         }
-                        Entry::Occupied(mut entry) => {
-                            entry
-                                .get_mut()
-                                .access(guards.clone(), new_resources.len(), access)
-                        }
+                        Entry::Occupied(mut entry) => entry
+                            .get_mut()
+                            .provide((guards.clone(), new_resources.len()), access),
                         Entry::Vacant(entry) => {
-                            entry.insert(ResourceMeta::new()).access(
-                                guards.clone(),
-                                new_resources.len(),
-                                access,
-                            )
+                            entry
+                                .insert(Resource::new())
+                                .provide((guards.clone(), new_resources.len()), access)
 
                             // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                         }
@@ -47,7 +46,7 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
             collect(transaction.write_locks(), AccessType::Write);
             collect(transaction.read_locks(), AccessType::Read);
 
-            ResourcesAccess::new(new_resources.len())
+            ResourcesProvider::new(new_resources.len())
         });
 
         for guard in &new_resources {
@@ -64,7 +63,7 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceProvider<R, C> {
     }
 }
 
-impl<R: ResourceID, C: ResourcesConsumer> Default for ResourceProvider<R, C> {
+impl<R: ResourceID, C: ResourcesConsumer> Default for ResourceManager<R, C> {
     fn default() -> Self {
         Self {
             guards: HashMap::new(),
