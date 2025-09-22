@@ -4,14 +4,14 @@ use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_core::{Transaction, TransactionProcessor};
-use kas_l2_scheduler::{Batch, ScheduledTransaction};
+use kas_l2_scheduler::{BatchAPI, ScheduledTransaction};
 
 use crate::worker::Worker;
 
 pub struct WorkersAPI<T: Transaction> {
     stealers: Vec<Stealer<Arc<ScheduledTransaction<T>>>>,
     unparkers: Vec<Unparker>,
-    injectors: Vec<Arc<Injector<Arc<Batch<T>>>>>,
+    injectors: Vec<Arc<Injector<Arc<BatchAPI<T>>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
@@ -47,7 +47,7 @@ impl<T: Transaction> WorkersAPI<T> {
         (this, handles)
     }
 
-    pub fn inject_batch(self: &Arc<Self>, batch: Arc<Batch<T>>) {
+    pub fn inject_batch(self: &Arc<Self>, batch: Arc<BatchAPI<T>>) {
         for (injector, unparker) in self.injectors.iter().zip(&self.unparkers) {
             injector.push(batch.clone());
             unparker.unpark();

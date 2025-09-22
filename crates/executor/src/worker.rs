@@ -3,14 +3,14 @@ use std::{sync::Arc, thread, thread::JoinHandle};
 use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_core::{Transaction, TransactionProcessor};
-use kas_l2_scheduler::{Batch, ScheduledTransaction};
+use kas_l2_scheduler::{BatchAPI, ScheduledTransaction};
 
 use crate::{batch_injector::BatchInjector, workers_api::WorkersAPI};
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
     local_queue: WorkerQueue<Arc<ScheduledTransaction<T>>>,
-    injector: Arc<Injector<Arc<Batch<T>>>>,
+    injector: Arc<Injector<Arc<BatchAPI<T>>>>,
     processor: P,
     parker: Parker,
 }
@@ -38,7 +38,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn injector(&self) -> Arc<Injector<Arc<Batch<T>>>> {
+    pub(crate) fn injector(&self) -> Arc<Injector<Arc<BatchAPI<T>>>> {
         self.injector.clone()
     }
 

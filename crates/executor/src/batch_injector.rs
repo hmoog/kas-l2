@@ -3,17 +3,17 @@ use std::sync::Arc;
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 use kas_l2_core::Transaction;
-use kas_l2_scheduler::{Batch, ScheduledTransaction};
+use kas_l2_scheduler::{BatchAPI, ScheduledTransaction};
 
 use crate::batch_injector::linked_list_element::*;
 
 pub struct BatchInjector<T: Transaction> {
-    queue: LinkedList<Adapter<Arc<Batch<T>>>>,
-    injector: Arc<Injector<Arc<Batch<T>>>>,
+    queue: LinkedList<Adapter<Arc<BatchAPI<T>>>>,
+    injector: Arc<Injector<Arc<BatchAPI<T>>>>,
 }
 
 impl<T: Transaction> BatchInjector<T> {
-    pub fn new(injector: Arc<Injector<Arc<Batch<T>>>>) -> Self {
+    pub fn new(injector: Arc<Injector<Arc<BatchAPI<T>>>>) -> Self {
         Self {
             queue: LinkedList::new(Adapter::new()),
             injector,
@@ -28,7 +28,6 @@ impl<T: Transaction> BatchInjector<T> {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
             while let Some(batch) = curr_element.get() {
-                let batch = batch.api();
                 if batch.is_done() {
                     curr_element.remove();
                     continue;

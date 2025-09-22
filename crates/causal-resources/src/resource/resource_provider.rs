@@ -7,7 +7,7 @@ use crate::resource::{
 };
 
 pub struct ResourceProvider<C: ResourceConsumer> {
-    pub status: AtomicEnum<AccessStatus>,
+    status: AtomicEnum<AccessStatus>,
     pub access_type: AtomicEnum<AccessType>,
     pub consumer: (AtomicWeak<C>, C::ResourceID),
     pub prev: AtomicOptionArc<Self>,
@@ -16,7 +16,7 @@ pub struct ResourceProvider<C: ResourceConsumer> {
 
 impl<C: ResourceConsumer> ResourceProvider<C> {
     pub fn new(
-        prev: Option<Arc<ResourceProvider<C>>>,
+        prev: Option<Arc<Self>>,
         consumer: Weak<C>,
         consumer_guard_id: C::ResourceID,
         access_type: AccessType,
@@ -30,7 +30,7 @@ impl<C: ResourceConsumer> ResourceProvider<C> {
         }
     }
 
-    pub fn extend(&self, successor: &Arc<ResourceProvider<C>>) {
+    pub fn extend(&self, successor: &Arc<Self>) {
         self.next.store(Arc::downgrade(successor));
 
         match self.status.load() {

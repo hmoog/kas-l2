@@ -1,7 +1,7 @@
 use std::{sync::Arc, thread::JoinHandle};
 
 use kas_l2_core::{Transaction, TransactionProcessor};
-use kas_l2_scheduler::Batch;
+use kas_l2_scheduler::BatchAPI;
 
 use crate::workers_api::WorkersAPI;
 
@@ -19,7 +19,7 @@ impl<T: Transaction> Executor<T> {
         }
     }
 
-    pub fn execute(&self, batch: Arc<Batch<T>>) {
+    pub fn execute(&self, batch: Arc<BatchAPI<T>>) {
         self.workers_api.inject_batch(batch);
     }
 
