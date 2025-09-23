@@ -1,6 +1,9 @@
 use std::sync::{Arc, Weak};
 
-use crate::{AccessMetadata, AccessType, ResourceHandle, Transaction};
+use crate::{
+    AccessMetadata, AccessType, ResourceHandle, Transaction,
+    resource_handle::{ReadHandle, WriteHandle},
+};
 
 pub struct ResourceState<T: Transaction> {
     pub owner: T::ResourceID,
@@ -25,11 +28,11 @@ impl<T: Transaction> ResourceState<T> {
 
     pub fn handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> ResourceHandle<T> {
         match access_metadata.access_type() {
-            AccessType::Read => ResourceHandle::Read {
+            AccessType::Read => ResourceHandle::Read(ReadHandle {
                 state: self.clone(),
                 access_metadata,
-            },
-            AccessType::Write => ResourceHandle::Write {
+            }),
+            AccessType::Write => ResourceHandle::Write(WriteHandle {
                 state: Self {
                     owner: self.owner.clone(),
                     data: self.data.clone(),
@@ -38,7 +41,7 @@ impl<T: Transaction> ResourceState<T> {
                     prev: Some(Arc::downgrade(self)),
                 },
                 access_metadata,
-            },
+            }),
         }
     }
 }

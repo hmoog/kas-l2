@@ -2,54 +2,55 @@ use std::{ops::Deref, sync::Arc};
 
 use crate::{Transaction, resource_state::ResourceState};
 
+/// Public enum for processors to consume.
 pub enum ResourceHandle<T: Transaction> {
-    Read {
-        state: Arc<ResourceState<T>>,
-        access_metadata: T::AccessMetadata,
-    },
-    Write {
-        state: ResourceState<T>,
-        access_metadata: T::AccessMetadata,
-    },
+    Read(ReadHandle<T>),
+    Write(WriteHandle<T>),
+}
+
+pub struct ReadHandle<T: Transaction> {
+    pub(crate) state: Arc<ResourceState<T>>,
+    pub(crate) access_metadata: T::AccessMetadata,
+}
+
+pub struct WriteHandle<T: Transaction> {
+    pub(crate) state: ResourceState<T>,
+    pub(crate) access_metadata: T::AccessMetadata,
 }
 
 impl<T: Transaction> ResourceHandle<T> {
     pub fn access_metadata(&self) -> &T::AccessMetadata {
         match self {
-            ResourceHandle::Read {
-                access_metadata, ..
-            } => access_metadata,
-            ResourceHandle::Write {
-                access_metadata, ..
-            } => access_metadata,
+            ResourceHandle::Read(h) => &h.access_metadata,
+            ResourceHandle::Write(h) => &h.access_metadata,
         }
     }
 
     pub fn data(&self) -> &[u8] {
         match self {
-            ResourceHandle::Read { state, .. } => &state.data,
-            ResourceHandle::Write { state, .. } => &state.data,
+            ResourceHandle::Read(h) => &h.state.data,
+            ResourceHandle::Write(h) => &h.state.data,
         }
     }
 
     pub fn data_mut(&mut self) -> Option<&mut [u8]> {
         match self {
-            ResourceHandle::Write { state, .. } => Some(&mut state.data),
-            ResourceHandle::Read { .. } => None,
+            ResourceHandle::Write(h) => Some(&mut h.state.data),
+            ResourceHandle::Read(_) => None,
         }
     }
 
     pub fn commit(self) -> Arc<ResourceState<T>> {
         match self {
-            ResourceHandle::Read { state, .. } => state,
-            ResourceHandle::Write { state, .. } => Arc::new(state),
+            ResourceHandle::Read(h) => h.state,
+            ResourceHandle::Write(h) => Arc::new(h.state),
         }
     }
 
     pub fn rollback(self) -> Option<Arc<ResourceState<T>>> {
         match self {
-            ResourceHandle::Read { state, .. } => Some(state),
-            ResourceHandle::Write { state, .. } => state.prev.and_then(|weak| weak.upgrade()),
+            ResourceHandle::Read(h) => Some(h.state),
+            ResourceHandle::Write(h) => h.state.prev.and_then(|weak| weak.upgrade()),
         }
     }
 }

@@ -31,7 +31,7 @@ impl<T: Transaction> ScheduledTransaction<T> {
 
     pub fn process<F: TransactionProcessor<T>>(&self, processor: &F) {
         if self.was_processed.open() {
-            processor(&self.transaction, &[] /* , &self.resources */);
+            processor(&self.transaction, &mut [] /* , &self.resources */);
             self.resources.release();
             self.batch_api.transaction_done();
         }

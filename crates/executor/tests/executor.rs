@@ -12,7 +12,7 @@ pub fn test_executor() {
     let mut scheduler = Scheduler::new(resource_provider);
     let executor = Executor::new(
         4,
-        |tx: &Transaction, _resources: &[ResourceHandle<Transaction>]| {
+        |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
             println!("Executing transaction with id {}", tx.id);
             sleep(tx.duration);
             println!("Finished transaction with id {}", tx.id);

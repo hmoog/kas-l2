@@ -18,19 +18,19 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceManager<R, C> {
     ) -> Arc<ResourcesProvider<C>> {
         let mut new_resources = Vec::new();
 
-        let resources = Arc::new_cyclic(|guards| {
+        let resources_provider = Arc::new_cyclic(|this| {
             for access in transaction.accessed_resources() {
                 new_resources.push(match self.guards.entry(access.resource_id().clone()) {
-                    Entry::Occupied(entry) if entry.get().was_last_accessed_by(guards) => {
+                    Entry::Occupied(entry) if entry.get().was_last_accessed_by(this) => {
                         continue; // TODO: CHANGE TO ERROR
                     }
                     Entry::Occupied(mut entry) => entry
                         .get_mut()
-                        .provide((guards.clone(), new_resources.len()), access.access_type()),
+                        .provide((this.clone(), new_resources.len()), access.access_type()),
                     Entry::Vacant(entry) => {
                         entry
                             .insert(Resource::new())
-                            .provide((guards.clone(), new_resources.len()), access.access_type())
+                            .provide((this.clone(), new_resources.len()), access.access_type())
 
                         // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                     }
@@ -50,7 +50,7 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceManager<R, C> {
             }
         }
 
-        resources
+        resources_provider
     }
 }
 
