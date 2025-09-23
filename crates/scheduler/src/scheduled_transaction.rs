@@ -8,7 +8,7 @@ use tap::Tap;
 use crate::{BatchAPI, Transaction};
 
 pub struct ScheduledTransaction<T: Transaction> {
-    resources: Arc<ResourcesProvider<Self>>,
+    resources: Arc<ResourcesProvider<T, Self>>,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
     was_processed: AtomicAsyncLatch,
@@ -16,7 +16,7 @@ pub struct ScheduledTransaction<T: Transaction> {
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub fn new(
-        resources: Arc<ResourcesProvider<Self>>,
+        resources: Arc<ResourcesProvider<T, Self>>,
         transaction: T,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {

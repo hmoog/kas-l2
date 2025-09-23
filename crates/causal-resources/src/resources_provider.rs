@@ -4,19 +4,19 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
-
+use kas_l2_core::Transaction;
 use crate::{
     ResourcesConsumer,
     resource::{resource_consumer::ResourceConsumer, resource_provider::ResourceProvider},
 };
 
-pub struct ResourcesProvider<C: ResourcesConsumer> {
+pub struct ResourcesProvider<T: Transaction, C: ResourcesConsumer> {
     consumer: AtomicWeak<C>,
-    resources: Vec<AtomicWeak<ResourceProvider<Self>>>,
+    resources: Vec<AtomicWeak<ResourceProvider<T, Self>>>,
     pending_resources: AtomicU64,
 }
 
-impl<C: ResourcesConsumer> ResourcesProvider<C> {
+impl<T: Transaction, C: ResourcesConsumer> ResourcesProvider<T, C> {
     pub fn new(size: usize) -> Self {
         Self {
             pending_resources: AtomicU64::new(size as u64),
@@ -36,15 +36,15 @@ impl<C: ResourcesConsumer> ResourcesProvider<C> {
     pub fn release(&self) {
         for resource in &self.resources {
             if let Some(resource) = resource.load().upgrade() {
-                resource.done();
+                resource.produce_value(resource.received_value.load().unwrap());
             }
         }
     }
 }
 
-impl<C: ResourcesConsumer> ResourceConsumer for ResourcesProvider<C> {
+impl<T: Transaction, C: ResourcesConsumer> ResourceConsumer<T> for ResourcesProvider<T, C> {
     type ResourceID = usize;
-    fn notify(self: &Arc<Self>, resource: Arc<ResourceProvider<ResourcesProvider<C>>>) {
+    fn notify(self: &Arc<Self>, resource: Arc<ResourceProvider<T, Self>>) {
         self.resources
             .get(resource.consumer.1)
             .unwrap()

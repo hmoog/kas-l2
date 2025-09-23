@@ -3,49 +3,54 @@ use std::{
     sync::Arc,
 };
 
-use kas_l2_core::{AccessMetadata, ResourceID, Transaction};
+use kas_l2_core::{AccessMetadata, ResourceState, Transaction};
 
 use crate::{ResourcesConsumer, resource::Resource, resources_provider::ResourcesProvider};
 
-pub struct ResourceManager<R: ResourceID, C: ResourcesConsumer> {
-    guards: HashMap<R, Resource<ResourcesProvider<C>>>,
+pub struct ResourceManager<T: Transaction, C: ResourcesConsumer> {
+    guards: HashMap<T::ResourceID, Resource<T, ResourcesProvider<T, C>>>,
 }
 
-impl<R: ResourceID, C: ResourcesConsumer> ResourceManager<R, C> {
-    pub fn provide<T: Transaction<ResourceID = R>>(
+impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
+    pub fn provide(
         &mut self,
         transaction: &T,
-    ) -> Arc<ResourcesProvider<C>> {
-        let mut new_resources = Vec::new();
+    ) -> Arc<ResourcesProvider<T, C>> {
+        let mut new_providers = Vec::new();
 
         let resources_provider = Arc::new_cyclic(|this| {
             for access in transaction.accessed_resources() {
-                new_resources.push(match self.guards.entry(access.resource_id().clone()) {
+                new_providers.push(match self.guards.entry(access.resource_id().clone()) {
                     Entry::Occupied(entry) if entry.get().was_last_accessed_by(this) => {
                         continue; // TODO: CHANGE TO ERROR
                     }
                     Entry::Occupied(mut entry) => entry
                         .get_mut()
-                        .provide((this.clone(), new_resources.len()), access.access_type()),
+                        .provide((this.clone(), new_providers.len()), access.access_type()),
                     Entry::Vacant(entry) => {
                         entry
                             .insert(Resource::new())
-                            .provide((this.clone(), new_resources.len()), access.access_type())
+                            .provide((this.clone(), new_providers.len()), access.access_type())
 
                         // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                     }
                 });
             }
 
-            ResourcesProvider::new(new_resources.len())
+            ResourcesProvider::new(new_providers.len())
         });
 
-        for guard in &new_resources {
-            match guard.prev.load() {
-                Some(prev) => prev.extend(guard),
+        for provider in &new_providers {
+            match provider.prev.load() {
+                Some(prev) => prev.extend(provider),
                 None => {
                     // TODO: no previous guard -> read from underlying storage!
-                    guard.ready()
+                    provider.receive_state(Arc::new(ResourceState::new(
+                        T::ResourceID::default(),
+                        Vec::new(),
+                        0,
+                        false,
+                    )))
                 }
             }
         }
@@ -54,7 +59,7 @@ impl<R: ResourceID, C: ResourcesConsumer> ResourceManager<R, C> {
     }
 }
 
-impl<R: ResourceID, C: ResourcesConsumer> Default for ResourceManager<R, C> {
+impl<T: Transaction, C: ResourcesConsumer> Default for ResourceManager<T, C> {
     fn default() -> Self {
         Self {
             guards: HashMap::new(),

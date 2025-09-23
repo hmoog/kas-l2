@@ -1,19 +1,21 @@
 use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::{AtomicEnum, AtomicOptionArc, AtomicWeak};
-use kas_l2_core::AccessType;
+use kas_l2_core::{AccessType, ResourceState, Transaction};
 
 use crate::resource::{access_status::AccessStatus, resource_consumer::ResourceConsumer};
 
-pub struct ResourceProvider<C: ResourceConsumer> {
+pub struct ResourceProvider<T: Transaction, C: ResourceConsumer<T>> {
     status: AtomicEnum<AccessStatus>,
-    pub access_type: AtomicEnum<AccessType>,
+    pub(crate) received_value: AtomicOptionArc<ResourceState<T>>,
+    produced_value: AtomicOptionArc<ResourceState<T>>,
+    pub access_type: AccessType,
     pub consumer: (AtomicWeak<C>, C::ResourceID),
     pub prev: AtomicOptionArc<Self>,
     pub next: AtomicWeak<Self>,
 }
 
-impl<C: ResourceConsumer> ResourceProvider<C> {
+impl<T: Transaction, C: ResourceConsumer<T>> ResourceProvider<T, C> {
     pub fn new(
         prev: Option<Arc<Self>>,
         consumer: Weak<C>,
@@ -21,7 +23,9 @@ impl<C: ResourceConsumer> ResourceProvider<C> {
         access_type: AccessType,
     ) -> Self {
         Self {
-            access_type: AtomicEnum::new(access_type),
+            received_value: AtomicOptionArc::empty(),
+            produced_value: AtomicOptionArc::empty(),
+            access_type,
             status: AtomicEnum::new(AccessStatus::Waiting),
             consumer: (AtomicWeak::new(consumer), consumer_guard_id),
             prev: AtomicOptionArc::new(prev),
@@ -32,48 +36,24 @@ impl<C: ResourceConsumer> ResourceProvider<C> {
     pub fn extend(&self, successor: &Arc<Self>) {
         self.next.store(Arc::downgrade(successor));
 
-        match self.status.load() {
-            AccessStatus::Ready if self.access_type.load() == AccessType::Read => {
-                if successor.access_type.load() == AccessType::Read {
-                    successor.ready();
-                }
-            }
-            AccessStatus::Done => successor.ready(),
-            _ => {} // do nothing, the successor will be notified when anything changes
-        }
+        self.produced_value.load().map(|state| successor.receive_state(state));
     }
 
-    pub fn ready(self: &Arc<Self>) {
-        if self
-            .status
-            .compare_exchange(AccessStatus::Waiting, AccessStatus::Ready)
-            .is_ok()
-        {
+    pub fn receive_state(self: &Arc<Self>, state: Arc<ResourceState<T>>) {
+        if self.received_value.publish(state.clone()) {
             if let Some(owner) = self.consumer.0.load().upgrade() {
                 owner.notify(self.clone());
-            } else {
-                eprintln!("ResourceGuard::ready: notifier is gone");
             }
 
-            if self.access_type.load() == AccessType::Read {
-                if let Some(successor) = self.next.load().upgrade() {
-                    if successor.access_type.load() == AccessType::Read {
-                        successor.ready();
-                    }
-                }
+            if self.access_type == AccessType::Read {
+                self.produce_value(state);
             }
         }
     }
 
-    pub fn done(&self) {
-        if self
-            .status
-            .compare_exchange(AccessStatus::Ready, AccessStatus::Done)
-            .is_ok()
-        {
-            if let Some(successor) = self.next.load().upgrade() {
-                successor.ready();
-            }
+    pub fn produce_value(&self, state: Arc<ResourceState<T>>) {
+        if self.produced_value.publish(state.clone()) {
+            self.next.load().upgrade().map(|next| next.receive_state(state));
         }
     }
 }

@@ -58,6 +58,25 @@ impl<T> AtomicOptionArc<T> {
             unsafe { Some(Arc::from_raw(raw)) }
         }
     }
+
+    pub fn publish(&self, value: Arc<T>) -> bool {
+        let raw = Arc::into_raw(value) as *mut T;
+
+        match self.ptr.compare_exchange(
+            ptr::null_mut(),
+            raw,
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        ) {
+            Ok(_) => true, // we installed it
+            Err(_) => {
+                // someone else had already set it, we must undo Arc::into_raw
+                unsafe { Arc::from_raw(raw) };
+                false
+            }
+        }
+    }
+
 }
 
 impl<T> Drop for AtomicOptionArc<T> {

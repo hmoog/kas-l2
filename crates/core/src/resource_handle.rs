@@ -2,7 +2,6 @@ use std::{ops::Deref, sync::Arc};
 
 use crate::{Transaction, resource_state::ResourceState};
 
-/// Public enum for processors to consume.
 pub enum ResourceHandle<T: Transaction> {
     Read(ReadHandle<T>),
     Write(WriteHandle<T>),
