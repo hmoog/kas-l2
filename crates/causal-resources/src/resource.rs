@@ -1,9 +1,8 @@
 use std::sync::{Arc, Weak};
 
-use crate::resource::{
-    access_type::AccessType, resource_consumer::ResourceConsumer,
-    resource_provider::ResourceProvider,
-};
+use kas_l2_core::AccessType;
+
+use crate::resource::{resource_consumer::ResourceConsumer, resource_provider::ResourceProvider};
 
 pub struct Resource<C: ResourceConsumer> {
     last_provider: Option<Arc<ResourceProvider<C>>>,
@@ -39,6 +38,5 @@ impl<C: ResourceConsumer> Resource<C> {
 }
 
 pub mod access_status;
-pub mod access_type;
 pub mod resource_consumer;
 pub mod resource_provider;

@@ -2,6 +2,7 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
+use kas_l2_core::{AccessType, ResourceHandle};
 use kas_l2_executor::Executor;
 use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
@@ -9,7 +10,7 @@ use kas_l2_scheduler::{ResourcesManager, Scheduler};
 pub fn test_executor() {
     let resource_provider = ResourcesManager::default();
     let mut scheduler = Scheduler::new(resource_provider);
-    let executor = Executor::new(4, |tx: &Transaction| {
+    let executor = Executor::new(4, |tx: &Transaction, _resources: &[ResourceHandle<u32, Access>]| {
         println!("Executing transaction with id {}", tx.id);
         sleep(tx.duration);
         println!("Finished transaction with id {}", tx.id);
@@ -19,20 +20,38 @@ pub fn test_executor() {
         Transaction {
             id: 0,
             duration: Duration::from_millis(10),
-            write_locks: vec![1],
-            read_locks: vec![3],
+            access: vec![
+                Access {
+                    resource_id: 1,
+                    access_type: AccessType::Write,
+                },
+                Access {
+                    resource_id: 3,
+                    access_type: AccessType::Read,
+                },
+            ],
         },
         Transaction {
             id: 1,
             duration: Duration::from_millis(1),
-            write_locks: vec![1, 2],
-            read_locks: vec![],
+            access: vec![
+                Access {
+                    resource_id: 1,
+                    access_type: AccessType::Write,
+                },
+                Access {
+                    resource_id: 2,
+                    access_type: AccessType::Write,
+                },
+            ],
         },
         Transaction {
             id: 2,
             duration: Duration::from_millis(1),
-            write_locks: vec![],
-            read_locks: vec![3],
+            access: vec![Access {
+                resource_id: 3,
+                access_type: AccessType::Read,
+            }],
         },
     ]);
     executor.execute(batch1);
@@ -41,14 +60,30 @@ pub fn test_executor() {
         Transaction {
             id: 3,
             duration: Duration::from_millis(1),
-            write_locks: vec![1],
-            read_locks: vec![3],
+            access: vec![
+                Access {
+                    resource_id: 1,
+                    access_type: AccessType::Write,
+                },
+                Access {
+                    resource_id: 3,
+                    access_type: AccessType::Read,
+                },
+            ],
         },
         Transaction {
             id: 4,
             duration: Duration::from_millis(1),
-            write_locks: vec![10, 20],
-            read_locks: vec![],
+            access: vec![
+                Access {
+                    resource_id: 10,
+                    access_type: AccessType::Write,
+                },
+                Access {
+                    resource_id: 20,
+                    access_type: AccessType::Write,
+                },
+            ],
         },
     ]);
     executor.execute(batch2);
@@ -61,18 +96,30 @@ pub fn test_executor() {
 struct Transaction {
     id: u32,
     duration: Duration,
-    read_locks: Vec<u32>,
-    write_locks: Vec<u32>,
+    access: Vec<Access>,
+}
+
+struct Access {
+    resource_id: u32,
+    access_type: AccessType,
+}
+
+impl kas_l2_core::AccessMetadata<u32> for Access {
+    fn resource_id(&self) -> u32 {
+        self.resource_id
+    }
+
+    fn access_type(&self) -> AccessType {
+        self.access_type
+    }
 }
 
 impl kas_l2_core::Transaction for Transaction {
     type ResourceID = u32;
 
-    fn read_locks(&self) -> &[Self::ResourceID] {
-        &self.read_locks
-    }
+    type AccessMetadata = Access;
 
-    fn write_locks(&self) -> &[Self::ResourceID] {
-        &self.write_locks
+    fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+        &self.access
     }
 }

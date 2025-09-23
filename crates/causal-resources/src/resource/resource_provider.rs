@@ -1,10 +1,9 @@
 use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::{AtomicEnum, AtomicOptionArc, AtomicWeak};
+use kas_l2_core::AccessType;
 
-use crate::resource::{
-    access_status::AccessStatus, access_type::AccessType, resource_consumer::ResourceConsumer,
-};
+use crate::resource::{access_status::AccessStatus, resource_consumer::ResourceConsumer};
 
 pub struct ResourceProvider<C: ResourceConsumer> {
     status: AtomicEnum<AccessStatus>,

@@ -21,7 +21,8 @@ impl<T: Transaction> Scheduler<T> {
             tasks,
             &mut self.resource_provider,
         ));
-        self.last_batch = Some(batch.clone());
-        batch.api()
+        let api = batch.api();
+        self.last_batch = Some(batch);
+        api
     }
 }
