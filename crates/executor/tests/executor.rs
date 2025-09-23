@@ -10,11 +10,14 @@ use kas_l2_scheduler::{ResourcesManager, Scheduler};
 pub fn test_executor() {
     let resource_provider = ResourcesManager::default();
     let mut scheduler = Scheduler::new(resource_provider);
-    let executor = Executor::new(4, |tx: &Transaction, _resources: &[ResourceHandle<u32, Access>]| {
-        println!("Executing transaction with id {}", tx.id);
-        sleep(tx.duration);
-        println!("Finished transaction with id {}", tx.id);
-    });
+    let executor = Executor::new(
+        4,
+        |tx: &Transaction, _resources: &[ResourceHandle<Transaction>]| {
+            println!("Executing transaction with id {}", tx.id);
+            sleep(tx.duration);
+            println!("Finished transaction with id {}", tx.id);
+        },
+    );
 
     let batch1 = scheduler.schedule(vec![
         Transaction {
@@ -99,6 +102,7 @@ struct Transaction {
     access: Vec<Access>,
 }
 
+#[derive(Clone)]
 struct Access {
     resource_id: u32,
     access_type: AccessType,

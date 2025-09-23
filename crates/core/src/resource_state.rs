@@ -1,9 +1,9 @@
 use std::sync::{Arc, Weak};
 
-use crate::ResourceID;
+use crate::{AccessMetadata, AccessType, ResourceHandle, Transaction};
 
-pub struct ResourceState<ID: ResourceID> {
-    pub owner: ID,
+pub struct ResourceState<T: Transaction> {
+    pub owner: T::ResourceID,
     pub data: Vec<u8>,
     pub balance: u64,
     pub executable: bool,
@@ -12,8 +12,8 @@ pub struct ResourceState<ID: ResourceID> {
     pub prev: Option<Weak<Self>>,
 }
 
-impl<ID: ResourceID> ResourceState<ID> {
-    pub fn new(owner: ID, data: Vec<u8>, balance: u64, executable: bool) -> Self {
+impl<T: Transaction> ResourceState<T> {
+    pub fn new(owner: T::ResourceID, data: Vec<u8>, balance: u64, executable: bool) -> Self {
         Self {
             owner,
             data,
@@ -23,13 +23,22 @@ impl<ID: ResourceID> ResourceState<ID> {
         }
     }
 
-    pub fn clone(self: &Arc<Self>) -> Self {
-        Self {
-            owner: self.owner.clone(),
-            data: self.data.clone(),
-            balance: self.balance,
-            executable: self.executable,
-            prev: Some(Arc::downgrade(self)),
+    pub fn handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> ResourceHandle<T> {
+        match access_metadata.access_type() {
+            AccessType::Read => ResourceHandle::Read {
+                state: self.clone(),
+                access_metadata,
+            },
+            AccessType::Write => ResourceHandle::Write {
+                state: Self {
+                    owner: self.owner.clone(),
+                    data: self.data.clone(),
+                    balance: self.balance,
+                    executable: self.executable,
+                    prev: Some(Arc::downgrade(self)),
+                },
+                access_metadata,
+            },
         }
     }
 }
