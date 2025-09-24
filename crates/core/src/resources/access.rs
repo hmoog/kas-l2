@@ -34,6 +34,10 @@ impl<T: Transaction, R: AtomicAccessor> Access<T, R> {
         }
     }
 
+    pub fn metadata(&self) -> &T::AccessMetadata {
+        &self.metadata
+    }
+
     pub fn atomic_ref(&self) -> &(Weak<AtomicAccess<T, R>>, usize) {
         &self.atomic_ref
     }
@@ -54,33 +58,33 @@ impl<T: Transaction, R: AtomicAccessor> Access<T, R> {
         self.next_access.load().upgrade()
     }
 
-    pub fn extend(&self, next_access: &Arc<Self>) {
+    pub fn publish_loaded_state(self: &Arc<Self>, state: Arc<State<T>>) {
+        if self.loaded_state.publish(state.clone()) {
+            if self.access_type() == AccessType::Read {
+                self.publish_written_state(state);
+            }
+
+            if let Some(atomic_access) = self.atomic_ref.0.upgrade() {
+                atomic_access.notify(self, self.atomic_ref.1);
+            }
+
+            drop(self.prev_access.take()); // allow the previous provider to be dropped
+        }
+    }
+
+    pub fn publish_written_state(&self, state: Arc<State<T>>) {
+        if self.written_state.publish(state.clone()) {
+            if let Some(next) = self.next_access.load().upgrade() {
+                next.publish_loaded_state(state)
+            }
+        }
+    }
+
+    pub fn publish_next_access(&self, next_access: &Arc<Self>) {
         self.next_access.store(Arc::downgrade(next_access));
 
         if let Some(state) = self.written_state() {
-            next_access.load(state);
-        }
-    }
-
-    pub fn load(self: &Arc<Self>, state: Arc<State<T>>) {
-        if self.loaded_state.publish(state.clone()) {
-            drop(self.prev_access.take()); // allow the previous provider to be dropped
-
-            if let Some(owner) = self.atomic_ref.0.upgrade() {
-                owner.notify(self.clone());
-            }
-
-            if self.access_type() == AccessType::Read {
-                self.write(state);
-            }
-        }
-    }
-
-    pub fn write(&self, state: Arc<State<T>>) {
-        if self.written_state.publish(state.clone()) {
-            if let Some(next) = self.next_access.load().upgrade() {
-                next.load(state)
-            }
+            next_access.publish_loaded_state(state);
         }
     }
 }
@@ -88,6 +92,6 @@ impl<T: Transaction, R: AtomicAccessor> Access<T, R> {
 impl<T: Transaction, C: AtomicAccessor> Deref for Access<T, C> {
     type Target = T::AccessMetadata;
     fn deref(&self) -> &Self::Target {
-        &self.metadata
+        self.metadata()
     }
 }

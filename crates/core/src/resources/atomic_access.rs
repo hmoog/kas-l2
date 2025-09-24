@@ -4,51 +4,64 @@ use std::sync::{
 };
 
 use crate::{
-    atomic::AtomicWeak,
-    resources::{AtomicAccessor, access::Access},
+    atomic::{AtomicOptionArc, AtomicWeak},
+    resources::{AccessHandle, AtomicAccessor, access::Access},
     transactions::Transaction,
 };
 
 pub struct AtomicAccess<T: Transaction, A: AtomicAccessor> {
     accessor: AtomicWeak<A>,
-    resources: Vec<AtomicWeak<Access<T, A>>>,
-    pending_resources: AtomicU64,
+    accesses: Vec<AtomicOptionArc<Access<T, A>>>,
+    pending_accesses: AtomicU64,
 }
 
 impl<T: Transaction, A: AtomicAccessor> AtomicAccess<T, A> {
     pub fn new(size: usize) -> Self {
         Self {
-            pending_resources: AtomicU64::new(size as u64),
+            pending_accesses: AtomicU64::new(size as u64),
             accessor: AtomicWeak::default(),
-            resources: (0..size).map(|_| AtomicWeak::default()).collect(),
+            accesses: (0..size).map(|_| AtomicOptionArc::empty()).collect(),
         }
     }
 
-    pub fn init_consumer(self: &Arc<Self>, consumer: &Arc<A>) {
-        self.accessor.store(Arc::downgrade(consumer));
+    pub fn publish_accessor(self: &Arc<Self>, accessor: &Arc<A>) {
+        self.accessor.store(Arc::downgrade(accessor));
 
-        if self.pending_resources.load(Ordering::Acquire) == 0 {
-            consumer.available();
+        if self.pending_accesses.load(Ordering::Acquire) == 0 {
+            accessor.available();
         }
     }
 
-    pub fn release(&self) {
-        for resource in &self.resources {
-            if let Some(resource) = resource.load().upgrade() {
-                resource.write(resource.loaded_state().unwrap());
+    pub fn handles(&self) -> Vec<AccessHandle<T>> {
+        self.accesses
+            .iter()
+            .map(|access| {
+                if let Some(access) = access.load() {
+                    access
+                        .loaded_state()
+                        .expect("must exist")
+                        .cow_handle(access.metadata().clone())
+                } else {
+                    panic!("Access not available");
+                }
+            })
+            .collect()
+    }
+
+    pub fn release(&self, handles: Vec<AccessHandle<T>>) {
+        for (handle, access) in handles.into_iter().zip(self.accesses.iter()) {
+            if let Some(access) = access.load() {
+                access.publish_written_state(handle.commit());
             }
         }
     }
 
-    pub(crate) fn notify(self: &Arc<Self>, resource: Arc<Access<T, A>>) {
-        self.resources
-            .get(resource.atomic_ref().1)
-            .unwrap()
-            .store(Arc::downgrade(&resource));
+    pub(crate) fn notify(self: &Arc<Self>, access: &Arc<Access<T, A>>, index: usize) {
+        self.accesses.get(index).unwrap().publish(access.clone());
 
-        if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
-            if let Some(consumer) = self.accessor.load().upgrade() {
-                consumer.available();
+        if self.pending_accesses.fetch_sub(1, Ordering::AcqRel) == 1 {
+            if let Some(accessor) = self.accessor.load().upgrade() {
+                accessor.available();
             }
         }
     }

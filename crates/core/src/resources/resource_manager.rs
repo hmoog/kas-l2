@@ -40,10 +40,10 @@ impl<T: Transaction, C: AtomicAccessor> ResourceManager<T, C> {
 
         for provider in &accesses {
             match provider.prev_access() {
-                Some(prev) => prev.extend(provider),
+                Some(prev) => prev.publish_next_access(provider),
                 None => {
                     // TODO: no previous guard -> read from underlying storage!
-                    provider.load(Arc::new(State::new(
+                    provider.publish_loaded_state(Arc::new(State::new(
                         T::ResourceID::default(),
                         Vec::new(),
                         0,
