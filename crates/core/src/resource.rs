@@ -1,8 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use kas_l2_core::Transaction;
-
-use crate::{ResourcesConsumer, ResourcesProvider, resource_provider::ResourceProvider};
+use crate::{ResourcesConsumer, ResourcesProvider, resource_provider::ResourceProvider, Transaction};
 
 pub struct Resource<T: Transaction, C: ResourcesConsumer> {
     last_provider: Option<Arc<ResourceProvider<T, C>>>,

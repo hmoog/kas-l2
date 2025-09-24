@@ -4,7 +4,7 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
-use kas_l2_core::Transaction;
+use crate::Transaction;
 
 use crate::{ResourcesConsumer, resource_provider::ResourceProvider};
 

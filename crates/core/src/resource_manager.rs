@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use kas_l2_core::{AccessMetadata, ResourceState, Transaction};
+use crate::{AccessMetadata, ResourceState, Transaction};
 
 use crate::{ResourcesConsumer, resource::Resource, resources_provider::ResourcesProvider};
 

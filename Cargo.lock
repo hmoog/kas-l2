@@ -3334,16 +3334,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-causal-resources"
+name = "kas-l2-core"
 version = "0.1.0"
 dependencies = [
  "kas-l2-atomic",
- "kas-l2-core",
 ]
-
-[[package]]
-name = "kas-l2-core"
-version = "0.1.0"
 
 [[package]]
 name = "kas-l2-executor"
@@ -3382,7 +3377,6 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "kas-l2-atomic",
- "kas-l2-causal-resources",
  "kas-l2-core",
  "tap",
 ]

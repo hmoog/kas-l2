@@ -4,7 +4,7 @@ use std::{
 };
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
-use kas_l2_core::{AccessMetadata, AccessType, ResourceState, Transaction};
+use crate::{AccessMetadata, AccessType, ResourceState, Transaction};
 
 use crate::{ResourcesConsumer, ResourcesProvider};
 
