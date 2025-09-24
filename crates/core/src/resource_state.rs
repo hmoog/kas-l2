@@ -1,4 +1,4 @@
-use std::sync::{Arc, Weak};
+use std::sync::{Arc};
 
 use crate::{
     AccessMetadata, AccessType, ResourceHandle, Transaction,
@@ -10,38 +10,34 @@ pub struct ResourceState<T: Transaction> {
     pub data: Vec<u8>,
     pub balance: u64,
     pub executable: bool,
-
-    /// Rollback / history link (weak to avoid cycles)
-    pub prev: Option<Weak<Self>>,
 }
 
 impl<T: Transaction> ResourceState<T> {
     pub fn new(owner: T::ResourceID, data: Vec<u8>, balance: u64, executable: bool) -> Self {
-        Self {
-            owner,
-            data,
-            balance,
-            executable,
-            prev: None,
-        }
+        Self { owner, data, balance, executable }
     }
 
-    pub fn handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> ResourceHandle<T> {
+    pub fn cow_handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> ResourceHandle<T> {
         match access_metadata.access_type() {
             AccessType::Read => ResourceHandle::Read(ReadHandle {
-                state: self.clone(),
+                state: Arc::clone(self),
                 access_metadata,
             }),
             AccessType::Write => ResourceHandle::Write(WriteHandle {
-                state: Self {
-                    owner: self.owner.clone(),
-                    data: self.data.clone(),
-                    balance: self.balance,
-                    executable: self.executable,
-                    prev: Some(Arc::downgrade(self)),
-                },
+                state: Self::clone(self),
                 access_metadata,
             }),
+        }
+    }
+}
+
+impl<T: Transaction> Clone for ResourceState<T> {
+    fn clone(&self) -> Self {
+        Self {
+            owner: self.owner.clone(),
+            data: self.data.clone(),
+            balance: self.balance,
+            executable: self.executable,
         }
     }
 }

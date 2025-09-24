@@ -45,13 +45,6 @@ impl<T: Transaction> ResourceHandle<T> {
             ResourceHandle::Write(h) => Arc::new(h.state),
         }
     }
-
-    pub fn rollback(self) -> Option<Arc<ResourceState<T>>> {
-        match self {
-            ResourceHandle::Read(h) => Some(h.state),
-            ResourceHandle::Write(h) => h.state.prev.and_then(|weak| weak.upgrade()),
-        }
-    }
 }
 
 impl<T: Transaction> Deref for ResourceHandle<T> {
