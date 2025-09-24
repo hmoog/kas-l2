@@ -10,7 +10,4 @@ pub use scheduled_transaction::ScheduledTransaction;
 pub use scheduler::Scheduler;
 
 /// A resource provider specialized for `ScheduledTransaction<T>`.
-pub type ResourcesManager<T> = kas_l2_causal_resources::ResourceManager<
-    T,
-    ScheduledTransaction<T>,
->;
+pub type ResourcesManager<T> = kas_l2_causal_resources::ResourceManager<T, ScheduledTransaction<T>>;

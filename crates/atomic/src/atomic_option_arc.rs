@@ -62,12 +62,10 @@ impl<T> AtomicOptionArc<T> {
     pub fn publish(&self, value: Arc<T>) -> bool {
         let raw = Arc::into_raw(value) as *mut T;
 
-        match self.ptr.compare_exchange(
-            ptr::null_mut(),
-            raw,
-            Ordering::AcqRel,
-            Ordering::Acquire,
-        ) {
+        match self
+            .ptr
+            .compare_exchange(ptr::null_mut(), raw, Ordering::AcqRel, Ordering::Acquire)
+        {
             Ok(_) => true, // we installed it
             Err(_) => {
                 // someone else had already set it, we must undo Arc::into_raw
@@ -76,7 +74,6 @@ impl<T> AtomicOptionArc<T> {
             }
         }
     }
-
 }
 
 impl<T> Drop for AtomicOptionArc<T> {

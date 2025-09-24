@@ -1,14 +1,14 @@
 use std::sync::{Arc, Weak};
 
-use kas_l2_core::{AccessType, Transaction};
+use kas_l2_core::Transaction;
 
-use crate::resource::{resource_consumer::ResourceConsumer, resource_provider::ResourceProvider};
+use crate::{ResourcesConsumer, ResourcesProvider, resource_provider::ResourceProvider};
 
-pub struct Resource<T: Transaction, C: ResourceConsumer<T>> {
+pub struct Resource<T: Transaction, C: ResourcesConsumer> {
     last_provider: Option<Arc<ResourceProvider<T, C>>>,
 }
 
-impl<T: Transaction, C: ResourceConsumer<T>> Resource<T, C> {
+impl<T: Transaction, C: ResourcesConsumer> Resource<T, C> {
     pub fn new() -> Self {
         Self {
             last_provider: None,
@@ -17,26 +17,21 @@ impl<T: Transaction, C: ResourceConsumer<T>> Resource<T, C> {
 
     pub fn provide(
         &mut self,
-        (consumer, id): (Weak<C>, C::ResourceID),
-        access_type: AccessType,
+        access_metadata: T::AccessMetadata,
+        consumer: (Weak<ResourcesProvider<T, C>>, usize),
     ) -> Arc<ResourceProvider<T, C>> {
         let guard = Arc::new(ResourceProvider::new(
-            self.last_provider.take(),
+            access_metadata,
             consumer,
-            id,
-            access_type,
+            self.last_provider.take(),
         ));
         self.last_provider = Some(guard.clone());
         guard
     }
 
-    pub fn was_last_accessed_by(&self, consumer: &Weak<C>) -> bool {
+    pub fn was_last_accessed_by(&self, consumer: &Weak<ResourcesProvider<T, C>>) -> bool {
         self.last_provider
             .as_ref()
-            .is_some_and(|guard| Weak::ptr_eq(&guard.consumer.0.load(), consumer))
+            .is_some_and(|p| p.has_consumer(consumer))
     }
 }
-
-pub mod access_status;
-pub mod resource_consumer;
-pub mod resource_provider;

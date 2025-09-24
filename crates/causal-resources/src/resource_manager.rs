@@ -8,14 +8,11 @@ use kas_l2_core::{AccessMetadata, ResourceState, Transaction};
 use crate::{ResourcesConsumer, resource::Resource, resources_provider::ResourcesProvider};
 
 pub struct ResourceManager<T: Transaction, C: ResourcesConsumer> {
-    guards: HashMap<T::ResourceID, Resource<T, ResourcesProvider<T, C>>>,
+    guards: HashMap<T::ResourceID, Resource<T, C>>,
 }
 
 impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
-    pub fn provide(
-        &mut self,
-        transaction: &T,
-    ) -> Arc<ResourcesProvider<T, C>> {
+    pub fn provide(&mut self, transaction: &T) -> Arc<ResourcesProvider<T, C>> {
         let mut new_providers = Vec::new();
 
         let resources_provider = Arc::new_cyclic(|this| {
@@ -26,11 +23,11 @@ impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
                     }
                     Entry::Occupied(mut entry) => entry
                         .get_mut()
-                        .provide((this.clone(), new_providers.len()), access.access_type()),
+                        .provide(access.clone(), (this.clone(), new_providers.len())),
                     Entry::Vacant(entry) => {
                         entry
                             .insert(Resource::new())
-                            .provide((this.clone(), new_providers.len()), access.access_type())
+                            .provide(access.clone(), (this.clone(), new_providers.len()))
 
                         // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                     }
@@ -41,11 +38,11 @@ impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
         });
 
         for provider in &new_providers {
-            match provider.prev.load() {
+            match provider.prev() {
                 Some(prev) => prev.extend(provider),
                 None => {
                     // TODO: no previous guard -> read from underlying storage!
-                    provider.receive_state(Arc::new(ResourceState::new(
+                    provider.publish_read_value(Arc::new(ResourceState::new(
                         T::ResourceID::default(),
                         Vec::new(),
                         0,

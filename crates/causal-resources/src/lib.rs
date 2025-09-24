@@ -1,5 +1,6 @@
 pub(crate) mod resource;
 mod resource_manager;
+mod resource_provider;
 mod resources_consumer;
 mod resources_provider;
 
