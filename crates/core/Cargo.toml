@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-atomic = { path = "../atomic" }
+tokio = { version = "1.47.1", features = ["sync"] }

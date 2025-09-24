@@ -5,9 +5,8 @@ mod scheduler;
 
 pub use batch::Batch;
 pub use batch_api::BatchAPI;
-use kas_l2_core::Transaction;
 pub use scheduled_transaction::ScheduledTransaction;
 pub use scheduler::Scheduler;
 
 /// A resource provider specialized for `ScheduledTransaction<T>`.
-pub type ResourcesManager<T> = kas_l2_core::ResourceManager<T, ScheduledTransaction<T>>;
+pub type ResourcesManager<T> = kas_l2_core::resources::ResourceManager<T, ScheduledTransaction<T>>;

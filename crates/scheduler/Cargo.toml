@@ -5,6 +5,5 @@ edition = "2021"
 
 [dependencies]
 crossbeam-deque = "0.8.6"
-kas-l2-atomic = { path = "../atomic" }
 kas-l2-core = { path = "../core" }
 tap = "1.0.1"

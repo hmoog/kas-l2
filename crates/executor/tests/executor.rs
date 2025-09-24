@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
-use kas_l2_core::{AccessType, ResourceHandle};
+use kas_l2_core::resources::{AccessHandle, AccessType};
 use kas_l2_executor::Executor;
 use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
@@ -12,7 +12,7 @@ pub fn test_executor() {
     let mut scheduler = Scheduler::new(resource_provider);
     let executor = Executor::new(
         4,
-        |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
+        |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
             println!("Executing transaction with id {}", tx.id);
             sleep(tx.duration);
             println!("Finished transaction with id {}", tx.id);
@@ -108,7 +108,7 @@ struct Access {
     access_type: AccessType,
 }
 
-impl kas_l2_core::AccessMetadata<u32> for Access {
+impl kas_l2_core::resources::AccessMetadata<u32> for Access {
     fn resource_id(&self) -> u32 {
         self.resource_id
     }
@@ -118,7 +118,7 @@ impl kas_l2_core::AccessMetadata<u32> for Access {
     }
 }
 
-impl kas_l2_core::Transaction for Transaction {
+impl kas_l2_core::transactions::Transaction for Transaction {
     type ResourceID = u32;
 
     type AccessMetadata = Access;

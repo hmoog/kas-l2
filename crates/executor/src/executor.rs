@@ -1,6 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
-use kas_l2_core::{Transaction, TransactionProcessor};
+use kas_l2_core::transactions::{Transaction, TransactionProcessor};
 use kas_l2_scheduler::BatchAPI;
 
 use crate::workers_api::WorkersAPI;

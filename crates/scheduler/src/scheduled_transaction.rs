@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
-use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_core::{ResourcesConsumer, ResourcesProvider, TransactionProcessor};
+use kas_l2_core::{
+    atomic::AtomicAsyncLatch,
+    resources::{AtomicAccess, AtomicAccessor},
+    transactions::{Transaction, TransactionProcessor},
+};
 use tap::Tap;
 
-use crate::{BatchAPI, Transaction};
+use crate::BatchAPI;
 
 pub struct ScheduledTransaction<T: Transaction> {
-    resources: Arc<ResourcesProvider<T, Self>>,
+    resources: Arc<AtomicAccess<T, Self>>,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
     was_processed: AtomicAsyncLatch,
@@ -15,7 +18,7 @@ pub struct ScheduledTransaction<T: Transaction> {
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub fn new(
-        resources: Arc<ResourcesProvider<T, Self>>,
+        resources: Arc<AtomicAccess<T, Self>>,
         transaction: T,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {
@@ -37,8 +40,8 @@ impl<T: Transaction> ScheduledTransaction<T> {
     }
 }
 
-impl<T: Transaction> ResourcesConsumer for ScheduledTransaction<T> {
-    fn resources_available(self: &Arc<Self>) {
+impl<T: Transaction> AtomicAccessor for ScheduledTransaction<T> {
+    fn available(self: &Arc<Self>) {
         self.batch_api.schedule_transaction(self.clone())
     }
 }

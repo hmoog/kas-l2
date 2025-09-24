@@ -1,5 +1,3 @@
-mod resources;
-mod transaction;
-
-pub use resources::*;
-pub use transaction::*;
+pub mod atomic;
+pub mod resources;
+pub mod transactions;

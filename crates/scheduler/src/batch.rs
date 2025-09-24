@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use kas_l2_atomic::AtomicOptionArc;
+use kas_l2_core::{atomic::AtomicOptionArc, transactions::Transaction};
 
-use crate::{BatchAPI, ResourcesManager, ScheduledTransaction, Transaction};
+use crate::{BatchAPI, ResourcesManager, ScheduledTransaction};
 
 pub struct Batch<T: Transaction> {
     scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
@@ -27,7 +27,7 @@ impl<T: Transaction> Batch<T> {
         let api = Arc::new(BatchAPI::new(transactions.len() as u64));
         let scheduled_transactions = transactions
             .into_iter()
-            .map(|tx| ScheduledTransaction::new(resources.provide(&tx), tx, api.clone()))
+            .map(|tx| ScheduledTransaction::new(resources.access(&tx), tx, api.clone()))
             .collect();
 
         Self {

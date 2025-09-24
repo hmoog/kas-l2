@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::{Batch, BatchAPI, ResourcesManager, Transaction};
+use kas_l2_core::transactions::Transaction;
+
+use crate::{Batch, BatchAPI, ResourcesManager};
 
 pub struct Scheduler<T: Transaction> {
     resource_provider: ResourcesManager<T>,

@@ -4,45 +4,46 @@ use std::{
 };
 
 use crate::{
-    AccessMetadata, Resource, ResourceState, ResourcesConsumer, ResourcesProvider, Transaction,
+    resources::{AtomicAccess, AtomicAccessor, Resource, State, access_metadata::AccessMetadata},
+    transactions::Transaction,
 };
 
-pub struct ResourceManager<T: Transaction, C: ResourcesConsumer> {
-    guards: HashMap<T::ResourceID, Resource<T, C>>,
+pub struct ResourceManager<T: Transaction, C: AtomicAccessor> {
+    resources: HashMap<T::ResourceID, Resource<T, C>>,
 }
 
-impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
-    pub fn provide(&mut self, transaction: &T) -> Arc<ResourcesProvider<T, C>> {
-        let mut new_providers = Vec::new();
+impl<T: Transaction, C: AtomicAccessor> ResourceManager<T, C> {
+    pub fn access(&mut self, transaction: &T) -> Arc<AtomicAccess<T, C>> {
+        let mut accesses = Vec::new();
 
-        let resources_provider = Arc::new_cyclic(|this| {
+        let atomic_access = Arc::new_cyclic(|this| {
             for access in transaction.accessed_resources() {
-                new_providers.push(match self.guards.entry(access.resource_id().clone()) {
-                    Entry::Occupied(entry) if entry.get().was_last_accessed_by(this) => {
+                accesses.push(match self.resources.entry(access.resource_id().clone()) {
+                    Entry::Occupied(entry) if entry.get().last_atomic_access_by(this) => {
                         continue; // TODO: CHANGE TO ERROR
                     }
                     Entry::Occupied(mut entry) => entry
                         .get_mut()
-                        .provide(access.clone(), (this.clone(), new_providers.len())),
+                        .access(access.clone(), (this.clone(), accesses.len())),
                     Entry::Vacant(entry) => {
                         entry
-                            .insert(Resource::new())
-                            .provide(access.clone(), (this.clone(), new_providers.len()))
+                            .insert(Resource::default())
+                            .access(access.clone(), (this.clone(), accesses.len()))
 
                         // TODO: RETRIEVE DATA FROM SOURCE AND SET READY IF POSSIBLE
                     }
                 });
             }
 
-            ResourcesProvider::new(new_providers.len())
+            AtomicAccess::new(accesses.len())
         });
 
-        for provider in &new_providers {
-            match provider.prev() {
+        for provider in &accesses {
+            match provider.prev_access() {
                 Some(prev) => prev.extend(provider),
                 None => {
                     // TODO: no previous guard -> read from underlying storage!
-                    provider.publish_read_value(Arc::new(ResourceState::new(
+                    provider.load(Arc::new(State::new(
                         T::ResourceID::default(),
                         Vec::new(),
                         0,
@@ -52,14 +53,14 @@ impl<T: Transaction, C: ResourcesConsumer> ResourceManager<T, C> {
             }
         }
 
-        resources_provider
+        atomic_access
     }
 }
 
-impl<T: Transaction, C: ResourcesConsumer> Default for ResourceManager<T, C> {
+impl<T: Transaction, C: AtomicAccessor> Default for ResourceManager<T, C> {
     fn default() -> Self {
         Self {
-            guards: HashMap::new(),
+            resources: HashMap::new(),
         }
     }
 }
