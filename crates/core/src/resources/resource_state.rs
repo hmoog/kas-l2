@@ -1,8 +1,8 @@
-use std::sync::{Arc};
+use std::sync::Arc;
 
 use crate::{
-    AccessMetadata, AccessType, ResourceHandle, Transaction,
-    resource_handle::{ReadHandle, WriteHandle},
+    AccessMetadata, AccessType, Transaction,
+    resources::resource_handle::{ReadHandle, ResourceHandle, WriteHandle},
 };
 
 pub struct ResourceState<T: Transaction> {
@@ -14,7 +14,12 @@ pub struct ResourceState<T: Transaction> {
 
 impl<T: Transaction> ResourceState<T> {
     pub fn new(owner: T::ResourceID, data: Vec<u8>, balance: u64, executable: bool) -> Self {
-        Self { owner, data, balance, executable }
+        Self {
+            owner,
+            data,
+            balance,
+            executable,
+        }
     }
 
     pub fn cow_handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> ResourceHandle<T> {

@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_core::{ResourcesConsumer, ResourcesProvider};
-use kas_l2_core::TransactionProcessor;
+use kas_l2_core::{ResourcesConsumer, ResourcesProvider, TransactionProcessor};
 use tap::Tap;
 
 use crate::{BatchAPI, Transaction};

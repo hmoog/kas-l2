@@ -1,6 +1,6 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::{Transaction, resource_state::ResourceState};
+use crate::{Transaction, resources::resource_state::ResourceState};
 
 pub enum ResourceHandle<T: Transaction> {
     Read(ReadHandle<T>),

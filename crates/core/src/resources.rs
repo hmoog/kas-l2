@@ -1,0 +1,20 @@
+mod access_metadata;
+mod access_type;
+mod resource;
+mod resource_handle;
+mod resource_id;
+mod resource_manager;
+mod resource_provider;
+mod resource_state;
+mod resources_consumer;
+mod resources_provider;
+
+pub use access_metadata::AccessMetadata;
+pub use access_type::AccessType;
+pub use resource::Resource;
+pub use resource_handle::ResourceHandle;
+pub use resource_id::ResourceID;
+pub use resource_manager::ResourceManager;
+pub use resource_state::ResourceState;
+pub use resources_consumer::ResourcesConsumer;
+pub use resources_provider::ResourcesProvider;

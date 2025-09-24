@@ -3,9 +3,9 @@ use std::{
     sync::Arc,
 };
 
-use crate::{AccessMetadata, ResourceState, Transaction};
-
-use crate::{ResourcesConsumer, resource::Resource, resources_provider::ResourcesProvider};
+use crate::{
+    AccessMetadata, Resource, ResourceState, ResourcesConsumer, ResourcesProvider, Transaction,
+};
 
 pub struct ResourceManager<T: Transaction, C: ResourcesConsumer> {
     guards: HashMap<T::ResourceID, Resource<T, C>>,

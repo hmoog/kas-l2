@@ -4,9 +4,8 @@ use std::sync::{
 };
 
 use kas_l2_atomic::AtomicWeak;
-use crate::Transaction;
 
-use crate::{ResourcesConsumer, resource_provider::ResourceProvider};
+use crate::{ResourcesConsumer, Transaction, resources::resource_provider::ResourceProvider};
 
 pub struct ResourcesProvider<T: Transaction, C: ResourcesConsumer> {
     consumer: AtomicWeak<C>,

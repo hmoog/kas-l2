@@ -1,6 +1,9 @@
 use std::sync::{Arc, Weak};
 
-use crate::{ResourcesConsumer, ResourcesProvider, resource_provider::ResourceProvider, Transaction};
+use crate::{
+    ResourcesConsumer, ResourcesProvider, Transaction,
+    resources::resource_provider::ResourceProvider,
+};
 
 pub struct Resource<T: Transaction, C: ResourcesConsumer> {
     last_provider: Option<Arc<ResourceProvider<T, C>>>,

@@ -4,9 +4,10 @@ use std::{
 };
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
-use crate::{AccessMetadata, AccessType, ResourceState, Transaction};
 
-use crate::{ResourcesConsumer, ResourcesProvider};
+use crate::{
+    AccessMetadata, AccessType, ResourceState, ResourcesConsumer, ResourcesProvider, Transaction,
+};
 
 pub struct ResourceProvider<T: Transaction, R: ResourcesConsumer> {
     access_metadata: T::AccessMetadata,

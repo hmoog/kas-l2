@@ -1,6 +1,5 @@
-pub trait Transaction: Send + Sync + 'static {
-    type ResourceID: crate::ResourceID;
-    type AccessMetadata: crate::AccessMetadata<Self::ResourceID>;
+mod processor;
+mod transaction;
 
-    fn accessed_resources(&self) -> &[Self::AccessMetadata];
-}
+pub use processor::TransactionProcessor;
+pub use transaction::Transaction;

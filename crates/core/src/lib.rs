@@ -1,23 +1,5 @@
-mod access_metadata;
-mod access_type;
-mod resource_handle;
-mod resource_id;
-mod resource_state;
+mod resources;
 mod transaction;
-mod transaction_processor;
-mod resource;
-mod resource_manager;
-mod resource_provider;
-mod resources_consumer;
-mod resources_provider;
 
-pub use resource_manager::ResourceManager;
-pub use resources_consumer::ResourcesConsumer;
-pub use resources_provider::ResourcesProvider;
-pub use access_metadata::AccessMetadata;
-pub use access_type::AccessType;
-pub use resource_handle::ResourceHandle;
-pub use resource_id::ResourceID;
-pub use resource_state::ResourceState;
-pub use transaction::Transaction;
-pub use transaction_processor::TransactionProcessor;
+pub use resources::*;
+pub use transaction::*;
