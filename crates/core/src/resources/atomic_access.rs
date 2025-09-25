@@ -8,7 +8,6 @@ use crate::{
     resources::{AccessHandle, AtomicAccessor, access::Access},
     transactions::Transaction,
 };
-use crate::resources::State;
 
 pub struct AtomicAccess<T: Transaction, A: AtomicAccessor> {
     accessor: AtomicWeak<A>,
@@ -25,23 +24,14 @@ impl<T: Transaction, A: AtomicAccessor> AtomicAccess<T, A> {
         }
     }
 
-    pub fn init_missing_resources(self: Arc<Self>) -> Arc<Self> {
+    pub fn provide_resources<F: Fn(&Arc<Access<T, A>>)>(self: Arc<Self>, loader: F) -> Arc<Self> {
         for access in self.accesses.iter() {
             let access = access.load().unwrap();
             match access.prev_access() {
                 Some(prev) => prev.publish_next_access(&access),
-                None => {
-                    // TODO: no previous guard -> read from underlying storage!
-                    access.publish_loaded_state(Arc::new(State::new(
-                        T::ResourceID::default(),
-                        Vec::new(),
-                        0,
-                        false,
-                    )))
-                }
+                None => loader(&access),
             }
         }
-
         self
     }
 

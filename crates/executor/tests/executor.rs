@@ -8,8 +8,8 @@ use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
 #[test]
 pub fn test_executor() {
-    let resource_provider = ResourcesManager::default();
-    let mut scheduler = Scheduler::new(resource_provider);
+    let mut scheduler = Scheduler::new(ResourcesManager::default());
+
     let executor = Executor::new(
         4,
         |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
@@ -19,7 +19,7 @@ pub fn test_executor() {
         },
     );
 
-    let batch1 = scheduler.schedule(vec![
+    executor.execute(scheduler.schedule(vec![
         Transaction {
             id: 0,
             duration: Duration::from_millis(10),
@@ -56,10 +56,9 @@ pub fn test_executor() {
                 access_type: AccessType::Read,
             }],
         },
-    ]);
-    executor.execute(batch1);
+    ]));
 
-    let batch2 = scheduler.schedule(vec![
+    executor.execute(scheduler.schedule(vec![
         Transaction {
             id: 3,
             duration: Duration::from_millis(1),
@@ -88,8 +87,7 @@ pub fn test_executor() {
                 },
             ],
         },
-    ]);
-    executor.execute(batch2);
+    ]));
 
     sleep(Duration::from_secs(1));
 
