@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    resources::{AtomicAccess, AtomicAccessor, Resource, State, access_metadata::AccessMetadata},
+    resources::{AtomicAccess, AtomicAccessor, Resource, AccessMetadata},
     transactions::Transaction,
 };
 
@@ -14,9 +14,9 @@ pub struct ResourceManager<T: Transaction, C: AtomicAccessor> {
 
 impl<T: Transaction, C: AtomicAccessor> ResourceManager<T, C> {
     pub fn access(&mut self, transaction: &T) -> Arc<AtomicAccess<T, C>> {
-        let mut accesses = Vec::new();
+        Arc::new_cyclic(|this| {
+            let mut accesses = Vec::new();
 
-        let atomic_access = Arc::new_cyclic(|this| {
             for access in transaction.accessed_resources() {
                 accesses.push(match self.resources.entry(access.resource_id().clone()) {
                     Entry::Occupied(entry) if entry.get().last_atomic_access_by(this) => {
@@ -35,25 +35,8 @@ impl<T: Transaction, C: AtomicAccessor> ResourceManager<T, C> {
                 });
             }
 
-            AtomicAccess::new(accesses.len())
-        });
-
-        for provider in &accesses {
-            match provider.prev_access() {
-                Some(prev) => prev.publish_next_access(provider),
-                None => {
-                    // TODO: no previous guard -> read from underlying storage!
-                    provider.publish_loaded_state(Arc::new(State::new(
-                        T::ResourceID::default(),
-                        Vec::new(),
-                        0,
-                        false,
-                    )))
-                }
-            }
-        }
-
-        atomic_access
+            AtomicAccess::new(accesses)
+        }).init_missing_resources()
     }
 }
 

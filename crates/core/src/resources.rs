@@ -4,8 +4,8 @@ mod access_metadata;
 mod access_type;
 mod atomic_access;
 mod atomic_accessor;
-mod id;
 mod resource;
+mod resource_id;
 mod resource_manager;
 mod state;
 
@@ -14,7 +14,7 @@ pub use access_metadata::AccessMetadata;
 pub use access_type::AccessType;
 pub use atomic_access::AtomicAccess;
 pub use atomic_accessor::AtomicAccessor;
-pub use id::ResourceID;
 pub use resource::Resource;
+pub use resource_id::ResourceID;
 pub use resource_manager::ResourceManager;
 pub use state::State;

@@ -28,22 +28,19 @@ impl<T: Transaction> ScheduledTransaction<T> {
             batch_api,
             was_processed: AtomicAsyncLatch::new(),
         })
-        .tap(|this| this.resources.publish_accessor(this))
+        .tap(|this| this.resources.init_accessor(this))
     }
 
     pub fn process<F: TransactionProcessor<T>>(&self, processor: &F) {
         if self.was_processed.open() {
-            let mut handles = self.resources.handles();
-            processor(&self.transaction, &mut handles);
-            self.resources.release(handles);
-
+            self.resources.consume(|h| processor(&self.transaction, h));
             self.batch_api.transaction_done();
         }
     }
 }
 
 impl<T: Transaction> AtomicAccessor for ScheduledTransaction<T> {
-    fn available(self: &Arc<Self>) {
+    fn notify(self: &Arc<Self>) {
         self.batch_api.schedule_transaction(self.clone())
     }
 }

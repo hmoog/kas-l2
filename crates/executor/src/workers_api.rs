@@ -60,6 +60,7 @@ impl<T: Transaction> WorkersAPI<T> {
         self: &Arc<Self>,
         worker_id: usize,
     ) -> Option<Arc<ScheduledTransaction<T>>> {
+        // TODO: randomize stealer selection
         for (id, other) in self.stealers.iter().enumerate() {
             if id != worker_id {
                 loop {
