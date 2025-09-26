@@ -1,55 +1,59 @@
-use std::{
-    collections::{HashMap, hash_map::Entry},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
+
+use borsh::BorshDeserialize;
 
 use crate::{
-    resources::{AtomicAccess, AtomicAccessor, Resource, AccessMetadata},
+    resources::{AccessMetadata, AtomicAccess, AtomicAccessor, Resource, State, access::Access},
+    storage::KvStore,
     transactions::Transaction,
 };
-use crate::resources::State;
 
-pub struct ResourceManager<T: Transaction, C: AtomicAccessor> {
-    resources: HashMap<T::ResourceID, Resource<T, C>>,
+pub struct ResourceManager<T: Transaction, C: AtomicAccessor, K: KvStore<T::ResourceID>> {
+    cached_resources: HashMap<T::ResourceID, Resource<T, C>>,
+    permanent_storage: K,
 }
 
-impl<T: Transaction, C: AtomicAccessor> ResourceManager<T, C> {
+impl<T: Transaction, C: AtomicAccessor, K: KvStore<T::ResourceID>> ResourceManager<T, C, K> {
+    pub fn new(permanent_storage: K) -> Self {
+        Self {
+            cached_resources: HashMap::new(),
+            permanent_storage,
+        }
+    }
+
     pub fn access(&mut self, transaction: &T) -> Arc<AtomicAccess<T, C>> {
         Arc::new_cyclic(|this| {
-            let mut accesses = Vec::new();
-            for access in transaction.accessed_resources() {
-                accesses.push(match self.resources.entry(access.resource_id().clone()) {
-                    Entry::Occupied(entry) if entry.get().last_atomic_access_by(this) => {
-                        continue; // TODO: CHANGE TO ERROR
-                    }
-                    Entry::Occupied(mut entry) => entry
-                        .get_mut()
-                        .access(access.clone(), (this.clone(), accesses.len())),
-                    Entry::Vacant(entry) => {
-                        entry
-                            .insert(Resource::default())
-                            .access(access.clone(), (this.clone(), accesses.len()))
-                    }
-                });
+            let mut accessed_resources = Vec::new();
+            for access_meta in transaction.accessed_resources() {
+                let resource = self
+                    .cached_resources
+                    .entry(access_meta.resource_id())
+                    .or_default();
+
+                if resource.last_accessed_by(this) {
+                    panic!("duplicate access to resource")
+                }
+
+                accessed_resources.push(resource.access(
+                    access_meta.clone(),
+                    (this.clone(), accessed_resources.len()),
+                ));
             }
 
-            AtomicAccess::new(accesses)
-        }).provide_resources(|access| {
-            // TODO: no previous guard -> read from underlying storage!
-            access.publish_loaded_state(Arc::new(State::new(
-                T::ResourceID::default(),
-                Vec::new(),
-                0,
-                false,
-            )))
+            AtomicAccess::new(accessed_resources)
         })
+        .load_missing(|access| self.load_from_storage(access))
     }
-}
 
-impl<T: Transaction, C: AtomicAccessor> Default for ResourceManager<T, C> {
-    fn default() -> Self {
-        Self {
-            resources: HashMap::new(),
-        }
+    pub fn load_from_storage(&self, access: &Arc<Access<T, C>>) {
+        access.publish_loaded_state(Arc::new(
+            match self.permanent_storage.get(&access.resource_id()) {
+                Ok(result) => match result {
+                    None => State::default(),
+                    Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
+                },
+                Err(err) => panic!("failed to load resource from storage: {}", err),
+            },
+        ))
     }
 }

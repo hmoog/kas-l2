@@ -1,4 +1,12 @@
 use std::hash::Hash;
 
-pub trait ResourceID: Default + Eq + Hash + Clone + Send + Sync + 'static {}
-impl<T: Default + Eq + Hash + Clone + Send + Sync + 'static> ResourceID for T {}
+use borsh::{BorshDeserialize, BorshSerialize};
+
+pub trait ResourceID:
+    BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static
+{
+}
+impl<T: BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static>
+    ResourceID for T
+{
+}

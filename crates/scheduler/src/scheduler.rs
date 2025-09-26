@@ -1,16 +1,16 @@
 use std::sync::Arc;
 
-use kas_l2_core::transactions::Transaction;
+use kas_l2_core::{storage::KvStore, transactions::Transaction};
 
 use crate::{Batch, BatchAPI, ResourcesManager};
 
-pub struct Scheduler<T: Transaction> {
-    resource_provider: ResourcesManager<T>,
+pub struct Scheduler<T: Transaction, K: KvStore<T::ResourceID>> {
+    resource_provider: ResourcesManager<T, K>,
     last_batch: Option<Arc<Batch<T>>>,
 }
 
-impl<T: Transaction> Scheduler<T> {
-    pub fn new(resource_provider: ResourcesManager<T>) -> Self {
+impl<T: Transaction, K: KvStore<T::ResourceID>> Scheduler<T, K> {
+    pub fn new(resource_provider: ResourcesManager<T, K>) -> Self {
         Self {
             resource_provider,
             last_batch: None,

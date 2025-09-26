@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::{
     resources::{
         AccessType,
@@ -9,6 +11,7 @@ use crate::{
     transactions::Transaction,
 };
 
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct State<T: Transaction> {
     pub owner: T::ResourceID,
     pub data: Vec<u8>,
@@ -47,6 +50,17 @@ impl<T: Transaction> Clone for State<T> {
             data: self.data.clone(),
             balance: self.balance,
             executable: self.executable,
+        }
+    }
+}
+
+impl<T: Transaction> Default for State<T> {
+    fn default() -> Self {
+        Self {
+            owner: T::ResourceID::default(),
+            data: Vec::new(),
+            balance: 0,
+            executable: false,
         }
     }
 }

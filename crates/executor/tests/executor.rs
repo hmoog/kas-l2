@@ -1,6 +1,6 @@
 extern crate core;
 
-use std::{thread::sleep, time::Duration};
+use std::{collections::HashMap, thread::sleep, time::Duration};
 
 use kas_l2_core::resources::{AccessHandle, AccessType};
 use kas_l2_executor::Executor;
@@ -8,7 +8,8 @@ use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
 #[test]
 pub fn test_executor() {
-    let mut scheduler = Scheduler::new(ResourcesManager::default());
+    let resources_manager = ResourcesManager::new(KVStore(HashMap::new()));
+    let mut scheduler = Scheduler::new(resources_manager);
 
     let executor = Executor::new(
         4,
@@ -100,6 +101,16 @@ struct Transaction {
     access: Vec<Access>,
 }
 
+impl kas_l2_core::transactions::Transaction for Transaction {
+    type ResourceID = u32;
+
+    type AccessMetadata = Access;
+
+    fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+        &self.access
+    }
+}
+
 #[derive(Clone)]
 struct Access {
     resource_id: u32,
@@ -116,12 +127,20 @@ impl kas_l2_core::resources::AccessMetadata<u32> for Access {
     }
 }
 
-impl kas_l2_core::transactions::Transaction for Transaction {
-    type ResourceID = u32;
+pub struct KVStore(HashMap<u32, Vec<u8>>);
 
-    type AccessMetadata = Access;
+impl kas_l2_core::storage::KvStore<u32> for KVStore {
+    type Error = std::io::Error;
 
-    fn accessed_resources(&self) -> &[Self::AccessMetadata] {
-        &self.access
+    fn get(&self, key: &u32) -> Result<Option<Vec<u8>>, Self::Error> {
+        Ok(self.0.get(key).cloned())
+    }
+
+    fn put(&mut self, key: u32, value: Vec<u8>) -> Result<(), Self::Error> {
+        self.0.insert(key, value);
+        Ok(())
+    }
+    fn delete(&mut self, key: &u32) -> Result<bool, Self::Error> {
+        Ok(self.0.remove(key).is_some())
     }
 }

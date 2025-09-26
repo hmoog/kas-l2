@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_core::{atomic::AtomicOptionArc, transactions::Transaction};
+use kas_l2_core::{atomic::AtomicOptionArc, storage::KvStore, transactions::Transaction};
 
 use crate::{BatchAPI, ResourcesManager, ScheduledTransaction};
 
@@ -19,10 +19,10 @@ impl<T: Transaction> Batch<T> {
         self.api.clone()
     }
 
-    pub(crate) fn new(
+    pub(crate) fn new<K: KvStore<T::ResourceID>>(
         prev: Option<Arc<Self>>,
         transactions: Vec<T>,
-        resources: &mut ResourcesManager<T>,
+        resources: &mut ResourcesManager<T, K>,
     ) -> Self {
         let api = Arc::new(BatchAPI::new(transactions.len() as u64));
         let scheduled_transactions = transactions

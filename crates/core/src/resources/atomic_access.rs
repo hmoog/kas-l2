@@ -16,15 +16,18 @@ pub struct AtomicAccess<T: Transaction, A: AtomicAccessor> {
 }
 
 impl<T: Transaction, A: AtomicAccessor> AtomicAccess<T, A> {
-    pub fn new(x: Vec<Arc<Access<T, A>>>) -> Self {
+    pub fn new(resources: Vec<Arc<Access<T, A>>>) -> Self {
         Self {
-            pending_accesses: AtomicU64::new(x.len() as u64),
+            pending_accesses: AtomicU64::new(resources.len() as u64),
             accessor: AtomicWeak::default(),
-            accesses: x.into_iter().map(|y| AtomicOptionArc::new(Some(y))).collect(),
+            accesses: resources
+                .into_iter()
+                .map(|y| AtomicOptionArc::new(Some(y)))
+                .collect(),
         }
     }
 
-    pub fn provide_resources<F: Fn(&Arc<Access<T, A>>)>(self: Arc<Self>, loader: F) -> Arc<Self> {
+    pub fn load_missing<F: Fn(&Arc<Access<T, A>>)>(self: Arc<Self>, loader: F) -> Arc<Self> {
         for access in self.accesses.iter() {
             let access = access.load().unwrap();
             match access.prev_access() {

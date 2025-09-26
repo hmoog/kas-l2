@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.47.1", features = ["sync"] }
+borsh = {  version = "1.5.7", features = ["derive"] }

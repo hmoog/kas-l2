@@ -26,7 +26,7 @@ impl<T: Transaction, C: AtomicAccessor> Resource<T, C> {
         access
     }
 
-    pub fn last_atomic_access_by(&self, atomic_access: &Weak<AtomicAccess<T, C>>) -> bool {
+    pub fn last_accessed_by(&self, atomic_access: &Weak<AtomicAccess<T, C>>) -> bool {
         let Some(last_access) = self.last_access.as_ref() else {
             return false;
         };

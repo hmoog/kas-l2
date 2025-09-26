@@ -3330,6 +3330,7 @@ dependencies = [
 name = "kas-l2-core"
 version = "0.1.0"
 dependencies = [
+ "borsh",
  "tokio",
 ]
 
