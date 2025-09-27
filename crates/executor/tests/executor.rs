@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{collections::HashMap, thread::sleep, time::Duration};
 
-use kas_l2_core::resources::{AccessHandle, AccessType};
+use kas_l2_core::resources::{AccessHandle, AccessMetadata, AccessType};
 use kas_l2_executor::Executor;
 use kas_l2_scheduler::{ResourcesManager, Scheduler};
 
@@ -14,6 +14,26 @@ pub fn test_executor() {
     let executor = Executor::new(
         4,
         |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
+            for r in _resources {
+                match r.access_metadata().access_type {
+                    AccessType::Read => {
+                        println!(
+                            "Transaction {} reading from resource {}: {:?}",
+                            tx.id,
+                            r.access_metadata().resource_id(),
+                            r.data()
+                        );
+                    }
+                    AccessType::Write => {
+                        println!(
+                            "Transaction {} writing to resource {}: {:?}",
+                            tx.id,
+                            r.access_metadata().resource_id(),
+                            r.data()
+                        );
+                    }
+                }
+            }
             println!("Executing transaction with id {}", tx.id);
             sleep(tx.duration);
             println!("Finished transaction with id {}", tx.id);

@@ -2,55 +2,56 @@ use std::{ops::Deref, sync::Arc};
 
 use crate::{resources::state::State, transactions::Transaction};
 
-pub enum AccessHandle<T: Transaction> {
-    Read(ReadHandle<T>),
-    Write(WriteHandle<T>),
+pub struct AccessHandle<'a, T: Transaction> {
+    state: Arc<State<T>>,
+    metadata: &'a T::AccessMetadata,
 }
 
-pub struct ReadHandle<T: Transaction> {
-    pub(crate) state: Arc<State<T>>,
-    pub(crate) access_metadata: T::AccessMetadata,
-}
+impl<'a, T: Transaction> AccessHandle<'a, T> {
+    pub fn new(state: Arc<State<T>>, metadata: &'a T::AccessMetadata) -> Self {
+        Self { state, metadata }
+    }
 
-pub struct WriteHandle<T: Transaction> {
-    pub(crate) state: State<T>,
-    pub(crate) access_metadata: T::AccessMetadata,
-}
-
-impl<T: Transaction> AccessHandle<T> {
+    /// Borrow the access metadata.
     pub fn access_metadata(&self) -> &T::AccessMetadata {
-        match self {
-            AccessHandle::Read(h) => &h.access_metadata,
-            AccessHandle::Write(h) => &h.access_metadata,
-        }
+        self.metadata
     }
 
+    /// Immutable access to the underlying data.
     pub fn data(&self) -> &[u8] {
-        match self {
-            AccessHandle::Read(h) => &h.state.data,
-            AccessHandle::Write(h) => &h.state.data,
-        }
+        &self.state.data
     }
 
-    pub fn data_mut(&mut self) -> Option<&mut [u8]> {
-        match self {
-            AccessHandle::Write(h) => Some(&mut h.state.data),
-            AccessHandle::Read(_) => None,
-        }
+    /// Mutable access with copy-on-write semantics.
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        &mut Arc::make_mut(&mut self.state).data
     }
 
+    /// Ensure the Vec has at least `additional` capacity.
+    pub fn reserve(&mut self, additional: usize) {
+        Arc::make_mut(&mut self.state).data.reserve(additional);
+    }
+
+    /// Replace the underlying Vec entirely.
+    pub fn set_data(&mut self, new_data: Vec<u8>) {
+        Arc::make_mut(&mut self.state).data = new_data;
+    }
+
+    /// Resize the underlying Vec (zero-filling new elements).
+    pub fn resize(&mut self, new_len: usize) {
+        Arc::make_mut(&mut self.state).data.resize(new_len, 0);
+    }
+
+    /// Commit and return the underlying Arc<State<T>>.
     pub fn commit(self) -> Arc<State<T>> {
-        match self {
-            AccessHandle::Read(h) => h.state,
-            AccessHandle::Write(h) => Arc::new(h.state),
-        }
+        self.state
     }
 }
 
-impl<T: Transaction> Deref for AccessHandle<T> {
+impl<'a, T: Transaction> Deref for AccessHandle<'a, T> {
     type Target = T::AccessMetadata;
 
     fn deref(&self) -> &Self::Target {
-        self.access_metadata()
+        self.metadata
     }
 }

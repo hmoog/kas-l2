@@ -45,15 +45,15 @@ impl<T: Transaction, C: AtomicAccessor, K: KvStore<T::ResourceID>> ResourceManag
         .load_missing(|access| self.load_from_storage(access))
     }
 
-    pub fn load_from_storage(&self, access: &Arc<Access<T, C>>) {
-        access.publish_loaded_state(Arc::new(
-            match self.permanent_storage.get(&access.resource_id()) {
-                Ok(result) => match result {
-                    None => State::default(),
-                    Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
-                },
-                Err(err) => panic!("failed to load resource from storage: {}", err),
+    pub fn load_from_storage(&self, access: Arc<Access<T, C>>) {
+        let resource_id = access.resource_id();
+
+        access.load_state(Arc::new(match self.permanent_storage.get(&resource_id) {
+            Ok(result) => match result {
+                None => State::default(),
+                Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
             },
-        ))
+            Err(err) => panic!("failed to load resource from storage: {}", err),
+        }))
     }
 }

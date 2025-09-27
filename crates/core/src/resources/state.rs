@@ -1,15 +1,6 @@
-use std::sync::Arc;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::{
-    resources::{
-        AccessType,
-        access_handle::{AccessHandle, ReadHandle, WriteHandle},
-        access_metadata::AccessMetadata,
-    },
-    transactions::Transaction,
-};
+use crate::transactions::Transaction;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct State<T: Transaction> {
@@ -26,19 +17,6 @@ impl<T: Transaction> State<T> {
             data,
             balance,
             executable,
-        }
-    }
-
-    pub fn cow_handle(self: &Arc<Self>, access_metadata: T::AccessMetadata) -> AccessHandle<T> {
-        match access_metadata.access_type() {
-            AccessType::Read => AccessHandle::Read(ReadHandle {
-                state: Arc::clone(self),
-                access_metadata,
-            }),
-            AccessType::Write => AccessHandle::Write(WriteHandle {
-                state: Self::clone(self),
-                access_metadata,
-            }),
         }
     }
 }

@@ -9,9 +9,9 @@ use crate::{
     transactions::Transaction,
 };
 
-pub struct Access<T: Transaction, R: AtomicAccessor> {
+pub struct Access<T: Transaction, A: AtomicAccessor> {
     metadata: T::AccessMetadata,
-    atomic_ref: (Weak<AtomicAccess<T, R>>, usize),
+    atomic_ref: (Weak<AtomicAccess<T, A>>, usize),
     loaded_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
     prev_access: AtomicOptionArc<Self>,
@@ -58,33 +58,33 @@ impl<T: Transaction, R: AtomicAccessor> Access<T, R> {
         self.next_access.load().upgrade()
     }
 
-    pub fn publish_loaded_state(self: &Arc<Self>, state: Arc<State<T>>) {
-        if self.loaded_state.publish(state.clone()) {
-            if self.access_type() == AccessType::Read {
-                self.publish_written_state(state);
-            }
+    pub fn load_state(self: Arc<Self>, state: Arc<State<T>>) {
+        drop(self.prev_access.take()); // allow the previous provider to be dropped
 
+        if self.access_type() == AccessType::Read {
+            self.publish_written_state(state.clone());
+        }
+
+        if self.loaded_state.publish(state) {
             if let Some(atomic_access) = self.atomic_ref.0.upgrade() {
-                atomic_access.notify(self, self.atomic_ref.1);
+                atomic_access.decrease_pending_resources();
             }
-
-            drop(self.prev_access.take()); // allow the previous provider to be dropped
         }
     }
 
     pub fn publish_written_state(&self, state: Arc<State<T>>) {
-        if self.written_state.publish(state.clone()) {
-            if let Some(next) = self.next_access.load().upgrade() {
-                next.publish_loaded_state(state)
-            }
+        if let Some(next_access) = self.next_access.load().upgrade() {
+            next_access.load_state(state)
+        } else {
+            self.written_state.store(Some(state))
         }
     }
 
-    pub fn publish_next_access(&self, next_access: &Arc<Self>) {
-        self.next_access.store(Arc::downgrade(next_access));
-
+    pub fn link_next_access(&self, next_access: Arc<Self>) {
         if let Some(state) = self.written_state() {
-            next_access.publish_loaded_state(state);
+            next_access.load_state(state);
+        } else {
+            self.next_access.store(Arc::downgrade(&next_access));
         }
     }
 }
