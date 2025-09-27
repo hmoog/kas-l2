@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-core = { path = "../core" }
+kas-l2-runtime-core = { path = "../runtime-core" }
 kas-l2-scheduler = { path = "../scheduler" }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"

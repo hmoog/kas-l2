@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_core::{atomic::AtomicOptionArc, storage::KvStore, transactions::Transaction};
+use kas_l2_runtime_core::{atomic::AtomicOptionArc, storage::KvStore, transactions::Transaction};
 
 use crate::{BatchAPI, ResourceProvider, ScheduledTransaction};
 

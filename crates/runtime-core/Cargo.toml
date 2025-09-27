@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-core"
+name = "kas-l2-runtime-core"
 version = "0.1.0"
 edition = "2021"
 

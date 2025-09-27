@@ -7,7 +7,7 @@ use std::{
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
-use kas_l2_core::{atomic::AtomicAsyncLatch, transactions::Transaction};
+use kas_l2_runtime_core::{atomic::AtomicAsyncLatch, transactions::Transaction};
 
 use crate::ScheduledTransaction;
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_core::{
+use kas_l2_runtime_core::{
     atomic::AtomicOptionArc,
     resources::{Consumer, Resources},
     transactions::{Transaction, TransactionProcessor},

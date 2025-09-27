@@ -2,7 +2,7 @@ use std::{sync::Arc, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
-use kas_l2_core::{
+use kas_l2_runtime_core::{
     atomic::AtomicAsyncLatch,
     transactions::{Transaction, TransactionProcessor},
 };
