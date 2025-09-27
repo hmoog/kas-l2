@@ -12,14 +12,14 @@ use crate::{
 };
 
 pub struct ResourceProvider<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> {
-    cached_resources: HashMap<T::ResourceID, ResourceManager<T, C>>,
+    managers: HashMap<T::ResourceID, ResourceManager<T, C>>,
     permanent_storage: K,
 }
 
 impl<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> ResourceProvider<T, C, K> {
     pub fn new(permanent_storage: K) -> Self {
         Self {
-            cached_resources: HashMap::new(),
+            managers: HashMap::new(),
             permanent_storage,
         }
     }
@@ -28,8 +28,8 @@ impl<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> ResourceProvider<T,
         Arc::new_cyclic(|weak_resources| {
             let mut resources = Vec::new();
             for access in transaction.accessed_resources() {
-                let manager = self.resource_manager(access.resource_id());
-                if manager.is_duplicate_access(weak_resources) {
+                let manager = self.manager(access.resource_id());
+                if manager.has_duplicate_access(weak_resources) {
                     panic!("duplicate access to resource")
                 }
 
@@ -41,8 +41,8 @@ impl<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> ResourceProvider<T,
         .init_resources(|resource| self.load_from_storage(resource))
     }
 
-    fn resource_manager(&mut self, resource_id: T::ResourceID) -> &mut ResourceManager<T, C> {
-        self.cached_resources.entry(resource_id).or_default()
+    fn manager(&mut self, resource_id: T::ResourceID) -> &mut ResourceManager<T, C> {
+        self.managers.entry(resource_id).or_default()
     }
 
     fn load_from_storage(&self, access: Arc<Resource<T, C>>) {

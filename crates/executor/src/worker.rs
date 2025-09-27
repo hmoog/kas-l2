@@ -52,12 +52,8 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
                 .or_else(|| batch_injector.steal(&self.local_queue))
                 .or_else(|| workers_api.steal_task_from_other_workers(self.id))
             {
-                Some(task) => {
-                    task.process(&self.processor);
-                }
-                None => {
-                    self.parker.park();
-                }
+                Some(task) => task.process(&self.processor),
+                None => self.parker.park(),
             }
         }
     }

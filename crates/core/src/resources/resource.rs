@@ -50,12 +50,12 @@ impl<T: Transaction, R: Consumer> Resource<T, R> {
         }
     }
 
-    pub(crate) fn read_state(&self) -> Option<Arc<State<T>>> {
-        self.read_state.load()
+    pub(crate) fn read_state(&self) -> Arc<State<T>> {
+        self.read_state.load().unwrap()
     }
 
     pub(crate) fn set_read_state(self: Arc<Self>, state: Arc<State<T>>) {
-        drop(self.prev.take()); // allow the previous provider to be dropped
+        drop(self.prev.take()); // allow previous resource to be dropped
 
         if self.access_type() == AccessType::Read {
             self.set_written_state(state.clone());
@@ -65,7 +65,7 @@ impl<T: Transaction, R: Consumer> Resource<T, R> {
 
         self.resources
             .upgrade()
-            .expect("missing atomic access")
+            .expect("resources missing")
             .decrease_pending_resources();
     }
 

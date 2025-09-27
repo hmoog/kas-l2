@@ -16,20 +16,6 @@ pub struct Resources<T: Transaction, A: Consumer> {
 }
 
 impl<T: Transaction, A: Consumer> Resources<T, A> {
-    pub(crate) fn new(resources: Vec<Arc<Resource<T, A>>>) -> Self {
-        let mut this = Self {
-            consumer: AtomicWeak::default(),
-            resources: Vec::new(),
-            pending_resources: AtomicU64::new(resources.len() as u64),
-        };
-
-        for resource in resources {
-            this.resources.push(AtomicOptionArc::new(Some(resource)));
-        }
-
-        this
-    }
-
     pub fn init_consumer(self: Arc<Self>, consumer: &Arc<A>) {
         if self.pending_resources.load(Ordering::Acquire) == 0 {
             consumer.resources_available();
@@ -48,7 +34,7 @@ impl<T: Transaction, A: Consumer> Resources<T, A> {
 
         let mut handles: Vec<_> = resources
             .iter()
-            .map(|access| AccessHandle::new(access.read_state().expect("missing state"), &access))
+            .map(|access| AccessHandle::new(access.read_state(), &access))
             .collect();
 
         processor(&mut handles);
@@ -60,16 +46,29 @@ impl<T: Transaction, A: Consumer> Resources<T, A> {
         }
     }
 
+    pub(crate) fn new(resources: Vec<Arc<Resource<T, A>>>) -> Self {
+        let mut this = Self {
+            consumer: AtomicWeak::default(),
+            resources: Vec::new(),
+            pending_resources: AtomicU64::new(resources.len() as u64),
+        };
+
+        for resource in resources {
+            this.resources.push(AtomicOptionArc::new(Some(resource)));
+        }
+
+        this
+    }
+
     pub(crate) fn init_resources<F: Fn(Arc<Resource<T, A>>)>(
         self: Arc<Self>,
-        load_state: F,
+        load: F,
     ) -> Arc<Self> {
         for resource in self.resources.iter() {
             let resource = resource.load().expect("missing resource");
-
             match resource.prev() {
                 Some(prev) => prev.set_next(resource),
-                None => load_state(resource),
+                None => load(resource),
             }
         }
         self
@@ -77,8 +76,8 @@ impl<T: Transaction, A: Consumer> Resources<T, A> {
 
     pub(crate) fn decrease_pending_resources(self: Arc<Self>) {
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
-            if let Some(accessor) = self.consumer.load().upgrade() {
-                accessor.resources_available();
+            if let Some(consumer) = self.consumer.load().upgrade() {
+                consumer.resources_available();
             }
         }
     }

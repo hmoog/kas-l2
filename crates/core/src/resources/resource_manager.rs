@@ -28,7 +28,7 @@ impl<T: Transaction, C: Consumer> ResourceManager<T, C> {
         access
     }
 
-    pub(crate) fn is_duplicate_access(&self, resources: &Weak<Resources<T, C>>) -> bool {
+    pub(crate) fn has_duplicate_access(&self, resources: &Weak<Resources<T, C>>) -> bool {
         match self.last_resource.as_ref() {
             Some(last_resource) => last_resource.belongs_to(resources),
             None => false,
