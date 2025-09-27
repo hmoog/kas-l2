@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use kas_l2_core::{
-    atomic::AtomicAsyncLatch,
-    resources::{AtomicAccess, AtomicAccessor},
+    atomic::AtomicOptionArc,
+    resources::{Consumer, Resources},
     transactions::{Transaction, TransactionProcessor},
 };
 use tap::Tap;
@@ -10,37 +10,35 @@ use tap::Tap;
 use crate::BatchAPI;
 
 pub struct ScheduledTransaction<T: Transaction> {
-    resources: Arc<AtomicAccess<T, Self>>,
+    resources: AtomicOptionArc<Resources<T, Self>>,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
-    was_processed: AtomicAsyncLatch,
 }
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub fn new(
-        resources: Arc<AtomicAccess<T, Self>>,
+        resources: Arc<Resources<T, Self>>,
         transaction: T,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {
         Arc::new(Self {
-            resources,
+            resources: AtomicOptionArc::new(Some(resources.clone())),
             transaction,
             batch_api,
-            was_processed: AtomicAsyncLatch::new(),
         })
-        .tap(|this| this.resources.init_accessor(this))
+        .tap(|this| resources.init_consumer(this))
     }
 
-    pub fn process<F: TransactionProcessor<T>>(&self, processor: &F) {
-        if self.was_processed.open() {
-            self.resources.consume(|h| processor(&self.transaction, h));
+    pub fn process<F: TransactionProcessor<T>>(self: Arc<Self>, processor: &F) {
+        if let Some(resources) = self.resources.take() {
+            resources.consume(|h| processor(&self.transaction, h));
             self.batch_api.transaction_done();
         }
     }
 }
 
-impl<T: Transaction> AtomicAccessor for ScheduledTransaction<T> {
-    fn notify(self: &Arc<Self>) {
+impl<T: Transaction> Consumer for ScheduledTransaction<T> {
+    fn resources_available(self: &Arc<Self>) {
         self.batch_api.schedule_transaction(self.clone())
     }
 }

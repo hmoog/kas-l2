@@ -4,11 +4,11 @@ use std::{collections::HashMap, thread::sleep, time::Duration};
 
 use kas_l2_core::resources::{AccessHandle, AccessMetadata, AccessType};
 use kas_l2_executor::Executor;
-use kas_l2_scheduler::{ResourcesManager, Scheduler};
+use kas_l2_scheduler::{ResourceProvider, Scheduler};
 
 #[test]
 pub fn test_executor() {
-    let resources_manager = ResourcesManager::new(KVStore(HashMap::new()));
+    let resources_manager = ResourceProvider::new(KVStore(HashMap::new()));
     let mut scheduler = Scheduler::new(resources_manager);
 
     let executor = Executor::new(

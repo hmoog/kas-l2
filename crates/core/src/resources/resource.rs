@@ -1,36 +1,86 @@
-use std::sync::{Arc, Weak};
+use std::{
+    ops::Deref,
+    sync::{Arc, Weak},
+};
 
 use crate::{
-    resources::{AtomicAccess, AtomicAccessor, access::Access},
+    atomic::{AtomicOptionArc, AtomicWeak},
+    resources::{AccessType, Consumer, Resources, State, access_metadata::AccessMetadata},
     transactions::Transaction,
 };
 
-pub struct Resource<T: Transaction, C: AtomicAccessor> {
-    last_access: Option<Arc<Access<T, C>>>,
+pub(crate) struct Resource<T: Transaction, A: Consumer> {
+    resources: Weak<Resources<T, A>>,
+    prev: AtomicOptionArc<Self>,
+    next: AtomicWeak<Self>,
+    read_state: AtomicOptionArc<State<T>>,
+    written_state: AtomicOptionArc<State<T>>,
+    access_metadata: T::AccessMetadata,
 }
 
-impl<T: Transaction, C: AtomicAccessor> Default for Resource<T, C> {
-    fn default() -> Self {
-        Self { last_access: None }
+impl<T: Transaction, R: Consumer> Resource<T, R> {
+    pub(crate) fn new(
+        resources: Weak<Resources<T, R>>,
+        prev: Option<Arc<Self>>,
+        access_metadata: T::AccessMetadata,
+    ) -> Arc<Self> {
+        Arc::new(Self {
+            resources,
+            prev: AtomicOptionArc::new(prev),
+            next: AtomicWeak::default(),
+            read_state: AtomicOptionArc::empty(),
+            written_state: AtomicOptionArc::empty(),
+            access_metadata,
+        })
+    }
+
+    pub(crate) fn belongs_to(&self, resources: &Weak<Resources<T, R>>) -> bool {
+        Weak::ptr_eq(&self.resources, resources)
+    }
+
+    pub(crate) fn prev(&self) -> Option<Arc<Self>> {
+        self.prev.load()
+    }
+
+    pub(crate) fn set_next(&self, next: Arc<Self>) {
+        if let Some(written_state) = self.written_state.take() {
+            next.set_read_state(written_state);
+        } else {
+            self.next.store(Arc::downgrade(&next));
+        }
+    }
+
+    pub(crate) fn read_state(&self) -> Option<Arc<State<T>>> {
+        self.read_state.load()
+    }
+
+    pub(crate) fn set_read_state(self: Arc<Self>, state: Arc<State<T>>) {
+        drop(self.prev.take()); // allow the previous provider to be dropped
+
+        if self.access_type() == AccessType::Read {
+            self.set_written_state(state.clone());
+        }
+
+        self.read_state.store(Some(state));
+
+        self.resources
+            .upgrade()
+            .expect("missing atomic access")
+            .decrease_pending_resources();
+    }
+
+    pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
+        if let Some(next) = self.next.load().upgrade() {
+            next.set_read_state(state)
+        } else {
+            self.written_state.store(Some(state))
+        }
     }
 }
 
-impl<T: Transaction, C: AtomicAccessor> Resource<T, C> {
-    pub fn access(
-        &mut self,
-        metadata: T::AccessMetadata,
-        consumer: (Weak<AtomicAccess<T, C>>, usize),
-    ) -> Arc<Access<T, C>> {
-        let access = Arc::new(Access::new(metadata, consumer, self.last_access.take()));
-        self.last_access = Some(access.clone());
-        access
-    }
-
-    pub fn last_accessed_by(&self, atomic_access: &Weak<AtomicAccess<T, C>>) -> bool {
-        let Some(last_access) = self.last_access.as_ref() else {
-            return false;
-        };
-
-        Weak::ptr_eq(&last_access.atomic_ref().0, atomic_access)
+impl<T: Transaction, C: Consumer> Deref for Resource<T, C> {
+    type Target = T::AccessMetadata;
+    fn deref(&self) -> &Self::Target {
+        &self.access_metadata
     }
 }
