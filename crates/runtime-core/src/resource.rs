@@ -6,12 +6,11 @@ use std::{
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessType, Consumer, Resources, State, access_metadata::AccessMetadata,
-    transaction::Transaction,
+    AccessType, Resources, State, access_metadata::AccessMetadata, transaction::Transaction,
 };
 
-pub(crate) struct Resource<T: Transaction, A: Consumer> {
-    resources: Weak<Resources<T, A>>,
+pub(crate) struct Resource<T: Transaction> {
+    resources: Weak<Resources<T>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
     read_state: AtomicOptionArc<State<T>>,
@@ -19,9 +18,9 @@ pub(crate) struct Resource<T: Transaction, A: Consumer> {
     access_metadata: T::AccessMetadata,
 }
 
-impl<T: Transaction, R: Consumer> Resource<T, R> {
+impl<T: Transaction> Resource<T> {
     pub(crate) fn new(
-        resources: Weak<Resources<T, R>>,
+        resources: Weak<Resources<T>>,
         prev: Option<Arc<Self>>,
         access_metadata: T::AccessMetadata,
     ) -> Arc<Self> {
@@ -35,7 +34,7 @@ impl<T: Transaction, R: Consumer> Resource<T, R> {
         })
     }
 
-    pub(crate) fn belongs_to(&self, resources: &Weak<Resources<T, R>>) -> bool {
+    pub(crate) fn belongs_to(&self, resources: &Weak<Resources<T>>) -> bool {
         Weak::ptr_eq(&self.resources, resources)
     }
 
@@ -79,7 +78,7 @@ impl<T: Transaction, R: Consumer> Resource<T, R> {
     }
 }
 
-impl<T: Transaction, C: Consumer> Deref for Resource<T, C> {
+impl<T: Transaction> Deref for Resource<T> {
     type Target = T::AccessMetadata;
     fn deref(&self) -> &Self::Target {
         &self.access_metadata

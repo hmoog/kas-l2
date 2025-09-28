@@ -6,18 +6,18 @@ use std::sync::{
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessHandle, AccessMetadata, AccessType, Consumer, resource::Resource,
+    AccessHandle, AccessMetadata, AccessType, ScheduledTransaction, resource::Resource,
     transaction::Transaction,
 };
 
-pub struct Resources<T: Transaction, A: Consumer> {
-    consumer: AtomicWeak<A>,
-    resources: Vec<AtomicOptionArc<Resource<T, A>>>,
+pub struct Resources<T: Transaction> {
+    consumer: AtomicWeak<ScheduledTransaction<T>>,
+    resources: Vec<AtomicOptionArc<Resource<T>>>,
     pending_resources: AtomicU64,
 }
 
-impl<T: Transaction, A: Consumer> Resources<T, A> {
-    pub fn init_consumer(self: Arc<Self>, consumer: &Arc<A>) {
+impl<T: Transaction> Resources<T> {
+    pub fn init_consumer(self: Arc<Self>, consumer: &Arc<ScheduledTransaction<T>>) {
         if self.pending_resources.load(Ordering::Acquire) == 0 {
             consumer.resources_available();
         } else {
@@ -47,7 +47,7 @@ impl<T: Transaction, A: Consumer> Resources<T, A> {
         }
     }
 
-    pub(crate) fn new(resources: Vec<Arc<Resource<T, A>>>) -> Self {
+    pub(crate) fn new(resources: Vec<Arc<Resource<T>>>) -> Self {
         let mut this = Self {
             consumer: AtomicWeak::default(),
             resources: Vec::new(),
@@ -61,10 +61,7 @@ impl<T: Transaction, A: Consumer> Resources<T, A> {
         this
     }
 
-    pub(crate) fn init_resources<F: Fn(Arc<Resource<T, A>>)>(
-        self: Arc<Self>,
-        load: F,
-    ) -> Arc<Self> {
+    pub(crate) fn init_resources<F: Fn(Arc<Resource<T>>)>(self: Arc<Self>, load: F) -> Arc<Self> {
         for resource in self.resources.iter() {
             let resource = resource.load().expect("missing resource");
             match resource.prev() {

@@ -3,17 +3,17 @@ use std::sync::Arc;
 use kas_l2_atomic::AtomicOptionArc;
 use tap::Tap;
 
-use crate::{BatchAPI, Consumer, Resources, Transaction, TransactionProcessor};
+use crate::{BatchAPI, Resources, Transaction, TransactionProcessor};
 
 pub struct ScheduledTransaction<T: Transaction> {
-    resources: AtomicOptionArc<Resources<T, Self>>,
+    resources: AtomicOptionArc<Resources<T>>,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
 }
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub fn new(
-        resources: Arc<Resources<T, Self>>,
+        resources: Arc<Resources<T>>,
         transaction: T,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Arc<Self> {
@@ -31,10 +31,8 @@ impl<T: Transaction> ScheduledTransaction<T> {
             self.batch_api.transaction_done();
         }
     }
-}
 
-impl<T: Transaction> Consumer for ScheduledTransaction<T> {
-    fn resources_available(self: &Arc<Self>) {
+    pub(crate) fn resources_available(self: &Arc<Self>) {
         self.batch_api.schedule_transaction(self.clone())
     }
 }
