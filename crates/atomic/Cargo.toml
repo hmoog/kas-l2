@@ -1,0 +1,7 @@
+[package]
+name = "kas-l2-atomic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.47.1", features = ["sync"] }

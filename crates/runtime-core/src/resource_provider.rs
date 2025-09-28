@@ -3,20 +3,16 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    resources::{
-        AccessMetadata, Consumer, Resources, State, resource::Resource,
-        resource_manager::ResourceManager,
-    },
-    storage::KvStore,
-    transactions::Transaction,
+    AccessMetadata, Consumer, Resources, State, resource::Resource,
+    resource_manager::ResourceManager, storage::Storage, transaction::Transaction,
 };
 
-pub struct ResourceProvider<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> {
+pub struct ResourceProvider<T: Transaction, C: Consumer, K: Storage<T::ResourceID>> {
     managers: HashMap<T::ResourceID, ResourceManager<T, C>>,
     permanent_storage: K,
 }
 
-impl<T: Transaction, C: Consumer, K: KvStore<T::ResourceID>> ResourceProvider<T, C, K> {
+impl<T: Transaction, C: Consumer, K: Storage<T::ResourceID>> ResourceProvider<T, C, K> {
     pub fn new(permanent_storage: K) -> Self {
         Self {
             managers: HashMap::new(),

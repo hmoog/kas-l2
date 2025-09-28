@@ -3,10 +3,11 @@ use std::{
     sync::{Arc, Weak},
 };
 
+use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
+
 use crate::{
-    atomic::{AtomicOptionArc, AtomicWeak},
-    resources::{AccessType, Consumer, Resources, State, access_metadata::AccessMetadata},
-    transactions::Transaction,
+    AccessType, Consumer, Resources, State, access_metadata::AccessMetadata,
+    transaction::Transaction,
 };
 
 pub(crate) struct Resource<T: Transaction, A: Consumer> {

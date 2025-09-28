@@ -3327,14 +3327,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-atomic"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "kas-l2-executor"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
  "intrusive-collections",
+ "kas-l2-atomic",
  "kas-l2-runtime-core",
- "kas-l2-scheduler",
 ]
 
 [[package]]
@@ -3353,7 +3360,9 @@ name = "kas-l2-runtime-core"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "tokio",
+ "crossbeam-deque",
+ "kas-l2-atomic",
+ "tap",
 ]
 
 [[package]]
@@ -3362,15 +3371,6 @@ version = "0.1.0"
 dependencies = [
  "quote",
  "syn 2.0.106",
-]
-
-[[package]]
-name = "kas-l2-scheduler"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
- "kas-l2-runtime-core",
- "tap",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-use crate::resources::{AccessMetadata, ResourceID};
+use crate::{AccessMetadata, ResourceID};
 
 pub trait Transaction: Send + Sync + 'static {
     type ResourceID: ResourceID;

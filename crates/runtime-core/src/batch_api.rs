@@ -7,9 +7,9 @@ use std::{
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
-use kas_l2_runtime_core::{atomic::AtomicAsyncLatch, transactions::Transaction};
+use kas_l2_atomic::AtomicAsyncLatch;
 
-use crate::ScheduledTransaction;
+use crate::{ScheduledTransaction, transaction::Transaction};
 
 pub struct BatchAPI<T: Transaction> {
     scheduled_tasks: Injector<Arc<ScheduledTransaction<T>>>,

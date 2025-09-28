@@ -1,13 +1,9 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_core::{
-    atomic::AtomicOptionArc,
-    resources::{Consumer, Resources},
-    transactions::{Transaction, TransactionProcessor},
-};
+use kas_l2_atomic::AtomicOptionArc;
 use tap::Tap;
 
-use crate::BatchAPI;
+use crate::{BatchAPI, Consumer, Resources, Transaction, TransactionProcessor};
 
 pub struct ScheduledTransaction<T: Transaction> {
     resources: AtomicOptionArc<Resources<T, Self>>,

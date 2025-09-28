@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.47.1", features = ["sync"] }
+crossbeam-deque = "0.8.6"
+kas-l2-atomic = { path = "../atomic"}
 borsh = {  version = "1.5.7", features = ["derive"] }
+tap = "1.0.1"

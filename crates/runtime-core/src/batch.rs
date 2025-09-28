@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_core::{atomic::AtomicOptionArc, storage::KvStore, transactions::Transaction};
+use kas_l2_atomic::AtomicOptionArc;
 
-use crate::{BatchAPI, ResourceProvider, ScheduledTransaction};
+use crate::{
+    BatchAPI, ResourceProvider, ScheduledTransaction, storage::Storage, transaction::Transaction,
+};
 
 pub struct Batch<T: Transaction> {
     scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
@@ -19,7 +21,7 @@ impl<T: Transaction> Batch<T> {
         self.api.clone()
     }
 
-    pub(crate) fn new<K: KvStore<T::ResourceID>>(
+    pub(crate) fn new<K: Storage<T::ResourceID>>(
         prev: Option<Arc<Self>>,
         transactions: Vec<T>,
         resources: &mut ResourceProvider<T, K>,

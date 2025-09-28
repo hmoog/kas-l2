@@ -1,9 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::{
-    resources::{Consumer, Resources, resource::Resource},
-    transactions::Transaction,
-};
+use crate::{Consumer, Resources, resource::Resource, transaction::Transaction};
 
 pub(crate) struct ResourceManager<T: Transaction, C: Consumer> {
     last_resource: Option<Arc<Resource<T, C>>>,

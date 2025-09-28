@@ -2,11 +2,8 @@ use std::{sync::Arc, thread::JoinHandle};
 
 use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
-use kas_l2_runtime_core::{
-    atomic::AtomicAsyncLatch,
-    transactions::{Transaction, TransactionProcessor},
-};
-use kas_l2_scheduler::{BatchAPI, ScheduledTransaction};
+use kas_l2_atomic::AtomicAsyncLatch;
+use kas_l2_runtime_core::{BatchAPI, ScheduledTransaction, Transaction, TransactionProcessor};
 
 use crate::worker::Worker;
 
