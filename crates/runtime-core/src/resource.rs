@@ -6,11 +6,12 @@ use std::{
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessType, Resources, State, access_metadata::AccessMetadata, transaction::Transaction,
+    AccessType, ScheduledTransaction, State, access_metadata::AccessMetadata,
+    transaction::Transaction,
 };
 
 pub(crate) struct Resource<T: Transaction> {
-    resources: Weak<Resources<T>>,
+    transaction: Weak<ScheduledTransaction<T>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
     read_state: AtomicOptionArc<State<T>>,
@@ -20,12 +21,12 @@ pub(crate) struct Resource<T: Transaction> {
 
 impl<T: Transaction> Resource<T> {
     pub(crate) fn new(
-        resources: Weak<Resources<T>>,
+        scheduled_transaction: Weak<ScheduledTransaction<T>>,
         prev: Option<Arc<Self>>,
         access_metadata: T::AccessMetadata,
     ) -> Arc<Self> {
         Arc::new(Self {
-            resources,
+            transaction: scheduled_transaction,
             prev: AtomicOptionArc::new(prev),
             next: AtomicWeak::default(),
             read_state: AtomicOptionArc::empty(),
@@ -34,8 +35,8 @@ impl<T: Transaction> Resource<T> {
         })
     }
 
-    pub(crate) fn belongs_to(&self, resources: &Weak<Resources<T>>) -> bool {
-        Weak::ptr_eq(&self.resources, resources)
+    pub(crate) fn belongs_to(&self, resources: &Weak<ScheduledTransaction<T>>) -> bool {
+        Weak::ptr_eq(&self.transaction, resources)
     }
 
     pub(crate) fn prev(&self) -> Option<Arc<Self>> {
@@ -63,7 +64,7 @@ impl<T: Transaction> Resource<T> {
 
         self.read_state.store(Some(state));
 
-        self.resources
+        self.transaction
             .upgrade()
             .expect("resources missing")
             .decrease_pending_resources();

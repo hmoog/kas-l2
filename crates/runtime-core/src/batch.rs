@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::AtomicOptionArc;
 
@@ -29,7 +29,25 @@ impl<T: Transaction> Batch<T> {
         let api = Arc::new(BatchAPI::new(transactions.len() as u64));
         let scheduled_transactions = transactions
             .into_iter()
-            .map(|tx| ScheduledTransaction::new(resources.provide_resources(&tx), tx, api.clone()))
+            .map(|tx| {
+                let scheduled_transaction =
+                    Arc::new_cyclic(|scheduled_transaction: &Weak<ScheduledTransaction<T>>| {
+                        ScheduledTransaction::new(
+                            resources.provide_resources(&tx, scheduled_transaction),
+                            tx,
+                            api.clone(),
+                        )
+                    });
+
+                for resource in scheduled_transaction.resources().into_iter() {
+                    match resource.prev() {
+                        Some(prev) => prev.set_next(resource),
+                        None => resources.load_from_storage(resource),
+                    }
+                }
+
+                scheduled_transaction
+            })
             .collect();
 
         Self {
