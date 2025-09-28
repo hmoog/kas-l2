@@ -7,11 +7,11 @@ use kas_l2_atomic::AtomicOptionArc;
 
 use crate::{
     AccessHandle, AccessMetadata, AccessType, BatchAPI, Transaction, TransactionProcessor,
-    resource::Resource,
+    resource_access::ResourceAccess,
 };
 
 pub struct ScheduledTransaction<T: Transaction> {
-    pub(crate) resources: Vec<AtomicOptionArc<Resource<T>>>,
+    pub(crate) resources: Vec<AtomicOptionArc<ResourceAccess<T>>>,
     pending_resources: AtomicU64,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
@@ -19,7 +19,7 @@ pub struct ScheduledTransaction<T: Transaction> {
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub(crate) fn new(
-        resources: Vec<Arc<Resource<T>>>,
+        resources: Vec<Arc<ResourceAccess<T>>>,
         transaction: T,
         batch_api: Arc<BatchAPI<T>>,
     ) -> Self {
@@ -34,7 +34,7 @@ impl<T: Transaction> ScheduledTransaction<T> {
         }
     }
 
-    pub(crate) fn resources(&self) -> Vec<Arc<Resource<T>>> {
+    pub(crate) fn resources(&self) -> Vec<Arc<ResourceAccess<T>>> {
         self.resources
             .iter()
             .filter_map(AtomicOptionArc::load)

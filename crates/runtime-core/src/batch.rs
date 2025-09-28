@@ -33,7 +33,7 @@ impl<T: Transaction> Batch<T> {
                 let scheduled_transaction =
                     Arc::new_cyclic(|scheduled_transaction: &Weak<ScheduledTransaction<T>>| {
                         ScheduledTransaction::new(
-                            resources.provide_resources(&tx, scheduled_transaction),
+                            resources.provide_resources(&tx, scheduled_transaction, api.clone()),
                             tx,
                             api.clone(),
                         )
