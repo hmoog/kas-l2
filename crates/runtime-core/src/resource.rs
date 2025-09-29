@@ -1,6 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::{ScheduledTransaction, resource_access::ResourceAccess, transaction::Transaction, BatchAPI};
+use crate::{BatchAPI, ScheduledTransaction, Transaction, resource_access::ResourceAccess};
 
 pub(crate) struct Resource<T: Transaction> {
     last_access: Option<Arc<ResourceAccess<T>>>,
@@ -8,9 +8,7 @@ pub(crate) struct Resource<T: Transaction> {
 
 impl<T: Transaction> Default for Resource<T> {
     fn default() -> Self {
-        Self {
-            last_access: None,
-        }
+        Self { last_access: None }
     }
 }
 
@@ -21,7 +19,12 @@ impl<T: Transaction> Resource<T> {
         batch: Arc<BatchAPI<T>>,
         scheduled_transaction: Weak<ScheduledTransaction<T>>,
     ) -> Arc<ResourceAccess<T>> {
-        let access = ResourceAccess::new(batch, scheduled_transaction, self.last_access.take(), metadata);
+        let access = ResourceAccess::new(
+            batch,
+            scheduled_transaction,
+            self.last_access.take(),
+            metadata,
+        );
         self.last_access = Some(access.clone());
         access
     }

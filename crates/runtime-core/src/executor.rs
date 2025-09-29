@@ -1,8 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
-use kas_l2_runtime_core::{BatchAPI, Transaction, TransactionProcessor};
-
-use crate::workers_api::WorkersAPI;
+use crate::{BatchAPI, Transaction, TransactionProcessor, workers_api::WorkersAPI};
 
 pub struct Executor<T: Transaction> {
     workers_api: Arc<WorkersAPI<T>>,

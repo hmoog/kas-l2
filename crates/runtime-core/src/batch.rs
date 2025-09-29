@@ -2,9 +2,7 @@ use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::AtomicOptionArc;
 
-use crate::{
-    BatchAPI, ResourceProvider, ScheduledTransaction, storage::Storage, transaction::Transaction,
-};
+use crate::{BatchAPI, ResourceProvider, ScheduledTransaction, Storage, Transaction};
 
 pub struct Batch<T: Transaction> {
     scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,

@@ -1,6 +1,6 @@
-use crate::ResourceID;
+use crate::ResourceId;
 
-pub trait Storage<R: ResourceID>: Send + Sync {
+pub trait Storage<R: ResourceId>: Send + Sync {
     type Error: std::error::Error + Send + Sync + 'static;
 
     /// Retrieve the value associated with a key.

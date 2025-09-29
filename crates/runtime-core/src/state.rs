@@ -1,6 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::transaction::Transaction;
+use crate::Transaction;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct State<T: Transaction> {

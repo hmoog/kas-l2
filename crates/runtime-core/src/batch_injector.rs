@@ -2,9 +2,8 @@ use std::sync::Arc;
 
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
-use kas_l2_runtime_core::{BatchAPI, ScheduledTransaction, transaction::Transaction};
 
-use crate::batch_injector::linked_list_element::*;
+use crate::{BatchAPI, ScheduledTransaction, Transaction, batch_injector::linked_list_element::*};
 
 pub struct BatchInjector<T: Transaction> {
     queue: LinkedList<Adapter<Arc<BatchAPI<T>>>>,

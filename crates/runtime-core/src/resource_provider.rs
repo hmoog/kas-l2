@@ -5,7 +5,10 @@ use std::{
 
 use borsh::BorshDeserialize;
 
-use crate::{AccessMetadata, ScheduledTransaction, State, resource_access::ResourceAccess, resource::Resource, storage::Storage, transaction::Transaction, BatchAPI};
+use crate::{
+    AccessMetadata, BatchAPI, ScheduledTransaction, State, Storage, Transaction,
+    resource::Resource, resource_access::ResourceAccess,
+};
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {
     resources: HashMap<T::ResourceID, Resource<T>>,
@@ -33,7 +36,11 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
                 panic!("duplicate access to resource")
             }
 
-            accessed_resources.push(resource.access(access.clone(), batch.clone(), scheduled_transaction.clone()));
+            accessed_resources.push(resource.access(
+                access.clone(),
+                batch.clone(),
+                scheduled_transaction.clone(),
+            ));
         }
         accessed_resources
     }

@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-crossbeam-deque = "0.8.6"
 kas-l2-atomic = { path = "../atomic"}
 borsh = {  version = "1.5.7", features = ["derive"] }
-tap = "1.0.1"
+crossbeam-utils = "0.8.21"
+crossbeam-deque = "0.8.6"
+intrusive-collections = "0.9.7"

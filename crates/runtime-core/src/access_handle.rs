@@ -1,6 +1,6 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::{State, transaction::Transaction};
+use crate::{State, Transaction};
 
 pub struct AccessHandle<'a, T: Transaction> {
     state: Arc<State<T>>,

@@ -3334,17 +3334,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-executor"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-utils",
- "intrusive-collections",
- "kas-l2-atomic",
- "kas-l2-runtime-core",
-]
-
-[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3361,8 +3350,9 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "crossbeam-deque",
+ "crossbeam-utils",
+ "intrusive-collections",
  "kas-l2-atomic",
- "tap",
 ]
 
 [[package]]

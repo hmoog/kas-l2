@@ -5,7 +5,7 @@ use std::{
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
-use crate::{AccessType, ScheduledTransaction, State, access_metadata::AccessMetadata, transaction::Transaction, BatchAPI};
+use crate::{AccessMetadata, AccessType, BatchAPI, ScheduledTransaction, State, Transaction};
 
 pub(crate) struct ResourceAccess<T: Transaction> {
     batch: Arc<BatchAPI<T>>,

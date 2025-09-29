@@ -2,8 +2,9 @@ extern crate core;
 
 use std::{collections::HashMap, thread::sleep, time::Duration};
 
-use kas_l2_executor::Executor;
-use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType, ResourceProvider, Scheduler};
+use kas_l2_runtime_core::{
+    AccessHandle, AccessMetadata, AccessType, Executor, ResourceProvider, Scheduler,
+};
 
 #[test]
 pub fn test_executor() {
@@ -120,7 +121,7 @@ struct Transaction {
     access: Vec<Access>,
 }
 
-impl kas_l2_runtime_core::transaction::Transaction for Transaction {
+impl kas_l2_runtime_core::Transaction for Transaction {
     type ResourceID = u32;
 
     type AccessMetadata = Access;
@@ -148,7 +149,7 @@ impl kas_l2_runtime_core::AccessMetadata<u32> for Access {
 
 pub struct KVStore(HashMap<u32, Vec<u8>>);
 
-impl kas_l2_runtime_core::storage::Storage<u32> for KVStore {
+impl kas_l2_runtime_core::Storage<u32> for KVStore {
     type Error = std::io::Error;
 
     fn get(&self, key: &u32) -> Result<Option<Vec<u8>>, Self::Error> {
