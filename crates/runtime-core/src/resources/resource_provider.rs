@@ -41,19 +41,19 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         accessed_resources
     }
 
-    fn resource(&mut self, resource_id: T::ResourceID) -> &mut Resource<T> {
-        self.resources.entry(resource_id).or_default()
+    pub(crate) fn load_from_storage(&self, access: &Arc<ResourceAccess<T>>) {
+        access.set_read_state(Arc::new(
+            match self.permanent_storage.get(&access.resource_id()) {
+                Ok(result) => match result {
+                    None => State::default(),
+                    Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
+                },
+                Err(err) => panic!("failed to load resource from storage: {}", err),
+            },
+        ))
     }
 
-    pub(crate) fn load_from_storage(&self, access: &Arc<ResourceAccess<T>>) {
-        let resource_id = access.resource_id();
-
-        access.set_read_state(Arc::new(match self.permanent_storage.get(&resource_id) {
-            Ok(result) => match result {
-                None => State::default(),
-                Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
-            },
-            Err(err) => panic!("failed to load resource from storage: {}", err),
-        }))
+    fn resource(&mut self, resource_id: T::ResourceID) -> &mut Resource<T> {
+        self.resources.entry(resource_id).or_default()
     }
 }
