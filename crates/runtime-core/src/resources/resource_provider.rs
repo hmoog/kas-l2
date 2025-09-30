@@ -6,8 +6,9 @@ use std::{
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, BatchAPI, ScheduledTransaction, State, Storage, Transaction,
-    resource::Resource, resource_access::ResourceAccess,
+    AccessMetadata, BatchAPI, Storage, Transaction,
+    resources::{resource::Resource, resource_access::ResourceAccess, state::State},
+    scheduling::scheduled_transaction::ScheduledTransaction,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {

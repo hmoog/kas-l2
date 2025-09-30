@@ -6,12 +6,14 @@ use std::sync::{
 use kas_l2_atomic::AtomicOptionArc;
 
 use crate::{
-    AccessHandle, AccessMetadata, AccessType, BatchAPI, Transaction, TransactionProcessor,
-    resource_access::ResourceAccess,
+    AccessMetadata, BatchAPI, Transaction, TransactionProcessor,
+    resources::{
+        access_type::AccessType, resource_access::ResourceAccess, resource_handle::ResourceHandle,
+    },
 };
 
 pub struct ScheduledTransaction<T: Transaction> {
-    pub(crate) resources: Vec<AtomicOptionArc<ResourceAccess<T>>>,
+    resources: Vec<AtomicOptionArc<ResourceAccess<T>>>,
     pending_resources: AtomicU64,
     transaction: T,
     batch_api: Arc<BatchAPI<T>>,
@@ -51,7 +53,7 @@ impl<T: Transaction> ScheduledTransaction<T> {
 
         let mut handles: Vec<_> = resources
             .iter()
-            .map(|access| AccessHandle::new(access.read_state(), access))
+            .map(|access| ResourceHandle::new(access.read_state(), access))
             .collect();
 
         processor(&self.transaction, &mut handles);

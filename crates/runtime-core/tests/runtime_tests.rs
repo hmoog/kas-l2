@@ -2,45 +2,42 @@ extern crate core;
 
 use std::{collections::HashMap, thread::sleep, time::Duration};
 
-use kas_l2_runtime_core::{
-    AccessHandle, AccessMetadata, AccessType, Executor, ResourceProvider, Scheduler,
-};
+use kas_l2_runtime_core::{AccessMetadata, AccessType, ResourceHandle, RuntimeBuilder};
 
 #[test]
 pub fn test_executor() {
-    let resources_manager = ResourceProvider::new(KVStore(HashMap::new()));
-    let mut scheduler = Scheduler::new(resources_manager);
-
-    let executor = Executor::new(
-        4,
-        |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
-            for r in _resources {
-                match r.access_metadata().access_type {
-                    AccessType::Read => {
-                        println!(
-                            "Transaction {} reading from resource {}: {:?}",
-                            tx.id,
-                            r.access_metadata().resource_id(),
-                            r.data()
-                        );
-                    }
-                    AccessType::Write => {
-                        println!(
-                            "Transaction {} writing to resource {}: {:?}",
-                            tx.id,
-                            r.access_metadata().resource_id(),
-                            r.data()
-                        );
+    let mut runtime = RuntimeBuilder::default()
+        .with_storage(KVStore(HashMap::new()))
+        .with_transaction_processor(
+            |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
+                for r in _resources {
+                    match r.access_metadata().access_type {
+                        AccessType::Read => {
+                            println!(
+                                "Transaction {} reading from resource {}: {:?}",
+                                tx.id,
+                                r.access_metadata().resource_id(),
+                                r.data()
+                            );
+                        }
+                        AccessType::Write => {
+                            println!(
+                                "Transaction {} writing to resource {}: {:?}",
+                                tx.id,
+                                r.access_metadata().resource_id(),
+                                r.data()
+                            );
+                        }
                     }
                 }
-            }
-            println!("Executing transaction with id {}", tx.id);
-            sleep(tx.duration);
-            println!("Finished transaction with id {}", tx.id);
-        },
-    );
+                println!("Executing transaction with id {}", tx.id);
+                sleep(tx.duration);
+                println!("Finished transaction with id {}", tx.id);
+            },
+        )
+        .build();
 
-    executor.execute(scheduler.schedule(vec![
+    let _batch1 = runtime.process(vec![
         Transaction {
             id: 0,
             duration: Duration::from_millis(10),
@@ -77,9 +74,9 @@ pub fn test_executor() {
                 access_type: AccessType::Read,
             }],
         },
-    ]));
+    ]);
 
-    executor.execute(scheduler.schedule(vec![
+    let _batch2 = runtime.process(vec![
         Transaction {
             id: 3,
             duration: Duration::from_millis(1),
@@ -108,11 +105,17 @@ pub fn test_executor() {
                 },
             ],
         },
-    ]));
+    ]);
+
+    println!("Batch 1 is done: {}", _batch1.is_done());
+    println!("Batch 2 is done: {}", _batch2.is_done());
 
     sleep(Duration::from_secs(1));
 
-    executor.shutdown();
+    println!("Batch 1 is done: {}", _batch1.is_done());
+    println!("Batch 2 is done: {}", _batch2.is_done());
+
+    runtime.shutdown();
 }
 
 struct Transaction {

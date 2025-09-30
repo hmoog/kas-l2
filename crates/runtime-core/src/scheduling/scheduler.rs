@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{Batch, BatchAPI, ResourceProvider, Storage, Transaction};
+use crate::{
+    BatchAPI, Storage, Transaction, resources::resource_provider::ResourceProvider,
+    scheduling::batch::Batch,
+};
 
 pub struct Scheduler<T: Transaction, K: Storage<T::ResourceID>> {
     resource_provider: ResourceProvider<T, K>,

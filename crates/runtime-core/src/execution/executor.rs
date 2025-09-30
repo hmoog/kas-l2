@@ -1,6 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
-use crate::{BatchAPI, Transaction, TransactionProcessor, workers_api::WorkersAPI};
+use crate::{BatchAPI, Transaction, TransactionProcessor, execution::workers_api::WorkersAPI};
 
 pub struct Executor<T: Transaction> {
     workers_api: Arc<WorkersAPI<T>>,

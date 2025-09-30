@@ -2,17 +2,21 @@ use std::sync::{Arc, Weak};
 
 use kas_l2_atomic::AtomicOptionArc;
 
-use crate::{BatchAPI, ResourceProvider, ScheduledTransaction, Storage, Transaction};
+use crate::{
+    BatchAPI, Storage, Transaction, resources::resource_provider::ResourceProvider,
+    scheduling::scheduled_transaction::ScheduledTransaction,
+};
 
 pub struct Batch<T: Transaction> {
-    scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
+    _scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
     api: Arc<BatchAPI<T>>,
     _prev: AtomicOptionArc<Self>,
 }
 
 impl<T: Transaction> Batch<T> {
-    pub fn scheduled_transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
-        &self.scheduled_transactions
+    // TODO: CHECK IF THIS METHOD IS REALLY NEEDED
+    pub fn _scheduled_transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
+        &self._scheduled_transactions
     }
 
     pub fn api(&self) -> Arc<BatchAPI<T>> {
@@ -25,7 +29,7 @@ impl<T: Transaction> Batch<T> {
         resources: &mut ResourceProvider<T, K>,
     ) -> Self {
         let api = Arc::new(BatchAPI::new(transactions.len() as u64));
-        let scheduled_transactions = transactions
+        let _scheduled_transactions = transactions
             .into_iter()
             .map(|tx| {
                 let scheduled_transaction =
@@ -50,7 +54,7 @@ impl<T: Transaction> Batch<T> {
 
         Self {
             _prev: AtomicOptionArc::new(prev),
-            scheduled_transactions,
+            _scheduled_transactions,
             api,
         }
     }

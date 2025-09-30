@@ -1,6 +1,9 @@
 use std::sync::{Arc, Weak};
 
-use crate::{BatchAPI, ScheduledTransaction, Transaction, resource_access::ResourceAccess};
+use crate::{
+    BatchAPI, Transaction, resources::resource_access::ResourceAccess,
+    scheduling::scheduled_transaction::ScheduledTransaction,
+};
 
 pub(crate) struct Resource<T: Transaction> {
     last_access: Option<Arc<ResourceAccess<T>>>,

@@ -3353,6 +3353,7 @@ dependencies = [
  "crossbeam-utils",
  "intrusive-collections",
  "kas-l2-atomic",
+ "num_cpus",
 ]
 
 [[package]]

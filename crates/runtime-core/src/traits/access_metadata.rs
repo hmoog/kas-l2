@@ -1,4 +1,4 @@
-use crate::{AccessType, ResourceId};
+use crate::{ResourceId, resources::access_type::AccessType};
 
 pub trait AccessMetadata<I: ResourceId>: Clone {
     fn resource_id(&self) -> I;

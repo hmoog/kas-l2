@@ -4,7 +4,10 @@ use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 
-use crate::{BatchAPI, ScheduledTransaction, Transaction, TransactionProcessor, worker::Worker};
+use crate::{
+    BatchAPI, Transaction, TransactionProcessor, execution::worker::Worker,
+    scheduling::scheduled_transaction::ScheduledTransaction,
+};
 
 pub struct WorkersAPI<T: Transaction> {
     stealers: Vec<Stealer<Arc<ScheduledTransaction<T>>>>,

@@ -1,13 +1,13 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::{State, Transaction};
+use crate::{Transaction, resources::state::State};
 
-pub struct AccessHandle<'a, T: Transaction> {
+pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
     metadata: &'a T::AccessMetadata,
 }
 
-impl<'a, T: Transaction> AccessHandle<'a, T> {
+impl<'a, T: Transaction> ResourceHandle<'a, T> {
     pub fn new(state: Arc<State<T>>, metadata: &'a T::AccessMetadata) -> Self {
         Self { state, metadata }
     }
@@ -48,7 +48,7 @@ impl<'a, T: Transaction> AccessHandle<'a, T> {
     }
 }
 
-impl<'a, T: Transaction> Deref for AccessHandle<'a, T> {
+impl<'a, T: Transaction> Deref for ResourceHandle<'a, T> {
     type Target = T::AccessMetadata;
 
     fn deref(&self) -> &Self::Target {

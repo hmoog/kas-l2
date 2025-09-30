@@ -4,8 +4,9 @@ use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
 
 use crate::{
-    BatchAPI, ScheduledTransaction, Transaction, TransactionProcessor,
-    batch_injector::BatchInjector, workers_api::WorkersAPI,
+    BatchAPI, Transaction, TransactionProcessor,
+    execution::{batch_injector::BatchInjector, workers_api::WorkersAPI},
+    scheduling::scheduled_transaction::ScheduledTransaction,
 };
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
