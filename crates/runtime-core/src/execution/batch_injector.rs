@@ -29,7 +29,7 @@ impl<T: Transaction> BatchInjector<T> {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
             while let Some(batch) = curr_element.get() {
-                if batch.is_done() {
+                if batch.pending_transactions() == 0 && batch.available_transactions() == 0 {
                     curr_element.remove();
                     continue;
                 }
@@ -44,26 +44,26 @@ impl<T: Transaction> BatchInjector<T> {
                 curr_element.move_next();
             }
 
-            if !self.update() {
+            if !self.try_pull_new_batches() {
                 break None;
             }
         }
     }
 
-    fn update(&mut self) -> bool {
-        let mut updated = false;
+    fn try_pull_new_batches(&mut self) -> bool {
+        let mut success = false;
         loop {
             match self.injector.steal() {
                 Steal::Success(batch) => {
                     self.queue
                         .push_back(Box::new(LinkedListElement::new(batch)));
-                    updated = true;
+                    success = true;
                 }
                 Steal::Empty => break,
                 Steal::Retry => (),
             }
         }
-        updated
+        success
     }
 }
 
