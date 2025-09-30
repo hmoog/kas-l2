@@ -11,7 +11,6 @@ pub struct Batch<T: Transaction> {
 }
 
 impl<T: Transaction> Batch<T> {
-    // TODO: CHECK IF THIS METHOD IS REALLY NEEDED
     pub fn scheduled_transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
         &self.scheduled_transactions
     }

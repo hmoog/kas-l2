@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{collections::HashMap, thread::sleep, time::Duration};
 
-use kas_l2_runtime_core::{AccessMetadata, AccessType, ResourceHandle, RuntimeBuilder};
+use kas_l2_runtime_core::{AccessMetadata, AccessType, Batch, ResourceHandle, RuntimeBuilder};
 
 #[test]
 pub fn test_executor() {
@@ -35,9 +35,9 @@ pub fn test_executor() {
                 println!("Finished transaction with id {}", tx.id);
             },
         )
-        .with_batch_processor(|batch| {
+        .with_batch_processor(|batch: Batch<Transaction>| {
             println!(
-                "Processed batch with {} transactions",
+                ">> Processed batch with {} transactions",
                 batch.scheduled_transactions().len()
             );
         })
@@ -126,9 +126,8 @@ struct Transaction {
 
 impl kas_l2_runtime_core::Transaction for Transaction {
     type ResourceID = u32;
-
     type AccessMetadata = Access;
-
+    
     fn accessed_resources(&self) -> &[Self::AccessMetadata] {
         &self.access
     }

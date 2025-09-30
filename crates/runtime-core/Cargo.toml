@@ -8,7 +8,7 @@ kas-l2-atomic = { path = "../atomic"}
 borsh = {  version = "1.5.7", features = ["derive"] }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"
+crossbeam-queue = "0.3.12"
 intrusive-collections = "0.9.7"
 num_cpus = "1.17.0"
 tokio = {  version = "1.47.1", features = ["rt", "sync"] }
-crossbeam = "0.8.4"

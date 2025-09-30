@@ -1,6 +1,6 @@
 use std::{sync::Arc, thread, thread::JoinHandle};
 
-use crossbeam::queue::SegQueue;
+use crossbeam_queue::SegQueue;
 use tokio::{runtime::Builder, sync::Notify};
 
 use crate::{
