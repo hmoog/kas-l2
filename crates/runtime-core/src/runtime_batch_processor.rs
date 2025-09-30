@@ -1,8 +1,10 @@
-use std::sync::Arc;
-use std::thread::{self, JoinHandle};
+use std::{
+    sync::Arc,
+    thread::{self, JoinHandle},
+};
+
 use crossbeam_queue::SegQueue;
-use tokio::runtime::Builder;
-use tokio::sync::Notify;
+use tokio::{runtime::Builder, sync::Notify};
 
 use crate::{Batch, BatchProcessor, Transaction};
 
@@ -16,9 +18,13 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
     pub(crate) fn new<F: BatchProcessor<T>>(batch_processor: F) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
-        let handle = Self::spawn(queue.clone(), notify.clone(), batch_processor);
+        let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
 
-        Self { queue, notify, handle }
+        Self {
+            queue,
+            notify,
+            handle,
+        }
     }
 
     pub(crate) fn push(&self, batch: Batch<T>) {
@@ -32,25 +38,27 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn spawn<F: BatchProcessor<T>>(queue: Arc<SegQueue<Batch<T>>>, notify: Arc<Notify>, callback: F) -> JoinHandle<()> {
+    fn start<F>(queue: Arc<SegQueue<Batch<T>>>, notify: Arc<Notify>, callback: F) -> JoinHandle<()>
+    where
+        F: BatchProcessor<T>,
+    {
         thread::spawn(move || {
-            let rt = Builder::new_current_thread()
+            Builder::new_current_thread()
                 .build()
-                .expect("failed to build Tokio runtime");
+                .expect("failed to build Tokio runtime")
+                .block_on(async move {
+                    while Arc::strong_count(&queue) != 1 {
+                        while let Some(batch) = queue.pop() {
+                            batch.api().wait_done().await;
+                            callback(batch);
+                        }
 
-            rt.block_on(async move {
-                while Arc::strong_count(&queue) != 1 {
-                    while let Some(batch) = queue.pop() {
-                        batch.api().wait_done().await;
-                        callback(batch);
+                        match Arc::strong_count(&queue) {
+                            1 => break,
+                            _ => notify.notified().await,
+                        }
                     }
-
-                    match Arc::strong_count(&queue) {
-                        1 => break,
-                        _ => notify.notified().await,
-                    }
-                }
-            });
+                })
         })
     }
 }

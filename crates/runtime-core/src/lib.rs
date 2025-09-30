@@ -1,6 +1,6 @@
 mod runtime;
-mod runtime_builder;
 mod runtime_batch_processor;
+mod runtime_builder;
 
 pub(crate) mod execution {
     pub(crate) mod batch_injector;

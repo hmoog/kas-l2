@@ -1,12 +1,10 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use crate::{
     BatchAPI, BatchProcessor, RuntimeBuilder, Storage, Transaction, TransactionProcessor,
-    execution::executor::Executor,
-    resources::resource_provider::ResourceProvider,
-    scheduling::{scheduler::Scheduler},
+    execution::executor::Executor, resources::resource_provider::ResourceProvider,
+    runtime_batch_processor::RuntimeBatchProcessor, scheduling::scheduler::Scheduler,
 };
-use crate::runtime_batch_processor::RuntimeBatchProcessor;
 
 pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {
     scheduler: Scheduler<T, S>,

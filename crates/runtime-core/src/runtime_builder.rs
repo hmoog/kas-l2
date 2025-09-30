@@ -17,8 +17,11 @@ pub struct RuntimeBuilder<
     _marker: PhantomData<T>,
 }
 
-impl<T: Transaction, S: Storage<T::ResourceID>, P: TransactionProcessor<T>> Default
-    for RuntimeBuilder<T, S, P, fn(Batch<T>)>
+impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
+where
+    T: Transaction,
+    S: Storage<T::ResourceID>,
+    P: TransactionProcessor<T>,
 {
     fn default() -> Self {
         RuntimeBuilder {
@@ -52,7 +55,7 @@ impl<T: Transaction, S: Storage<T::ResourceID>, P: TransactionProcessor<T>, B: B
         self
     }
 
-    /// Provide the transaction processor callback.
+    /// Provide the batch processor callback.
     pub fn with_batch_processor<BNew: BatchProcessor<T>>(
         self,
         f: BNew,
