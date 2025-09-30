@@ -10,17 +10,6 @@ pub struct State<T: Transaction> {
     pub executable: bool,
 }
 
-impl<T: Transaction> State<T> {
-    pub fn new(owner: T::ResourceID, data: Vec<u8>, balance: u64, executable: bool) -> Self {
-        Self {
-            owner,
-            data,
-            balance,
-            executable,
-        }
-    }
-}
-
 impl<T: Transaction> Clone for State<T> {
     fn clone(&self) -> Self {
         Self {

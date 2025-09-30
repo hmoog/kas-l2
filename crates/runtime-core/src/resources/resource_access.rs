@@ -47,11 +47,11 @@ impl<T: Transaction> ResourceAccess<T> {
         self.prev.load()
     }
 
-    pub(crate) fn set_next(&self, next: Arc<Self>) {
+    pub(crate) fn set_next(&self, next: &Arc<Self>) {
         if let Some(written_state) = self.written_state.take() {
             next.set_read_state(written_state);
         } else {
-            self.next.store(Arc::downgrade(&next));
+            self.next.store(Arc::downgrade(next));
         }
     }
 
@@ -59,7 +59,7 @@ impl<T: Transaction> ResourceAccess<T> {
         self.read_state.load().unwrap()
     }
 
-    pub(crate) fn set_read_state(self: Arc<Self>, state: Arc<State<T>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<State<T>>) {
         drop(self.prev.take()); // allow previous resource to be dropped
 
         if self.access_type() == AccessType::Read {

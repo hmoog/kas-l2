@@ -1,20 +1,26 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::{Transaction, resources::state::State};
+use crate::{
+    AccessMetadata, AccessType, Transaction,
+    resources::{resource_access::ResourceAccess, state::State},
+};
 
 pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
-    metadata: &'a T::AccessMetadata,
+    resource: &'a Arc<ResourceAccess<T>>,
 }
 
 impl<'a, T: Transaction> ResourceHandle<'a, T> {
-    pub fn new(state: Arc<State<T>>, metadata: &'a T::AccessMetadata) -> Self {
-        Self { state, metadata }
+    pub(crate) fn new(resource: &'a Arc<ResourceAccess<T>>) -> Self {
+        Self {
+            state: resource.read_state(),
+            resource,
+        }
     }
 
     /// Borrow the access metadata.
     pub fn access_metadata(&self) -> &T::AccessMetadata {
-        self.metadata
+        self.resource
     }
 
     /// Immutable access to the underlying data.
@@ -41,17 +47,20 @@ impl<'a, T: Transaction> ResourceHandle<'a, T> {
     pub fn resize(&mut self, new_len: usize) {
         Arc::make_mut(&mut self.state).data.resize(new_len, 0);
     }
-
-    /// Commit and return the underlying Arc<State<T>>.
-    pub fn commit(self) -> Arc<State<T>> {
-        self.state
-    }
 }
 
 impl<'a, T: Transaction> Deref for ResourceHandle<'a, T> {
     type Target = T::AccessMetadata;
 
     fn deref(&self) -> &Self::Target {
-        self.metadata
+        self.resource
+    }
+}
+
+impl<'a, T: Transaction> Drop for ResourceHandle<'a, T> {
+    fn drop(&mut self) {
+        if self.access_type() == AccessType::Write {
+            self.resource.set_written_state(self.state.clone());
+        }
     }
 }

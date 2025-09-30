@@ -49,7 +49,7 @@ impl<T: Transaction> BatchAPI<T> {
         self.scheduled_transactions.push(transaction);
     }
 
-    pub(crate) fn transaction_done(&self) {
+    pub(crate) fn decrease_pending_transactions(&self) {
         if self.pending_transactions.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.is_done.open();
         }

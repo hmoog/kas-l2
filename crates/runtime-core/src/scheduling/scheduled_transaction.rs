@@ -3,73 +3,48 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
-use kas_l2_atomic::AtomicOptionArc;
-
 use crate::{
-    AccessMetadata, BatchAPI, Transaction, TransactionProcessor,
-    resources::{
-        access_type::AccessType, resource_access::ResourceAccess, resource_handle::ResourceHandle,
-    },
+    BatchAPI, Transaction, TransactionProcessor,
+    resources::{resource_access::ResourceAccess, resource_handle::ResourceHandle},
 };
 
 pub struct ScheduledTransaction<T: Transaction> {
-    resources: Vec<AtomicOptionArc<ResourceAccess<T>>>,
+    batch: Arc<BatchAPI<T>>,
+    resources: Vec<Arc<ResourceAccess<T>>>,
     pending_resources: AtomicU64,
     transaction: T,
-    batch_api: Arc<BatchAPI<T>>,
 }
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub(crate) fn new(
+        batch: Arc<BatchAPI<T>>,
         resources: Vec<Arc<ResourceAccess<T>>>,
         transaction: T,
-        batch_api: Arc<BatchAPI<T>>,
     ) -> Self {
         Self {
             pending_resources: AtomicU64::new(resources.len() as u64),
-            resources: resources
-                .into_iter()
-                .map(|r| AtomicOptionArc::new(Some(r)))
-                .collect(),
+            batch,
             transaction,
-            batch_api,
+            resources,
         }
     }
 
-    pub(crate) fn resources(&self) -> Vec<Arc<ResourceAccess<T>>> {
-        self.resources
-            .iter()
-            .filter_map(AtomicOptionArc::load)
-            .collect()
+    pub(crate) fn process<F: TransactionProcessor<T>>(self: Arc<Self>, processor: &F) {
+        processor(&self.transaction, &mut self.resource_handles());
+        self.batch.decrease_pending_transactions();
     }
 
-    pub fn process<F: TransactionProcessor<T>>(self: Arc<Self>, processor: &F) {
-        let resources: Vec<_> = self
-            .resources
-            .iter()
-            .filter_map(AtomicOptionArc::take)
-            .collect();
-        assert_eq!(resources.len(), self.resources.len(), "missing resources");
-
-        let mut handles: Vec<_> = resources
-            .iter()
-            .map(|access| ResourceHandle::new(access.read_state(), access))
-            .collect();
-
-        processor(&self.transaction, &mut handles);
-
-        for (handle, access) in handles.into_iter().zip(resources.iter()) {
-            if handle.access_type() == AccessType::Write {
-                access.set_written_state(handle.commit());
-            }
-        }
-
-        self.batch_api.transaction_done();
+    pub(crate) fn resources(&self) -> &[Arc<ResourceAccess<T>>] {
+        &self.resources
     }
 
     pub(crate) fn decrease_pending_resources(self: Arc<Self>) {
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
-            self.batch_api.schedule_transaction(self.clone())
+            self.batch.schedule_transaction(self.clone())
         }
+    }
+
+    fn resource_handles(&self) -> Vec<ResourceHandle<'_, T>> {
+        self.resources.iter().map(ResourceHandle::new).collect()
     }
 }

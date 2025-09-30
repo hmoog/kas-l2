@@ -127,7 +127,7 @@ struct Transaction {
 impl kas_l2_runtime_core::Transaction for Transaction {
     type ResourceID = u32;
     type AccessMetadata = Access;
-    
+
     fn accessed_resources(&self) -> &[Self::AccessMetadata] {
         &self.access
     }
