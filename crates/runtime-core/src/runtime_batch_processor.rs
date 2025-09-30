@@ -38,7 +38,11 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start<F>(queue: Arc<SegQueue<Batch<T>>>, notify: Arc<Notify>, callback: F) -> JoinHandle<()>
+    fn start<F>(
+        queue: Arc<SegQueue<Batch<T>>>,
+        notify: Arc<Notify>,
+        batch_processor: F,
+    ) -> JoinHandle<()>
     where
         F: BatchProcessor<T>,
     {
@@ -50,12 +54,11 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
                             batch.api().wait_done().await;
-                            callback(batch);
+                            batch_processor(batch);
                         }
 
-                        match Arc::strong_count(&queue) {
-                            1 => break,
-                            _ => notify.notified().await,
+                        if Arc::strong_count(&queue) != 1 {
+                            notify.notified().await
                         }
                     }
                 })

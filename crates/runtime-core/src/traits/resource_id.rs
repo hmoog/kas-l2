@@ -6,7 +6,7 @@ pub trait ResourceId:
     BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static
 {
 }
-impl<T: BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static>
-    ResourceId for T
+impl<T> ResourceId for T where
+    T: BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static
 {
 }

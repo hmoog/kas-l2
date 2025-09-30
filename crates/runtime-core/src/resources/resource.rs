@@ -30,9 +30,9 @@ impl<T: Transaction> Resource<T> {
         access
     }
 
-    pub(crate) fn was_accessed_by(&self, resources: &Weak<ScheduledTransaction<T>>) -> bool {
+    pub(crate) fn was_accessed_by(&self, transaction: &Weak<ScheduledTransaction<T>>) -> bool {
         match self.last_access.as_ref() {
-            Some(last_resource) => last_resource.belongs_to(resources),
+            Some(last_resource) => last_resource.belongs_to(transaction),
             None => false,
         }
     }

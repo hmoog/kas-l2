@@ -3,28 +3,26 @@ use std::{sync::Arc, thread::JoinHandle};
 use crate::{BatchAPI, Transaction, TransactionProcessor, execution::workers_api::WorkersAPI};
 
 pub struct Executor<T: Transaction> {
-    workers_api: Arc<WorkersAPI<T>>,
-    worker_handles: Vec<JoinHandle<()>>,
+    workers: Arc<WorkersAPI<T>>,
+    handles: Vec<JoinHandle<()>>,
 }
 
 impl<T: Transaction> Executor<T> {
     pub fn new<P: TransactionProcessor<T>>(worker_count: usize, processor: P) -> Self {
-        let (workers_api, worker_handles) = WorkersAPI::new_with_workers(worker_count, processor);
-        Self {
-            workers_api,
-            worker_handles,
-        }
+        let (workers, handles) = WorkersAPI::new_with_workers(worker_count, processor);
+
+        Self { workers, handles }
     }
 
     pub fn execute(&self, batch: Arc<BatchAPI<T>>) {
-        self.workers_api.inject_batch(batch);
+        self.workers.inject_batch(batch);
     }
 
     pub fn shutdown(self) {
-        self.workers_api.shutdown();
+        self.workers.shutdown();
 
-        for handle in self.worker_handles {
-            let _ = handle.join();
+        for handle in self.handles {
+            handle.join().expect("executor worker panicked");
         }
     }
 }

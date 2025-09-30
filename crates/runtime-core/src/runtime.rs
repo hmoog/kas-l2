@@ -9,7 +9,7 @@ use crate::{
 pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {
     scheduler: Scheduler<T, S>,
     executor: Executor<T>,
-    batch_worker: RuntimeBatchProcessor<T>,
+    batch_processor: RuntimeBatchProcessor<T>,
 }
 
 impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
@@ -18,14 +18,14 @@ impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
         let batch_api = batch.api().clone();
 
         self.executor.execute(batch_api.clone());
-        self.batch_worker.push(batch);
+        self.batch_processor.push(batch);
 
         batch_api
     }
 
     pub fn shutdown(self) {
         self.executor.shutdown();
-        self.batch_worker.shutdown();
+        self.batch_processor.shutdown();
     }
 
     pub(crate) fn new<P: TransactionProcessor<T>, B: BatchProcessor<T>>(
@@ -42,7 +42,7 @@ impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
         Self {
             scheduler: Scheduler::new(ResourceProvider::new(storage)),
             executor: Executor::new(builder.execution_workers, transaction_processor),
-            batch_worker: RuntimeBatchProcessor::new(builder.batch_processor),
+            batch_processor: RuntimeBatchProcessor::new(builder.batch_processor),
         }
     }
 }
