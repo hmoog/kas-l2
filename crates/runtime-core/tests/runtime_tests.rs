@@ -35,9 +35,15 @@ pub fn test_executor() {
                 println!("Finished transaction with id {}", tx.id);
             },
         )
+        .with_batch_processor(|batch| {
+            println!(
+                "Processed batch with {} transactions",
+                batch.scheduled_transactions().len()
+            );
+        })
         .build();
 
-    let _batch1 = runtime.process(vec![
+    runtime.process(vec![
         Transaction {
             id: 0,
             duration: Duration::from_millis(10),
@@ -76,7 +82,7 @@ pub fn test_executor() {
         },
     ]);
 
-    let _batch2 = runtime.process(vec![
+    runtime.process(vec![
         Transaction {
             id: 3,
             duration: Duration::from_millis(1),
@@ -107,13 +113,7 @@ pub fn test_executor() {
         },
     ]);
 
-    println!("Batch 1 is done: {}", _batch1.is_done());
-    println!("Batch 2 is done: {}", _batch2.is_done());
-
     sleep(Duration::from_secs(1));
-
-    println!("Batch 1 is done: {}", _batch1.is_done());
-    println!("Batch 2 is done: {}", _batch2.is_done());
 
     runtime.shutdown();
 }

@@ -26,6 +26,7 @@ pub(crate) mod scheduling {
 
 pub(crate) mod traits {
     pub(crate) mod access_metadata;
+    pub(crate) mod batch_processor;
     pub(crate) mod resource_id;
     pub(crate) mod storage;
     pub(crate) mod transaction;
@@ -37,6 +38,6 @@ pub use runtime::Runtime;
 pub use runtime_builder::RuntimeBuilder;
 pub use scheduling::batch_api::BatchAPI;
 pub use traits::{
-    access_metadata::AccessMetadata, resource_id::ResourceId, storage::Storage,
-    transaction::Transaction, transaction_processor::TransactionProcessor,
+    access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
+    storage::Storage, transaction::Transaction, transaction_processor::TransactionProcessor,
 };
