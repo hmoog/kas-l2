@@ -15,8 +15,8 @@ impl<T: Transaction> Batch<T> {
         &self.scheduled_transactions
     }
 
-    pub fn api(&self) -> Arc<BatchAPI<T>> {
-        self.api.clone()
+    pub fn api(&self) -> &Arc<BatchAPI<T>> {
+        &self.api
     }
 
     pub(crate) fn new<K: Storage<T::ResourceID>>(
@@ -31,7 +31,7 @@ impl<T: Transaction> Batch<T> {
                     Arc::new_cyclic(|this: &Weak<ScheduledTransaction<T>>| {
                         ScheduledTransaction::new(
                             api.clone(),
-                            resource_provider.provide(&tx, this, api.clone()),
+                            resource_provider.provide(&tx, this),
                             tx,
                         )
                     });

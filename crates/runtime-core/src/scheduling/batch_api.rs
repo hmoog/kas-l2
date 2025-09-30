@@ -12,17 +12,14 @@ use kas_l2_atomic::AtomicAsyncLatch;
 use crate::{Transaction, scheduling::scheduled_transaction::ScheduledTransaction};
 
 pub struct BatchAPI<T: Transaction> {
-    scheduled_transactions: Injector<Arc<ScheduledTransaction<T>>>,
+    available_transactions: Injector<Arc<ScheduledTransaction<T>>>,
     pending_transactions: AtomicU64,
     is_done: AtomicAsyncLatch,
 }
 
 impl<T: Transaction> BatchAPI<T> {
-    pub(crate) fn steal_scheduled_transactions(
-        &self,
-        dest: &Worker<Arc<ScheduledTransaction<T>>>,
-    ) -> Steal<Arc<ScheduledTransaction<T>>> {
-        self.scheduled_transactions.steal_batch_and_pop(dest)
+    pub fn available_transactions(&self) -> u64 {
+        self.available_transactions.len() as u64
     }
 
     pub fn pending_transactions(&self) -> u64 {
@@ -37,16 +34,23 @@ impl<T: Transaction> BatchAPI<T> {
         self.is_done.wait()
     }
 
-    pub(crate) fn new(pending_tasks: u64) -> Self {
+    pub(crate) fn new(transaction_count: u64) -> Self {
         Self {
-            scheduled_transactions: Injector::new(),
-            pending_transactions: AtomicU64::new(pending_tasks),
+            available_transactions: Injector::new(),
+            pending_transactions: AtomicU64::new(transaction_count),
             is_done: AtomicAsyncLatch::new(),
         }
     }
 
-    pub(crate) fn schedule_transaction(&self, transaction: Arc<ScheduledTransaction<T>>) {
-        self.scheduled_transactions.push(transaction);
+    pub(crate) fn push_available(&self, transaction: &Arc<ScheduledTransaction<T>>) {
+        self.available_transactions.push(transaction.clone());
+    }
+
+    pub(crate) fn steal_available_transactions(
+        &self,
+        worker: &Worker<Arc<ScheduledTransaction<T>>>,
+    ) -> Steal<Arc<ScheduledTransaction<T>>> {
+        self.available_transactions.steal_batch_and_pop(worker)
     }
 
     pub(crate) fn decrease_pending_transactions(&self) {

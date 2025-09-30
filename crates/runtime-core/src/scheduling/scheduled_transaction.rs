@@ -16,6 +16,10 @@ pub struct ScheduledTransaction<T: Transaction> {
 }
 
 impl<T: Transaction> ScheduledTransaction<T> {
+    pub fn resources(&self) -> &[Arc<ResourceAccess<T>>] {
+        &self.resources
+    }
+
     pub(crate) fn new(
         batch: Arc<BatchAPI<T>>,
         resources: Vec<Arc<ResourceAccess<T>>>,
@@ -34,13 +38,9 @@ impl<T: Transaction> ScheduledTransaction<T> {
         self.batch.decrease_pending_transactions();
     }
 
-    pub(crate) fn resources(&self) -> &[Arc<ResourceAccess<T>>] {
-        &self.resources
-    }
-
     pub(crate) fn decrease_pending_resources(self: Arc<Self>) {
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
-            self.batch.schedule_transaction(self.clone())
+            self.batch.push_available(&self)
         }
     }
 

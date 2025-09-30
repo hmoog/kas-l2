@@ -21,7 +21,7 @@ pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {
 impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
     pub fn process(&mut self, transactions: Vec<T>) -> Arc<BatchAPI<T>> {
         let batch = self.scheduler.schedule(transactions);
-        let batch_api = batch.api();
+        let batch_api = batch.api().clone();
 
         self.executor.execute(batch_api.clone());
         self.batch_processor_queue.push(batch);

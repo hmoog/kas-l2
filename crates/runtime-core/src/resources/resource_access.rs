@@ -6,13 +6,12 @@ use std::{
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessMetadata, BatchAPI, Transaction,
+    AccessMetadata, Transaction,
     resources::{access_type::AccessType, state::State},
     scheduling::scheduled_transaction::ScheduledTransaction,
 };
 
-pub(crate) struct ResourceAccess<T: Transaction> {
-    _batch: Arc<BatchAPI<T>>,
+pub struct ResourceAccess<T: Transaction> {
     scheduled_transaction: Weak<ScheduledTransaction<T>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
@@ -23,13 +22,11 @@ pub(crate) struct ResourceAccess<T: Transaction> {
 
 impl<T: Transaction> ResourceAccess<T> {
     pub(crate) fn new(
-        _batch: Arc<BatchAPI<T>>,
         scheduled_transaction: Weak<ScheduledTransaction<T>>,
         prev: Option<Arc<Self>>,
         access_metadata: T::AccessMetadata,
     ) -> Arc<Self> {
         Arc::new(Self {
-            _batch,
             scheduled_transaction,
             prev: AtomicOptionArc::new(prev),
             next: AtomicWeak::default(),

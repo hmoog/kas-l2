@@ -35,7 +35,7 @@ impl<T: Transaction> BatchInjector<T> {
                 }
 
                 loop {
-                    match batch.steal_scheduled_transactions(local_queue) {
+                    match batch.steal_available_transactions(local_queue) {
                         Steal::Success(task) => return Some(task),
                         Steal::Retry => continue,
                         Steal::Empty => break,

@@ -6,7 +6,7 @@ use std::{
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, BatchAPI, Storage, Transaction,
+    AccessMetadata, Storage, Transaction,
     resources::{resource::Resource, resource_access::ResourceAccess, state::State},
     scheduling::scheduled_transaction::ScheduledTransaction,
 };
@@ -28,7 +28,6 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         &mut self,
         transaction: &T,
         scheduled_transaction: &Weak<ScheduledTransaction<T>>,
-        batch: Arc<BatchAPI<T>>,
     ) -> Vec<Arc<ResourceAccess<T>>> {
         let mut accessed_resources = Vec::new();
         for access in transaction.accessed_resources() {
@@ -37,11 +36,7 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
                 panic!("duplicate access to resource")
             }
 
-            accessed_resources.push(resource.access(
-                access.clone(),
-                batch.clone(),
-                scheduled_transaction.clone(),
-            ));
+            accessed_resources.push(resource.access(access.clone(), scheduled_transaction.clone()));
         }
         accessed_resources
     }
