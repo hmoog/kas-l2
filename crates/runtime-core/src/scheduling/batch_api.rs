@@ -49,8 +49,14 @@ impl<T: Transaction> BatchAPI<T> {
     pub(crate) fn steal_available_transactions(
         &self,
         worker: &Worker<Arc<ScheduledTransaction<T>>>,
-    ) -> Steal<Arc<ScheduledTransaction<T>>> {
-        self.available_transactions.steal_batch_and_pop(worker)
+    ) -> Option<Arc<ScheduledTransaction<T>>> {
+        loop {
+            match self.available_transactions.steal_batch_and_pop(worker) {
+                Steal::Success(task) => return Some(task),
+                Steal::Retry => continue,
+                Steal::Empty => return None,
+            }
+        }
     }
 
     pub(crate) fn decrease_pending_transactions(&self) {

@@ -15,7 +15,7 @@ pub(crate) struct RuntimeBatchProcessor<T: Transaction> {
 }
 
 impl<T: Transaction> RuntimeBatchProcessor<T> {
-    pub(crate) fn new<F: BatchProcessor<T>>(batch_processor: F) -> Self {
+    pub(crate) fn new<B: BatchProcessor<T>>(batch_processor: B) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
         let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
@@ -38,14 +38,11 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start<F>(
+    fn start<F: BatchProcessor<T>>(
         queue: Arc<SegQueue<Batch<T>>>,
         notify: Arc<Notify>,
         batch_processor: F,
-    ) -> JoinHandle<()>
-    where
-        F: BatchProcessor<T>,
-    {
+    ) -> JoinHandle<()> {
         thread::spawn(move || {
             Builder::new_current_thread()
                 .build()

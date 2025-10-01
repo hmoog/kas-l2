@@ -28,19 +28,17 @@ impl<T: Transaction> BatchInjector<T> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
+
             while let Some(batch) = curr_element.get() {
                 if batch.pending_transactions() == 0 && batch.available_transactions() == 0 {
                     curr_element.remove();
                     continue;
                 }
 
-                loop {
-                    match batch.steal_available_transactions(local_queue) {
-                        Steal::Success(task) => return Some(task),
-                        Steal::Retry => continue,
-                        Steal::Empty => break,
-                    }
+                if let Some(transaction) = batch.steal_available_transactions(local_queue) {
+                    return Some(transaction);
                 }
+
                 curr_element.move_next();
             }
 

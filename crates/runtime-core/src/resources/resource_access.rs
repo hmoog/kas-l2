@@ -34,9 +34,9 @@ impl<T: Transaction> ResourceAccess<T> {
     }
 
     pub(crate) fn new(
+        access_metadata: T::AccessMetadata,
         parent: Weak<ScheduledTransaction<T>>,
         prev: Option<Arc<Self>>,
-        access_metadata: T::AccessMetadata,
     ) -> Arc<Self> {
         Arc::new(Self {
             access_metadata,

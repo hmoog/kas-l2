@@ -1,5 +1,7 @@
 use std::sync::{Arc, Weak};
 
+use tap::Tap;
+
 use crate::{
     Transaction, resources::resource_access::ResourceAccess,
     scheduling::scheduled_transaction::ScheduledTransaction,
@@ -19,15 +21,10 @@ impl<T: Transaction> Resource<T> {
     pub(crate) fn access(
         &mut self,
         access_metadata: T::AccessMetadata,
-        scheduled_transaction: Weak<ScheduledTransaction<T>>,
+        parent: Weak<ScheduledTransaction<T>>,
     ) -> Arc<ResourceAccess<T>> {
-        let access = ResourceAccess::new(
-            scheduled_transaction,
-            self.last_access.take(),
-            access_metadata,
-        );
-        self.last_access = Some(access.clone());
-        access
+        ResourceAccess::new(access_metadata, parent, self.last_access.take())
+            .tap(|this| self.last_access = Some(this.clone()))
     }
 
     pub(crate) fn was_accessed_by(&self, transaction: &Weak<ScheduledTransaction<T>>) -> bool {
