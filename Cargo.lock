@@ -3364,6 +3364,7 @@ dependencies = [
  "intrusive-collections",
  "kas-l2-atomic",
  "num_cpus",
+ "tap",
  "tokio",
 ]
 

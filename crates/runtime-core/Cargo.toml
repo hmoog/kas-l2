@@ -12,3 +12,4 @@ crossbeam-queue = "0.3.12"
 intrusive-collections = "0.9.7"
 num_cpus = "1.17.0"
 tokio = {  version = "1.47.1", features = ["rt", "sync"] }
+tap = "1.0.1"

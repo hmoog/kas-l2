@@ -1,4 +1,4 @@
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
 use crate::{
     BatchAPI, Storage, Transaction, resources::resource_provider::ResourceProvider,
@@ -6,50 +6,31 @@ use crate::{
 };
 
 pub struct Batch<T: Transaction> {
-    scheduled_transactions: Vec<Arc<ScheduledTransaction<T>>>,
+    transactions: Vec<Arc<ScheduledTransaction<T>>>,
     api: Arc<BatchAPI<T>>,
 }
 
 impl<T: Transaction> Batch<T> {
-    pub fn scheduled_transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
-        &self.scheduled_transactions
+    pub fn transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
+        &self.transactions
     }
 
     pub fn api(&self) -> &Arc<BatchAPI<T>> {
         &self.api
     }
 
-    pub(crate) fn new<K: Storage<T::ResourceID>>(
+    pub(crate) fn new<S: Storage<T::ResourceID>>(
         transactions: Vec<T>,
-        resource_provider: &mut ResourceProvider<T, K>,
+        resources: &mut ResourceProvider<T, S>,
     ) -> Self {
-        let api = Arc::new(BatchAPI::new(transactions.len() as u64));
-        let _scheduled_transactions = transactions
-            .into_iter()
-            .map(|tx| {
-                let scheduled_transaction =
-                    Arc::new_cyclic(|this: &Weak<ScheduledTransaction<T>>| {
-                        ScheduledTransaction::new(
-                            api.clone(),
-                            resource_provider.provide(&tx, this),
-                            tx,
-                        )
-                    });
-
-                for resource in scheduled_transaction.resources() {
-                    match resource.prev() {
-                        Some(prev) => prev.set_next(resource),
-                        None => resource_provider.load_from_storage(resource),
-                    }
-                }
-
-                scheduled_transaction
-            })
-            .collect();
-
-        Self {
-            scheduled_transactions: _scheduled_transactions,
-            api,
-        }
+        let api = BatchAPI::new(transactions.len());
+        let transactions = vec_map(transactions, |t| {
+            ScheduledTransaction::new(api.clone(), resources, t)
+        });
+        Self { transactions, api }
     }
+}
+
+fn vec_map<Src, Dest, Mapping: FnMut(Src) -> Dest>(src: Vec<Src>, map: Mapping) -> Vec<Dest> {
+    src.into_iter().map(map).collect()
 }

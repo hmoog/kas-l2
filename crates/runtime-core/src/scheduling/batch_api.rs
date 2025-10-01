@@ -34,12 +34,12 @@ impl<T: Transaction> BatchAPI<T> {
         self.is_done.wait()
     }
 
-    pub(crate) fn new(transaction_count: u64) -> Self {
-        Self {
+    pub(crate) fn new(transaction_count: usize) -> Arc<Self> {
+        Arc::new(Self {
             available_transactions: Injector::new(),
-            pending_transactions: AtomicU64::new(transaction_count),
+            pending_transactions: AtomicU64::new(transaction_count as u64),
             is_done: AtomicAsyncLatch::new(),
-        }
+        })
     }
 
     pub(crate) fn push_available(&self, transaction: &Arc<ScheduledTransaction<T>>) {

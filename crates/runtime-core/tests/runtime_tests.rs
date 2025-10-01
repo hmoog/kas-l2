@@ -7,6 +7,7 @@ use kas_l2_runtime_core::{Batch, ResourceHandle, RuntimeBuilder};
 #[test]
 pub fn test_executor() {
     let mut runtime = RuntimeBuilder::default()
+        .with_execution_workers(4)
         .with_storage(KVStore(HashMap::new()))
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
@@ -16,7 +17,7 @@ pub fn test_executor() {
         .with_batch_processor(|batch: Batch<Transaction>| {
             println!(
                 ">> Processed batch with {} transactions",
-                batch.scheduled_transactions().len()
+                batch.transactions().len()
             );
         })
         .build();

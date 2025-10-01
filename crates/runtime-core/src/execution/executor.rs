@@ -10,7 +10,6 @@ pub struct Executor<T: Transaction> {
 impl<T: Transaction> Executor<T> {
     pub fn new<P: TransactionProcessor<T>>(worker_count: usize, processor: P) -> Self {
         let (workers, handles) = WorkersAPI::new_with_workers(worker_count, processor);
-
         Self { workers, handles }
     }
 
