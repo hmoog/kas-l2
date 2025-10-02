@@ -1,15 +1,15 @@
-use std::{sync::Arc, thread::JoinHandle};
+use std::thread::JoinHandle;
 
-use crate::{BatchApi, Transaction, TransactionProcessor, execution::workers_api::WorkersAPI};
+use crate::{BatchApi, Transaction, TransactionProcessor, execution::workers_api::WorkersApi};
 
 pub struct Executor<T: Transaction> {
-    workers: Arc<WorkersAPI<T>>,
+    workers: WorkersApi<T>,
     handles: Vec<JoinHandle<()>>,
 }
 
 impl<T: Transaction> Executor<T> {
     pub fn new<P: TransactionProcessor<T>>(worker_count: usize, processor: P) -> Self {
-        let (workers, handles) = WorkersAPI::new_with_workers(worker_count, processor);
+        let (workers, handles) = WorkersApi::new_with_workers(worker_count, processor);
         Self { workers, handles }
     }
 

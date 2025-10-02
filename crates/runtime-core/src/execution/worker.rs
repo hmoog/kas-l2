@@ -5,7 +5,7 @@ use crossbeam_utils::sync::{Parker, Unparker};
 
 use crate::{
     BatchApi, ScheduledTransaction, Transaction, TransactionProcessor,
-    execution::{batch_injector::BatchInjector, workers_api::WorkersAPI},
+    execution::{batch_injector::BatchInjector, workers_api::WorkersApi},
 };
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
@@ -27,7 +27,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         }
     }
 
-    pub(crate) fn start(self, workers_api: Arc<WorkersAPI<T>>) -> JoinHandle<()> {
+    pub(crate) fn start(self, workers_api: WorkersApi<T>) -> JoinHandle<()> {
         thread::spawn(move || self.run(workers_api))
     }
 
@@ -43,7 +43,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         self.injector.clone()
     }
 
-    fn run(self, workers_api: Arc<WorkersAPI<T>>) {
+    fn run(self, workers_api: WorkersApi<T>) {
         let mut batch_injector = BatchInjector::new(self.injector);
 
         while !workers_api.is_shutdown() {

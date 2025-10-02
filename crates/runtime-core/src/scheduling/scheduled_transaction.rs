@@ -13,7 +13,14 @@ use crate::{
     },
 };
 
-pub struct ScheduledTransaction<T: Transaction>(Arc<inner::ScheduledTransaction<T>>);
+pub struct ScheduledTransaction<T: Transaction>(Arc<ScheduledTransactionData<T>>);
+
+struct ScheduledTransactionData<T: Transaction> {
+    batch: BatchApi<T>,
+    resources: Vec<Arc<ResourceAccess<T>>>,
+    pending_resources: AtomicU64,
+    transaction: T,
+}
 
 impl<T: Transaction> ScheduledTransaction<T> {
     pub fn downgrade(&self) -> ScheduledTransactionRef<T> {
@@ -26,10 +33,10 @@ impl<T: Transaction> ScheduledTransaction<T> {
         transaction: T,
     ) -> Self {
         Self(Arc::new_cyclic(
-            |this: &Weak<inner::ScheduledTransaction<T>>| {
+            |this: &Weak<ScheduledTransactionData<T>>| {
                 let resources =
                     resources.provide(&transaction, ScheduledTransactionRef(this.clone()));
-                inner::ScheduledTransaction {
+                ScheduledTransactionData {
                     pending_resources: AtomicU64::new(resources.len() as u64),
                     batch,
                     transaction,
@@ -70,7 +77,7 @@ impl<T: Transaction> Clone for ScheduledTransaction<T> {
     }
 }
 
-pub struct ScheduledTransactionRef<T: Transaction>(Weak<inner::ScheduledTransaction<T>>);
+pub struct ScheduledTransactionRef<T: Transaction>(Weak<ScheduledTransactionData<T>>);
 
 impl<T: Transaction> ScheduledTransactionRef<T> {
     pub fn upgrade(&self) -> Option<ScheduledTransaction<T>> {
@@ -87,15 +94,5 @@ impl<T: Transaction> PartialEq for ScheduledTransactionRef<T> {
 impl<T: Transaction> Clone for ScheduledTransactionRef<T> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
-    }
-}
-
-pub(crate) mod inner {
-    use super::*;
-    pub(crate) struct ScheduledTransaction<T: Transaction> {
-        pub(crate) batch: BatchApi<T>,
-        pub(crate) resources: Vec<Arc<ResourceAccess<T>>>,
-        pub(crate) pending_resources: AtomicU64,
-        pub(crate) transaction: T,
     }
 }

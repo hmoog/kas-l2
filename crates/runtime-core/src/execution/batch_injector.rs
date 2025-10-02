@@ -29,13 +29,13 @@ impl<T: Transaction> BatchInjector<T> {
             curr_element.move_next();
 
             while let Some(batch) = curr_element.get() {
+                if let Some(transaction) = batch.steal_available_transactions(local_queue) {
+                    return Some(transaction);
+                }
+
                 if batch.pending_transactions() == 0 && batch.available_transactions() == 0 {
                     curr_element.remove();
                 } else {
-                    if let Some(transaction) = batch.steal_available_transactions(local_queue) {
-                        return Some(transaction);
-                    }
-
                     curr_element.move_next();
                 }
             }
