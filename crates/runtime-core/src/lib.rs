@@ -37,7 +37,11 @@ pub(crate) mod traits {
 pub use resources::{access_type::AccessType, resource_handle::ResourceHandle};
 pub use runtime::Runtime;
 pub use runtime_builder::RuntimeBuilder;
-pub use scheduling::{batch::Batch, batch_api::BatchAPI};
+pub use scheduling::{
+    batch::Batch,
+    batch_api::shared::BatchApi,
+    scheduled_transaction::{ScheduledTransaction, ScheduledTransactionRef},
+};
 pub use traits::{
     access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
     storage::Storage, transaction::Transaction, transaction_processor::TransactionProcessor,

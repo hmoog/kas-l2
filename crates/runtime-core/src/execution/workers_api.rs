@@ -5,14 +5,13 @@ use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 
 use crate::{
-    BatchAPI, Transaction, TransactionProcessor, execution::worker::Worker,
-    scheduling::scheduled_transaction::ScheduledTransaction,
+    BatchApi, ScheduledTransaction, Transaction, TransactionProcessor, execution::worker::Worker,
 };
 
 pub struct WorkersAPI<T: Transaction> {
-    stealers: Vec<Stealer<Arc<ScheduledTransaction<T>>>>,
+    stealers: Vec<Stealer<ScheduledTransaction<T>>>,
     unparkers: Vec<Unparker>,
-    injectors: Vec<Arc<Injector<Arc<BatchAPI<T>>>>>,
+    injectors: Vec<Arc<Injector<BatchApi<T>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
@@ -48,7 +47,7 @@ impl<T: Transaction> WorkersAPI<T> {
         (this, handles)
     }
 
-    pub fn inject_batch(self: &Arc<Self>, batch: Arc<BatchAPI<T>>) {
+    pub fn inject_batch(self: &Arc<Self>, batch: BatchApi<T>) {
         for (injector, unparker) in self.injectors.iter().zip(&self.unparkers) {
             injector.push(batch.clone());
             unparker.unpark();
@@ -58,7 +57,7 @@ impl<T: Transaction> WorkersAPI<T> {
     pub fn steal_task_from_other_workers(
         self: &Arc<Self>,
         worker_id: usize,
-    ) -> Option<Arc<ScheduledTransaction<T>>> {
+    ) -> Option<ScheduledTransaction<T>> {
         // TODO: randomize stealer selection
         for (id, other) in self.stealers.iter().enumerate() {
             if id != worker_id {

@@ -1,6 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
-use crate::{BatchAPI, Transaction, TransactionProcessor, execution::workers_api::WorkersAPI};
+use crate::{BatchApi, Transaction, TransactionProcessor, execution::workers_api::WorkersAPI};
 
 pub struct Executor<T: Transaction> {
     workers: Arc<WorkersAPI<T>>,
@@ -13,7 +13,7 @@ impl<T: Transaction> Executor<T> {
         Self { workers, handles }
     }
 
-    pub fn execute(&self, batch: Arc<BatchAPI<T>>) {
+    pub fn execute(&self, batch: BatchApi<T>) {
         self.workers.inject_batch(batch);
     }
 

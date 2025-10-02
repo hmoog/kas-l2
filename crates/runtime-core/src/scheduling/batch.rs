@@ -1,21 +1,19 @@
-use std::sync::Arc;
-
 use crate::{
-    BatchAPI, Storage, Transaction, resources::resource_provider::ResourceProvider,
-    scheduling::scheduled_transaction::ScheduledTransaction,
+    BatchApi, ScheduledTransaction, Storage, Transaction,
+    resources::resource_provider::ResourceProvider,
 };
 
 pub struct Batch<T: Transaction> {
-    transactions: Vec<Arc<ScheduledTransaction<T>>>,
-    api: Arc<BatchAPI<T>>,
+    transactions: Vec<ScheduledTransaction<T>>,
+    api: BatchApi<T>,
 }
 
 impl<T: Transaction> Batch<T> {
-    pub fn transactions(&self) -> &[Arc<ScheduledTransaction<T>>] {
+    pub fn transactions(&self) -> &[ScheduledTransaction<T>] {
         &self.transactions
     }
 
-    pub fn api(&self) -> &Arc<BatchAPI<T>> {
+    pub fn api(&self) -> &BatchApi<T> {
         &self.api
     }
 
@@ -23,14 +21,16 @@ impl<T: Transaction> Batch<T> {
         transactions: Vec<T>,
         resources: &mut ResourceProvider<T, S>,
     ) -> Self {
-        let api = BatchAPI::new(transactions.len());
-        let transactions = vec_map(transactions, |t| {
-            ScheduledTransaction::new(api.clone(), resources, t)
-        });
-        Self { transactions, api }
+        let api = BatchApi::new(transactions.len());
+        Self {
+            transactions: map(transactions, |t| {
+                ScheduledTransaction::new(api.clone(), resources, t)
+            }),
+            api,
+        }
     }
 }
 
-fn vec_map<Src, Dest, Mapping: FnMut(Src) -> Dest>(src: Vec<Src>, map: Mapping) -> Vec<Dest> {
+fn map<Src, Dest, Mapping: FnMut(Src) -> Dest>(src: Vec<Src>, map: Mapping) -> Vec<Dest> {
     src.into_iter().map(map).collect()
 }

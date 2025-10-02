@@ -4,17 +4,16 @@ use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 
 use crate::{
-    BatchAPI, Transaction, execution::batch_injector::linked_list_element::*,
-    scheduling::scheduled_transaction::ScheduledTransaction,
+    BatchApi, ScheduledTransaction, Transaction, execution::batch_injector::linked_list_element::*,
 };
 
 pub struct BatchInjector<T: Transaction> {
-    queue: LinkedList<Adapter<Arc<BatchAPI<T>>>>,
-    injector: Arc<Injector<Arc<BatchAPI<T>>>>,
+    queue: LinkedList<Adapter<BatchApi<T>>>,
+    injector: Arc<Injector<BatchApi<T>>>,
 }
 
 impl<T: Transaction> BatchInjector<T> {
-    pub fn new(injector: Arc<Injector<Arc<BatchAPI<T>>>>) -> Self {
+    pub fn new(injector: Arc<Injector<BatchApi<T>>>) -> Self {
         Self {
             queue: LinkedList::new(Adapter::new()),
             injector,
@@ -23,8 +22,8 @@ impl<T: Transaction> BatchInjector<T> {
 
     pub fn steal(
         &mut self,
-        local_queue: &WorkerQueue<Arc<ScheduledTransaction<T>>>,
-    ) -> Option<Arc<ScheduledTransaction<T>>> {
+        local_queue: &WorkerQueue<ScheduledTransaction<T>>,
+    ) -> Option<ScheduledTransaction<T>> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
@@ -32,18 +31,17 @@ impl<T: Transaction> BatchInjector<T> {
             while let Some(batch) = curr_element.get() {
                 if batch.pending_transactions() == 0 && batch.available_transactions() == 0 {
                     curr_element.remove();
-                    continue;
-                }
+                } else {
+                    if let Some(transaction) = batch.steal_available_transactions(local_queue) {
+                        return Some(transaction);
+                    }
 
-                if let Some(transaction) = batch.steal_available_transactions(local_queue) {
-                    return Some(transaction);
+                    curr_element.move_next();
                 }
-
-                curr_element.move_next();
             }
 
             if !self.try_pull_new_batches() {
-                break None;
+                return None;
             }
         }
     }
@@ -58,7 +56,7 @@ impl<T: Transaction> BatchInjector<T> {
                     success = true;
                 }
                 Steal::Empty => break,
-                Steal::Retry => (),
+                Steal::Retry => continue,
             }
         }
         success
@@ -71,7 +69,7 @@ mod linked_list_element {
     use intrusive_collections::{LinkedListLink, intrusive_adapter};
 
     pub struct LinkedListElement<T> {
-        pub(super) link: LinkedListLink,
+        pub link: LinkedListLink,
         pub inner: T,
     }
 
@@ -86,7 +84,6 @@ mod linked_list_element {
 
     impl<T> Deref for LinkedListElement<T> {
         type Target = T;
-
         fn deref(&self) -> &Self::Target {
             &self.inner
         }

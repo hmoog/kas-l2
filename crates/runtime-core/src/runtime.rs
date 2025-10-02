@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use crate::{
-    BatchAPI, BatchProcessor, RuntimeBuilder, Storage, Transaction, TransactionProcessor,
+    BatchApi, BatchProcessor, RuntimeBuilder, Storage, Transaction, TransactionProcessor,
     execution::executor::Executor, resources::resource_provider::ResourceProvider,
     runtime_batch_processor::RuntimeBatchProcessor, scheduling::scheduler::Scheduler,
 };
@@ -13,7 +11,7 @@ pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {
 }
 
 impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
-    pub fn process(&mut self, transactions: Vec<T>) -> Arc<BatchAPI<T>> {
+    pub fn process(&mut self, transactions: Vec<T>) -> BatchApi<T> {
         let batch = self.scheduler.schedule(transactions);
         let batch_api = batch.api().clone();
 

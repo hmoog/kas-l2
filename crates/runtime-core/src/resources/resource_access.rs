@@ -1,19 +1,15 @@
-use std::{
-    ops::Deref,
-    sync::{Arc, Weak},
-};
+use std::{ops::Deref, sync::Arc};
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessMetadata, Transaction,
+    AccessMetadata, ScheduledTransaction, ScheduledTransactionRef, Transaction,
     resources::{access_type::AccessType, state::State},
-    scheduling::scheduled_transaction::ScheduledTransaction,
 };
 
 pub struct ResourceAccess<T: Transaction> {
     access_metadata: T::AccessMetadata,
-    parent: Weak<ScheduledTransaction<T>>,
+    parent: ScheduledTransactionRef<T>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
     read_state: AtomicOptionArc<State<T>>,
@@ -35,7 +31,7 @@ impl<T: Transaction> ResourceAccess<T> {
 
     pub(crate) fn new(
         access_metadata: T::AccessMetadata,
-        parent: Weak<ScheduledTransaction<T>>,
+        parent: ScheduledTransactionRef<T>,
         prev: Option<Arc<Self>>,
     ) -> Arc<Self> {
         Arc::new(Self {
@@ -61,12 +57,12 @@ impl<T: Transaction> ResourceAccess<T> {
         }
     }
 
-    pub(crate) fn parent(&self) -> Arc<ScheduledTransaction<T>> {
+    pub(crate) fn parent(&self) -> ScheduledTransaction<T> {
         self.parent.upgrade().expect("parent missing")
     }
 
-    pub(crate) fn parent_eq(&self, parent: &Weak<ScheduledTransaction<T>>) -> bool {
-        Weak::ptr_eq(&self.parent, parent)
+    pub(crate) fn parent_eq(&self, parent: &ScheduledTransactionRef<T>) -> bool {
+        self.parent == *parent
     }
 
     pub(crate) fn set_read_state(&self, state: Arc<State<T>>) {

@@ -11,11 +11,11 @@ pub fn test_executor() {
         .with_storage(KVStore(HashMap::new()))
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
-                println!("Processed transaction with id {}", tx.0);
+                eprintln!("Processed transaction with id {}", tx.0);
             },
         )
         .with_batch_processor(|batch: Batch<Transaction>| {
-            println!(
+            eprintln!(
                 ">> Processed batch with {} transactions",
                 batch.transactions().len()
             );

@@ -1,14 +1,10 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Weak},
-};
+use std::{collections::HashMap, sync::Arc};
 
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, Storage, Transaction,
+    AccessMetadata, ScheduledTransactionRef, Storage, Transaction,
     resources::{resource::Resource, resource_access::ResourceAccess, state::State},
-    scheduling::scheduled_transaction::ScheduledTransaction,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {
@@ -27,12 +23,12 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
     pub(crate) fn provide(
         &mut self,
         transaction: &T,
-        scheduled_transaction: &Weak<ScheduledTransaction<T>>,
+        scheduled_transaction: ScheduledTransactionRef<T>,
     ) -> Vec<Arc<ResourceAccess<T>>> {
         let mut accessed_resources = Vec::new();
         for access in transaction.accessed_resources() {
             let resource = self.resource(access.resource_id());
-            if resource.was_accessed_by(scheduled_transaction) {
+            if resource.was_accessed_by(&scheduled_transaction) {
                 panic!("duplicate access to resource")
             }
 
