@@ -3,12 +3,16 @@ use std::{sync::Arc, thread::JoinHandle};
 use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
+use kas_l2_runtime_macros::smart_pointer;
+use tap::Tap;
 
-use crate::{BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::worker::Worker};
+use crate::{
+    BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::worker::Worker,
+    utils::vec_ext::VecExt,
+};
 
-pub struct WorkersApi<T: Transaction>(Arc<WorkersApiData<T>>);
-
-struct WorkersApiData<T: Transaction> {
+#[smart_pointer]
+pub(crate) struct WorkersApi<T: Transaction> {
     stealers: Vec<Stealer<RuntimeTx<T>>>,
     unparkers: Vec<Unparker>,
     injectors: Vec<Arc<Injector<BatchApi<T>>>>,
@@ -21,24 +25,22 @@ impl<T: Transaction> WorkersApi<T> {
         processor: P,
     ) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
-            stealers: vec![],
-            unparkers: vec![],
-            injectors: vec![],
+            stealers: Vec::with_capacity(worker_count),
+            unparkers: Vec::with_capacity(worker_count),
+            injectors: Vec::with_capacity(worker_count),
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        let workers: Vec<Worker<T, P>> = (0..worker_count)
-            .map(|id| {
-                let worker = Worker::new(id, processor.clone());
-                data.stealers.push(worker.stealer());
-                data.unparkers.push(worker.unparker());
-                data.injectors.push(worker.injector());
-                worker
+        let workers: Vec<Worker<T, P>> = (0..worker_count).into_vec(|id| {
+            Worker::new(id, processor.clone()).tap(|w| {
+                data.stealers.push(w.stealer());
+                data.unparkers.push(w.unparker());
+                data.injectors.push(w.injector());
             })
-            .collect();
+        });
 
         let this = Self(Arc::new(data));
-        let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
+        let handles = workers.into_vec(|w| w.start(this.clone()));
 
         (this, handles)
     }
@@ -76,11 +78,5 @@ impl<T: Transaction> WorkersApi<T> {
 
     pub fn is_shutdown(&self) -> bool {
         self.0.shutdown.is_open()
-    }
-}
-
-impl<T: Transaction> Clone for WorkersApi<T> {
-    fn clone(&self) -> Self {
-        Self(Arc::clone(&self.0))
     }
 }
