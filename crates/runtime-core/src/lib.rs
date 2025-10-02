@@ -6,6 +6,7 @@ pub(crate) mod execution {
     pub(crate) mod batch_injector;
     pub(crate) mod executor;
     pub(crate) mod runtime_tx;
+    pub(crate) mod runtime_tx_ref;
     pub(crate) mod worker;
     pub(crate) mod workers_api;
 }
@@ -34,7 +35,11 @@ pub(crate) mod traits {
     pub(crate) mod transaction_processor;
 }
 
-pub use execution::runtime_tx::{RuntimeTx, RuntimeTxRef};
+pub(crate) mod utils {
+    pub(crate) mod vec_ext;
+}
+
+pub use execution::{runtime_tx::RuntimeTx, runtime_tx_ref::RuntimeTxRef};
 pub use resources::{access_type::AccessType, resource_handle::ResourceHandle};
 pub use runtime::Runtime;
 pub use runtime_builder::RuntimeBuilder;

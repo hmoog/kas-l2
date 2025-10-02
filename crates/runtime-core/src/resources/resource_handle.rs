@@ -7,11 +7,11 @@ use crate::{
 
 pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
-    resource: &'a Arc<AccessedResource<T>>,
+    resource: &'a AccessedResource<T>,
 }
 
 impl<'a, T: Transaction> ResourceHandle<'a, T> {
-    pub(crate) fn new(resource: &'a Arc<AccessedResource<T>>) -> Self {
+    pub(crate) fn new(resource: &'a AccessedResource<T>) -> Self {
         Self {
             state: resource.read_state(),
             resource,

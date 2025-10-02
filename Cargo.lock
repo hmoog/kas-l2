@@ -3363,6 +3363,7 @@ dependencies = [
  "crossbeam-utils",
  "intrusive-collections",
  "kas-l2-atomic",
+ "kas-l2-runtime-macros",
  "num_cpus",
  "tap",
  "tokio",
@@ -3372,6 +3373,7 @@ dependencies = [
 name = "kas-l2-runtime-macros"
 version = "0.1.0"
 dependencies = [
+ "proc-macro2",
  "quote",
  "syn 2.0.106",
 ]

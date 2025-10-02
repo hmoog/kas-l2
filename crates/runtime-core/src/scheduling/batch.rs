@@ -1,5 +1,6 @@
 use crate::{
     BatchApi, RuntimeTx, Storage, Transaction, resources::resource_provider::ResourceProvider,
+    utils::vec_ext::VecExt,
 };
 
 pub struct Batch<TX: Transaction> {
@@ -22,12 +23,8 @@ impl<TX: Transaction> Batch<TX> {
     ) -> Self {
         let api = BatchApi::new(txs.len());
         Self {
-            transactions: map(txs, |t| RuntimeTx::new(api.clone(), resources, t)),
+            transactions: txs.into_vec(|tx| RuntimeTx::new(api.clone(), resources, tx)),
             api,
         }
     }
-}
-
-fn map<Src, Dest, Mapping: FnMut(Src) -> Dest>(src: Vec<Src>, map: Mapping) -> Vec<Dest> {
-    src.into_iter().map(map).collect()
 }

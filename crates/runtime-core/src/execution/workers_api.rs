@@ -67,10 +67,8 @@ impl<T: Transaction> WorkersApi<T> {
     }
 
     pub fn shutdown(&self) {
-        // trigger shutdown signal
-        self.0.shutdown.open();
+        self.0.shutdown.open(); // trigger shutdown signal
 
-        // wake all workers so they can exit
         for unparker in &self.0.unparkers {
             unparker.unpark();
         }

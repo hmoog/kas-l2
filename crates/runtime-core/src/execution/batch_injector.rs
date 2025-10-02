@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 
-use crate::{BatchApi, RuntimeTx, Transaction, execution::batch_injector::linked_list_element::*};
+use crate::{BatchApi, RuntimeTx, Transaction, execution::batch_injector::linked_list::*};
 
 pub struct BatchInjector<T: Transaction> {
     queue: LinkedList<Adapter<BatchApi<T>>>,
@@ -20,18 +20,18 @@ impl<T: Transaction> BatchInjector<T> {
 
     pub fn steal(&mut self, worker_queue: &WorkerQueue<RuntimeTx<T>>) -> Option<RuntimeTx<T>> {
         loop {
-            let mut curr_element = self.queue.cursor_mut();
-            curr_element.move_next();
+            let mut queue_element = self.queue.cursor_mut();
+            queue_element.move_next();
 
-            while let Some(batch) = curr_element.get() {
+            while let Some(batch) = queue_element.get() {
                 if let Some(transaction) = batch.steal_available_txs(worker_queue) {
                     return Some(transaction);
                 }
 
                 if batch.pending_txs() == 0 && batch.available_txs() == 0 {
-                    curr_element.remove();
+                    queue_element.remove();
                 } else {
-                    curr_element.move_next();
+                    queue_element.move_next();
                 }
             }
 
@@ -46,8 +46,7 @@ impl<T: Transaction> BatchInjector<T> {
         loop {
             match self.injector.steal() {
                 Steal::Success(batch) => {
-                    self.queue
-                        .push_back(Box::new(LinkedListElement::new(batch)));
+                    self.queue.push_back(Box::new(Element::new(batch)));
                     success = true;
                 }
                 Steal::Empty => break,
@@ -58,17 +57,17 @@ impl<T: Transaction> BatchInjector<T> {
     }
 }
 
-mod linked_list_element {
+mod linked_list {
     use std::ops::{Deref, DerefMut};
 
     use intrusive_collections::{LinkedListLink, intrusive_adapter};
 
-    pub struct LinkedListElement<T> {
+    pub struct Element<T> {
         pub link: LinkedListLink,
         pub inner: T,
     }
 
-    impl<T> LinkedListElement<T> {
+    impl<T> Element<T> {
         pub fn new(inner: T) -> Self {
             Self {
                 link: LinkedListLink::new(),
@@ -77,18 +76,18 @@ mod linked_list_element {
         }
     }
 
-    impl<T> Deref for LinkedListElement<T> {
+    impl<T> Deref for Element<T> {
         type Target = T;
         fn deref(&self) -> &Self::Target {
             &self.inner
         }
     }
 
-    impl<T> DerefMut for LinkedListElement<T> {
+    impl<T> DerefMut for Element<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             &mut self.inner
         }
     }
 
-    intrusive_adapter!(pub Adapter<T> = Box<LinkedListElement<T>>: LinkedListElement<T> { link: LinkedListLink });
+    intrusive_adapter!(pub Adapter<T> = Box<Element<T>>: Element<T> { link: LinkedListLink });
 }

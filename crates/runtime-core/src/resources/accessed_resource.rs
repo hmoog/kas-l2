@@ -1,68 +1,62 @@
-use std::{ops::Deref, sync::Arc};
+use std::sync::Arc;
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
+use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
     AccessMetadata, RuntimeTx, RuntimeTxRef, Transaction,
     resources::{access_type::AccessType, state::State},
 };
 
+#[smart_pointer(deref(access))]
 pub struct AccessedResource<T: Transaction> {
     access: T::Access,
-    parent: RuntimeTxRef<T>,
-    prev: AtomicOptionArc<Self>,
-    next: AtomicWeak<Self>,
+    tx_ref: RuntimeTxRef<T>,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
+    prev: AtomicOptionArc<Self>,
+    next: AtomicWeak<Self>,
 }
 
 impl<T: Transaction> AccessedResource<T> {
     pub fn read_state(&self) -> Arc<State<T>> {
-        self.read_state
-            .load()
-            .expect("tried to access resource before it was loaded")
+        self.read_state.load().expect("read state missing")
     }
 
     pub fn written_state(&self) -> Arc<State<T>> {
-        self.written_state
-            .load()
-            .expect("tried to access resource before it was written")
+        self.written_state.load().expect("written state missing")
     }
 
-    pub(crate) fn new(
-        access: T::Access,
-        parent: RuntimeTxRef<T>,
-        prev: Option<Arc<Self>>,
-    ) -> Arc<Self> {
-        Arc::new(Self {
+    pub(crate) fn new(access: T::Access, tx_ref: RuntimeTxRef<T>, prev: Option<Self>) -> Self {
+        Self(Arc::new(AccessedResourceData {
             access,
-            parent,
-            prev: AtomicOptionArc::new(prev),
-            next: AtomicWeak::default(),
+            tx_ref,
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),
-        })
+            prev: AtomicOptionArc::new(prev.map(|p| p.0)),
+            next: AtomicWeak::default(),
+        }))
     }
 
-    pub(crate) fn init<F: FnOnce(&Arc<Self>)>(self: &Arc<Self>, load_state: F) {
+    pub(crate) fn init<F: FnOnce(&Self)>(&self, load_state: F) {
         match self.prev.load() {
             Some(prev) => {
                 if let Some(written_state) = prev.written_state.load() {
                     self.set_read_state(written_state);
                 } else {
-                    prev.next.store(Arc::downgrade(self));
+                    prev.next.store(Arc::downgrade(&self.0));
                 }
             }
             None => load_state(self),
         }
     }
 
-    pub(crate) fn parent(&self) -> RuntimeTx<T> {
-        self.parent.upgrade().expect("parent missing")
+    pub(crate) fn tx(&self) -> RuntimeTx<T> {
+        self.tx_ref.upgrade().expect("tx was dropped")
     }
 
-    pub(crate) fn parent_eq(&self, parent: &RuntimeTxRef<T>) -> bool {
-        self.parent == *parent
+    pub(crate) fn tx_ref(&self) -> &RuntimeTxRef<T> {
+        &self.tx_ref
     }
 
     pub(crate) fn set_read_state(&self, state: Arc<State<T>>) {
@@ -74,21 +68,14 @@ impl<T: Transaction> AccessedResource<T> {
 
         self.read_state.store(Some(state));
 
-        self.parent().decrease_pending_resources();
+        self.tx().decrease_pending_resources();
     }
 
     pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
         if let Some(next) = self.next.load().upgrade() {
-            next.set_read_state(state.clone())
+            Self(next).set_read_state(state.clone())
         }
 
         self.written_state.store(Some(state));
-    }
-}
-
-impl<T: Transaction> Deref for AccessedResource<T> {
-    type Target = T::Access;
-    fn deref(&self) -> &Self::Target {
-        &self.access
     }
 }

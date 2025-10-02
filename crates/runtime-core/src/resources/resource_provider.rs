@@ -24,7 +24,7 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         &mut self,
         transaction: &T,
         tx_ref: RuntimeTxRef<T>,
-    ) -> Vec<Arc<AccessedResource<T>>> {
+    ) -> Vec<AccessedResource<T>> {
         let mut accessed_resources = Vec::new();
         for access in transaction.accessed_resources() {
             let resource = self.resource(access.id());
@@ -37,7 +37,7 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         accessed_resources
     }
 
-    pub(crate) fn load_from_storage(&self, resource: &Arc<AccessedResource<T>>) {
+    pub(crate) fn load_from_storage(&self, resource: &AccessedResource<T>) {
         resource.set_read_state(Arc::new(match self.permanent_storage.get(&resource.id()) {
             Ok(result) => match result {
                 None => State::default(),
