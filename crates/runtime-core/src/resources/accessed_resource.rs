@@ -3,20 +3,20 @@ use std::{ops::Deref, sync::Arc};
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 
 use crate::{
-    AccessMetadata, ScheduledTransaction, ScheduledTransactionRef, Transaction,
+    AccessMetadata, RuntimeTx, RuntimeTxRef, Transaction,
     resources::{access_type::AccessType, state::State},
 };
 
-pub struct ResourceAccess<T: Transaction> {
-    access_metadata: T::AccessMetadata,
-    parent: ScheduledTransactionRef<T>,
+pub struct AccessedResource<T: Transaction> {
+    access: T::Access,
+    parent: RuntimeTxRef<T>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
 }
 
-impl<T: Transaction> ResourceAccess<T> {
+impl<T: Transaction> AccessedResource<T> {
     pub fn read_state(&self) -> Arc<State<T>> {
         self.read_state
             .load()
@@ -30,12 +30,12 @@ impl<T: Transaction> ResourceAccess<T> {
     }
 
     pub(crate) fn new(
-        access_metadata: T::AccessMetadata,
-        parent: ScheduledTransactionRef<T>,
+        access: T::Access,
+        parent: RuntimeTxRef<T>,
         prev: Option<Arc<Self>>,
     ) -> Arc<Self> {
         Arc::new(Self {
-            access_metadata,
+            access,
             parent,
             prev: AtomicOptionArc::new(prev),
             next: AtomicWeak::default(),
@@ -57,11 +57,11 @@ impl<T: Transaction> ResourceAccess<T> {
         }
     }
 
-    pub(crate) fn parent(&self) -> ScheduledTransaction<T> {
+    pub(crate) fn parent(&self) -> RuntimeTx<T> {
         self.parent.upgrade().expect("parent missing")
     }
 
-    pub(crate) fn parent_eq(&self, parent: &ScheduledTransactionRef<T>) -> bool {
+    pub(crate) fn parent_eq(&self, parent: &RuntimeTxRef<T>) -> bool {
         self.parent == *parent
     }
 
@@ -86,9 +86,9 @@ impl<T: Transaction> ResourceAccess<T> {
     }
 }
 
-impl<T: Transaction> Deref for ResourceAccess<T> {
-    type Target = T::AccessMetadata;
+impl<T: Transaction> Deref for AccessedResource<T> {
+    type Target = T::Access;
     fn deref(&self) -> &Self::Target {
-        &self.access_metadata
+        &self.access
     }
 }

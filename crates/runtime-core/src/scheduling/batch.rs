@@ -1,31 +1,28 @@
 use crate::{
-    BatchApi, ScheduledTransaction, Storage, Transaction,
-    resources::resource_provider::ResourceProvider,
+    BatchApi, RuntimeTx, Storage, Transaction, resources::resource_provider::ResourceProvider,
 };
 
-pub struct Batch<T: Transaction> {
-    transactions: Vec<ScheduledTransaction<T>>,
-    api: BatchApi<T>,
+pub struct Batch<TX: Transaction> {
+    transactions: Vec<RuntimeTx<TX>>,
+    api: BatchApi<TX>,
 }
 
-impl<T: Transaction> Batch<T> {
-    pub fn transactions(&self) -> &[ScheduledTransaction<T>] {
+impl<TX: Transaction> Batch<TX> {
+    pub fn txs(&self) -> &[RuntimeTx<TX>] {
         &self.transactions
     }
 
-    pub fn api(&self) -> &BatchApi<T> {
+    pub fn api(&self) -> &BatchApi<TX> {
         &self.api
     }
 
-    pub(crate) fn new<S: Storage<T::ResourceID>>(
-        transactions: Vec<T>,
-        resources: &mut ResourceProvider<T, S>,
+    pub(crate) fn new<S: Storage<TX::ResourceID>>(
+        txs: Vec<TX>,
+        resources: &mut ResourceProvider<TX, S>,
     ) -> Self {
-        let api = BatchApi::new(transactions.len());
+        let api = BatchApi::new(txs.len());
         Self {
-            transactions: map(transactions, |t| {
-                ScheduledTransaction::new(api.clone(), resources, t)
-            }),
+            transactions: map(txs, |t| RuntimeTx::new(api.clone(), resources, t)),
             api,
         }
     }

@@ -15,10 +15,7 @@ pub fn test_executor() {
             },
         )
         .with_batch_processor(|batch: Batch<Transaction>| {
-            eprintln!(
-                ">> Processed batch with {} transactions",
-                batch.transactions().len()
-            );
+            eprintln!(">> Processed batch with {} transactions", batch.txs().len());
         })
         .build();
 
@@ -72,14 +69,14 @@ mod runtime_traits {
 
     impl kas_l2_runtime_core::Transaction for Transaction {
         type ResourceID = u32;
-        type AccessMetadata = Access;
-        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+        type Access = Access;
+        fn accessed_resources(&self) -> &[Self::Access] {
             &self.1
         }
     }
 
     impl kas_l2_runtime_core::AccessMetadata<u32> for Access {
-        fn resource_id(&self) -> u32 {
+        fn id(&self) -> u32 {
             match self {
                 Access::Read(id) => *id as u32,
                 Access::Write(id) => *id as u32,

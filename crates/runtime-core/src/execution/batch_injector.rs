@@ -3,9 +3,7 @@ use std::sync::Arc;
 use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
 use intrusive_collections::LinkedList;
 
-use crate::{
-    BatchApi, ScheduledTransaction, Transaction, execution::batch_injector::linked_list_element::*,
-};
+use crate::{BatchApi, RuntimeTx, Transaction, execution::batch_injector::linked_list_element::*};
 
 pub struct BatchInjector<T: Transaction> {
     queue: LinkedList<Adapter<BatchApi<T>>>,
@@ -20,20 +18,17 @@ impl<T: Transaction> BatchInjector<T> {
         }
     }
 
-    pub fn steal(
-        &mut self,
-        local_queue: &WorkerQueue<ScheduledTransaction<T>>,
-    ) -> Option<ScheduledTransaction<T>> {
+    pub fn steal(&mut self, worker_queue: &WorkerQueue<RuntimeTx<T>>) -> Option<RuntimeTx<T>> {
         loop {
             let mut curr_element = self.queue.cursor_mut();
             curr_element.move_next();
 
             while let Some(batch) = curr_element.get() {
-                if let Some(transaction) = batch.steal_available_transactions(local_queue) {
+                if let Some(transaction) = batch.steal_available_txs(worker_queue) {
                     return Some(transaction);
                 }
 
-                if batch.pending_transactions() == 0 && batch.available_transactions() == 0 {
+                if batch.pending_txs() == 0 && batch.available_txs() == 0 {
                     curr_element.remove();
                 } else {
                     curr_element.move_next();

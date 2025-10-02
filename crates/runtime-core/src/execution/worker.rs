@@ -4,13 +4,13 @@ use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
 use crossbeam_utils::sync::{Parker, Unparker};
 
 use crate::{
-    BatchApi, ScheduledTransaction, Transaction, TransactionProcessor,
+    BatchApi, RuntimeTx, Transaction, TransactionProcessor,
     execution::{batch_injector::BatchInjector, workers_api::WorkersApi},
 };
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
-    local_queue: WorkerQueue<ScheduledTransaction<T>>,
+    local_queue: WorkerQueue<RuntimeTx<T>>,
     injector: Arc<Injector<BatchApi<T>>>,
     processor: P,
     parker: Parker,
@@ -31,7 +31,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         thread::spawn(move || self.run(workers_api))
     }
 
-    pub(crate) fn stealer(&self) -> Stealer<ScheduledTransaction<T>> {
+    pub(crate) fn stealer(&self) -> Stealer<RuntimeTx<T>> {
         self.local_queue.stealer()
     }
 

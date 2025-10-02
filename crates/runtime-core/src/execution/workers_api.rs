@@ -4,14 +4,12 @@ use crossbeam_deque::{Injector, Steal, Stealer};
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 
-use crate::{
-    BatchApi, ScheduledTransaction, Transaction, TransactionProcessor, execution::worker::Worker,
-};
+use crate::{BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::worker::Worker};
 
 pub struct WorkersApi<T: Transaction>(Arc<WorkersApiData<T>>);
 
 struct WorkersApiData<T: Transaction> {
-    stealers: Vec<Stealer<ScheduledTransaction<T>>>,
+    stealers: Vec<Stealer<RuntimeTx<T>>>,
     unparkers: Vec<Unparker>,
     injectors: Vec<Arc<Injector<BatchApi<T>>>>,
     shutdown: AtomicAsyncLatch,
@@ -22,7 +20,6 @@ impl<T: Transaction> WorkersApi<T> {
         worker_count: usize,
         processor: P,
     ) -> (Self, Vec<JoinHandle<()>>) {
-        // create owned instance
         let mut data = WorkersApiData {
             stealers: vec![],
             unparkers: vec![],
@@ -30,7 +27,6 @@ impl<T: Transaction> WorkersApi<T> {
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        // create workers
         let workers: Vec<Worker<T, P>> = (0..worker_count)
             .map(|id| {
                 let worker = Worker::new(id, processor.clone());
@@ -41,11 +37,9 @@ impl<T: Transaction> WorkersApi<T> {
             })
             .collect();
 
-        // start workers (they will immediately park)
         let this = Self(Arc::new(data));
         let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
 
-        // return shared instance + handles
         (this, handles)
     }
 
@@ -56,10 +50,7 @@ impl<T: Transaction> WorkersApi<T> {
         }
     }
 
-    pub fn steal_task_from_other_workers(
-        &self,
-        worker_id: usize,
-    ) -> Option<ScheduledTransaction<T>> {
+    pub fn steal_task_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<T>> {
         // TODO: randomize stealer selection
         for (id, other) in self.0.stealers.iter().enumerate() {
             if id != worker_id {

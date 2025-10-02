@@ -3,8 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, ScheduledTransactionRef, Storage, Transaction,
-    resources::{resource::Resource, resource_access::ResourceAccess, state::State},
+    AccessMetadata, RuntimeTxRef, Storage, Transaction,
+    resources::{accessed_resource::AccessedResource, resource::Resource, state::State},
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {
@@ -23,30 +23,28 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
     pub(crate) fn provide(
         &mut self,
         transaction: &T,
-        scheduled_transaction: ScheduledTransactionRef<T>,
-    ) -> Vec<Arc<ResourceAccess<T>>> {
+        tx_ref: RuntimeTxRef<T>,
+    ) -> Vec<Arc<AccessedResource<T>>> {
         let mut accessed_resources = Vec::new();
         for access in transaction.accessed_resources() {
-            let resource = self.resource(access.resource_id());
-            if resource.was_accessed_by(&scheduled_transaction) {
+            let resource = self.resource(access.id());
+            if resource.was_accessed_by(&tx_ref) {
                 panic!("duplicate access to resource")
             }
 
-            accessed_resources.push(resource.access(access.clone(), scheduled_transaction.clone()));
+            accessed_resources.push(resource.access(access.clone(), tx_ref.clone()));
         }
         accessed_resources
     }
 
-    pub(crate) fn load_from_storage(&self, access: &Arc<ResourceAccess<T>>) {
-        access.set_read_state(Arc::new(
-            match self.permanent_storage.get(&access.resource_id()) {
-                Ok(result) => match result {
-                    None => State::default(),
-                    Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
-                },
-                Err(err) => panic!("failed to load resource from storage: {}", err),
+    pub(crate) fn load_from_storage(&self, resource: &Arc<AccessedResource<T>>) {
+        resource.set_read_state(Arc::new(match self.permanent_storage.get(&resource.id()) {
+            Ok(result) => match result {
+                None => State::default(),
+                Some(bytes) => State::try_from_slice(&bytes).expect("failed to deserialize"),
             },
-        ))
+            Err(err) => panic!("failed to load resource from storage: {}", err),
+        }))
     }
 
     fn resource(&mut self, resource_id: T::ResourceID) -> &mut Resource<T> {
