@@ -12,17 +12,17 @@ use crate::{
 };
 
 #[smart_pointer]
-pub(crate) struct WorkersApi<T: Transaction> {
-    stealers: Vec<Stealer<RuntimeTx<T>>>,
+pub(crate) struct WorkersApi<Tx: Transaction> {
+    stealers: Vec<Stealer<RuntimeTx<Tx>>>,
     unparkers: Vec<Unparker>,
-    injectors: Vec<Arc<Injector<BatchApi<T>>>>,
+    injectors: Vec<Arc<Injector<BatchApi<Tx>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
-impl<T: Transaction> WorkersApi<T> {
-    pub fn new_with_workers<P: TransactionProcessor<T>>(
+impl<Tx: Transaction> WorkersApi<Tx> {
+    pub fn new_with_workers<TxProc: TransactionProcessor<Tx>>(
         worker_count: usize,
-        processor: P,
+        processor: TxProc,
     ) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
             stealers: Vec::with_capacity(worker_count),
@@ -31,7 +31,7 @@ impl<T: Transaction> WorkersApi<T> {
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        let workers: Vec<Worker<T, P>> = (0..worker_count).into_vec(|id| {
+        let workers: Vec<Worker<Tx, TxProc>> = (0..worker_count).into_vec(|id| {
             Worker::new(id, processor.clone()).tap(|w| {
                 data.stealers.push(w.stealer());
                 data.unparkers.push(w.unparker());
@@ -45,16 +45,16 @@ impl<T: Transaction> WorkersApi<T> {
         (this, handles)
     }
 
-    pub fn inject_batch(&self, batch: BatchApi<T>) {
-        for (injector, unparker) in self.0.injectors.iter().zip(&self.0.unparkers) {
+    pub fn inject_batch(&self, batch: BatchApi<Tx>) {
+        for (injector, unparker) in self.injectors.iter().zip(&self.unparkers) {
             injector.push(batch.clone());
             unparker.unpark();
         }
     }
 
-    pub fn steal_task_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<T>> {
+    pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<Tx>> {
         // TODO: randomize stealer selection
-        for (id, other) in self.0.stealers.iter().enumerate() {
+        for (id, other) in self.stealers.iter().enumerate() {
             if id != worker_id {
                 loop {
                     match other.steal() {
@@ -69,14 +69,14 @@ impl<T: Transaction> WorkersApi<T> {
     }
 
     pub fn shutdown(&self) {
-        self.0.shutdown.open(); // trigger shutdown signal
+        self.shutdown.open(); // trigger shutdown signal
 
-        for unparker in &self.0.unparkers {
+        for unparker in &self.unparkers {
             unparker.unpark();
         }
     }
 
     pub fn is_shutdown(&self) -> bool {
-        self.0.shutdown.is_open()
+        self.shutdown.is_open()
     }
 }

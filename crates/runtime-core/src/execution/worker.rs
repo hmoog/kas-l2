@@ -44,14 +44,14 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
     }
 
     fn run(self, workers_api: WorkersApi<T>) {
-        let mut batch_injector = BatchInjector::new(self.injector);
+        let mut global_queue = BatchInjector::new(self.injector);
 
         while !workers_api.is_shutdown() {
             match self
                 .local_queue
                 .pop()
-                .or_else(|| batch_injector.steal(&self.local_queue))
-                .or_else(|| workers_api.steal_task_from_other_workers(self.id))
+                .or_else(|| global_queue.steal(&self.local_queue))
+                .or_else(|| workers_api.steal_from_other_workers(self.id))
             {
                 Some(task) => task.execute(&self.processor),
                 None => self.parker.park(),

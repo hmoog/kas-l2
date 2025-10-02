@@ -17,7 +17,7 @@ use crate::{
 
 #[smart_pointer(deref(tx))]
 pub struct RuntimeTx<Tx: Transaction> {
-    batch: BatchApi<Tx>,
+    batch_api: BatchApi<Tx>,
     accessed_resources: Vec<AccessedResource<Tx>>,
     pending_resources: AtomicU64,
     tx: Tx,
@@ -29,7 +29,7 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
     }
 
     pub(crate) fn new<TxStorage: Storage<Tx::ResourceID>>(
-        batch: BatchApi<Tx>,
+        batch_api: BatchApi<Tx>,
         resources: &mut ResourceProvider<Tx, TxStorage>,
         tx: Tx,
     ) -> Self {
@@ -38,7 +38,7 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
             let pending_resources = AtomicU64::new(accessed_resources.len() as u64);
             RuntimeTxData {
                 pending_resources,
-                batch,
+                batch_api,
                 tx,
                 accessed_resources,
             }
@@ -53,12 +53,12 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
     pub(crate) fn execute<TxProc: TransactionProcessor<Tx>>(&self, processor: &TxProc) {
         let mut handles = self.accessed_resources.as_vec(ResourceHandle::new);
         processor(&self.tx, &mut handles);
-        self.batch.decrease_pending_txs();
+        self.batch_api.decrease_pending_txs();
     }
 
     pub(crate) fn decrease_pending_resources(self) {
         if self.pending_resources.fetch_sub(1, Ordering::AcqRel) == 1 {
-            self.batch.push_available_tx(&self)
+            self.batch_api.push_available_tx(&self)
         }
     }
 }

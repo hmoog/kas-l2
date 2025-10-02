@@ -1,13 +1,18 @@
 use std::{
     future::Future,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
+use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{RuntimeTx, Transaction};
 
+#[smart_pointer]
 pub struct BatchApi<T: Transaction> {
     available_txs: Injector<RuntimeTx<T>>,
     pending_txs: AtomicU64,
@@ -32,11 +37,11 @@ impl<T: Transaction> BatchApi<T> {
     }
 
     pub(crate) fn new(tx_count: usize) -> Self {
-        Self {
+        Self(Arc::new(BatchApiData {
             available_txs: Injector::new(),
             pending_txs: AtomicU64::new(tx_count as u64),
             is_done: AtomicAsyncLatch::new(),
-        }
+        }))
     }
 
     pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<T>) {
@@ -59,33 +64,6 @@ impl<T: Transaction> BatchApi<T> {
     pub(crate) fn decrease_pending_txs(&self) {
         if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.is_done.open();
-        }
-    }
-}
-
-pub(crate) mod shared {
-    use std::{ops::Deref, sync::Arc};
-
-    use crate::Transaction;
-
-    pub struct BatchApi<T: Transaction>(Arc<super::BatchApi<T>>);
-
-    impl<T: Transaction> BatchApi<T> {
-        pub(crate) fn new(transaction_count: usize) -> Self {
-            Self(Arc::new(super::BatchApi::new(transaction_count)))
-        }
-    }
-
-    impl<T: Transaction> Deref for BatchApi<T> {
-        type Target = super::BatchApi<T>;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    impl<T: Transaction> Clone for BatchApi<T> {
-        fn clone(&self) -> Self {
-            Self(Arc::clone(&self.0))
         }
     }
 }

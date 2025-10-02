@@ -5,6 +5,7 @@ use borsh::BorshDeserialize;
 use crate::{
     AccessMetadata, RuntimeTxRef, Storage, Transaction,
     resources::{accessed_resource::AccessedResource, resource::Resource, state::State},
+    utils::vec_ext::VecExt,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {
@@ -25,16 +26,13 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         transaction: &T,
         tx_ref: RuntimeTxRef<T>,
     ) -> Vec<AccessedResource<T>> {
-        let mut accessed_resources = Vec::new();
-        for access in transaction.accessed_resources() {
+        transaction.accessed_resources().iter().into_vec(|access| {
             let resource = self.resource(access.id());
             if resource.was_accessed_by(&tx_ref) {
                 panic!("duplicate access to resource")
             }
-
-            accessed_resources.push(resource.access(access.clone(), tx_ref.clone()));
-        }
-        accessed_resources
+            resource.access(access.clone(), tx_ref.clone())
+        })
     }
 
     pub(crate) fn load_from_storage(&self, resource: &AccessedResource<T>) {
