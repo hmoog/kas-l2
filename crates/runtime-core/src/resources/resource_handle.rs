@@ -1,9 +1,7 @@
-use std::{ops::Deref, sync::Arc};
-
-use crate::{
-    AccessMetadata, AccessType, Transaction,
-    resources::{accessed_resource::AccessedResource, state::State},
-};
+use std::sync::Arc;
+use crate::resources::accessed_resource::AccessedResource;
+use crate::resources::state::State;
+use crate::{AccessMetadata, AccessType, Transaction};
 
 pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
@@ -11,55 +9,29 @@ pub struct ResourceHandle<'a, T: Transaction> {
 }
 
 impl<'a, T: Transaction> ResourceHandle<'a, T> {
-    pub(crate) fn new(resource: &'a AccessedResource<T>) -> Self {
-        Self {
-            state: resource.read_state(),
-            resource,
-        }
-    }
-
-    /// Borrow the access metadata.
+    #[inline]
     pub fn access_metadata(&self) -> &T::Access {
         self.resource
     }
 
-    /// Immutable access to the underlying data.
-    pub fn data(&self) -> &[u8] {
-        &self.state.data
+    #[inline]
+    pub fn state(&self) -> &State<T> {
+        &self.state
     }
 
-    /// Mutable access with copy-on-write semantics.
-    pub fn data_mut(&mut self) -> &mut [u8] {
-        &mut Arc::make_mut(&mut self.state).data
+    #[inline]
+    pub fn state_mut(&mut self) -> &mut State<T> {
+        Arc::make_mut(&mut self.state)
     }
 
-    /// Ensure the Vec has at least `additional` capacity.
-    pub fn reserve(&mut self, additional: usize) {
-        Arc::make_mut(&mut self.state).data.reserve(additional);
-    }
-
-    /// Replace the underlying Vec entirely.
-    pub fn set_data(&mut self, new_data: Vec<u8>) {
-        Arc::make_mut(&mut self.state).data = new_data;
-    }
-
-    /// Resize the underlying Vec (zero-filling new elements).
-    pub fn resize(&mut self, new_len: usize) {
-        Arc::make_mut(&mut self.state).data.resize(new_len, 0);
-    }
-}
-
-impl<'a, T: Transaction> Deref for ResourceHandle<'a, T> {
-    type Target = T::Access;
-
-    fn deref(&self) -> &Self::Target {
-        self.resource
+    pub(crate) fn new(resource: &'a AccessedResource<T>) -> Self {
+        Self { state: resource.read_state(), resource }
     }
 }
 
 impl<'a, T: Transaction> Drop for ResourceHandle<'a, T> {
     fn drop(&mut self) {
-        if self.access_type() == AccessType::Write {
+        if self.resource.access_type() == AccessType::Write {
             self.resource.set_written_state(self.state.clone());
         }
     }

@@ -41,10 +41,10 @@ impl<T: Transaction> AccessedResource<T> {
     pub(crate) fn init<S: Storage<T::ResourceID>>(&self, resources: &mut ResourceProvider<T, S>) {
         match self.prev.load() {
             Some(prev) => {
+                prev.next.store(Arc::downgrade(&self.0));
+
                 if let Some(written_state) = prev.written_state.load() {
                     self.set_read_state(written_state);
-                } else {
-                    prev.next.store(Arc::downgrade(&self.0));
                 }
             }
             None => resources.load_from_storage(self),
@@ -60,22 +60,22 @@ impl<T: Transaction> AccessedResource<T> {
     }
 
     pub(crate) fn set_read_state(&self, state: Arc<State<T>>) {
-        drop(self.prev.take()); // drop the previous reference to allow cleanup
+        if self.read_state.publish(state.clone()) {
+            drop(self.prev.take()); // drop the previous reference to allow cleanup
 
-        if self.access_type() == AccessType::Read {
-            self.set_written_state(state.clone());
+            if self.access_type() == AccessType::Read {
+                self.set_written_state(state);
+            }
+
+            self.tx().decrease_pending_resources();
         }
-
-        self.read_state.store(Some(state));
-
-        self.tx().decrease_pending_resources();
     }
 
     pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
-        if let Some(next) = self.next.load().upgrade() {
-            Self(next).set_read_state(state.clone())
+        if self.written_state.publish(state.clone()) {
+            if let Some(next) = self.next.load().upgrade() {
+                Self(next).set_read_state(state)
+            }
         }
-
-        self.written_state.store(Some(state));
     }
 }
