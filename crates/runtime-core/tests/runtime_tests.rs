@@ -68,7 +68,7 @@ mod runtime_traits {
     }
 
     impl kas_l2_runtime_core::Transaction for Transaction {
-        type ResourceID = u32;
+        type ResourceId = u32;
         type Access = Access;
         fn accessed_resources(&self) -> &[Self::Access] {
             &self.1

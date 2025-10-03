@@ -1,25 +1,25 @@
 use std::sync::Arc;
 
-use crossbeam_deque::Worker as WorkerQueue;
+use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 
-use crate::{BatchApi, RuntimeTx, Transaction, scheduling::pending_batches::linked_list::*};
+use crate::{BatchApi, RuntimeTx, Transaction};
 
 pub struct PendingBatches<T: Transaction> {
-    queue: LinkedList<Adapter<BatchApi<T>>>,
+    queue: LinkedList<linked_list::Adapter<BatchApi<T>>>,
     new_batches: Arc<ArrayQueue<BatchApi<T>>>,
 }
 
 impl<T: Transaction> PendingBatches<T> {
     pub fn new(new_batches: Arc<ArrayQueue<BatchApi<T>>>) -> Self {
         Self {
-            queue: LinkedList::new(Adapter::new()),
+            queue: LinkedList::new(linked_list::Adapter::new()),
             new_batches,
         }
     }
 
-    pub fn steal(&mut self, worker_queue: &WorkerQueue<RuntimeTx<T>>) -> Option<RuntimeTx<T>> {
+    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<T>>) -> Option<RuntimeTx<T>> {
         loop {
             let mut queue_element = self.queue.cursor_mut();
             queue_element.move_next();
@@ -45,7 +45,7 @@ impl<T: Transaction> PendingBatches<T> {
     fn try_pull_new_batches(&mut self) -> bool {
         let mut pulled = false;
         while let Some(batch) = self.new_batches.pop() {
-            self.queue.push_back(Box::new(Element::new(batch)));
+            self.queue.push_back(Box::new(linked_list::Element::new(batch)));
             pulled = true;
         }
         pulled

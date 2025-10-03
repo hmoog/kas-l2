@@ -6,12 +6,12 @@ use crate::{
     AccessMetadata, AccessedResource, Resource, RuntimeTxRef, State, Storage, Transaction, VecExt,
 };
 
-pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {
-    resources: HashMap<T::ResourceID, Resource<T>>,
+pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceId>> {
+    resources: HashMap<T::ResourceId, Resource<T>>,
     permanent_storage: K,
 }
 
-impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
+impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
     pub fn new(permanent_storage: K) -> Self {
         Self {
             resources: HashMap::new(),
@@ -43,7 +43,7 @@ impl<T: Transaction, K: Storage<T::ResourceID>> ResourceProvider<T, K> {
         }))
     }
 
-    fn resource(&mut self, resource_id: T::ResourceID) -> &mut Resource<T> {
+    fn resource(&mut self, resource_id: T::ResourceId) -> &mut Resource<T> {
         self.resources.entry(resource_id).or_default()
     }
 }

@@ -3,13 +3,13 @@ use crate::{
     Scheduler, Storage, Transaction, TransactionProcessor,
 };
 
-pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {
+pub struct Runtime<T: Transaction, S: Storage<T::ResourceId>> {
     scheduler: Scheduler<T, S>,
     executor: Executor<T>,
     batch_processor: RuntimeBatchProcessor<T>,
 }
 
-impl<T: Transaction, S: Storage<T::ResourceID>> Runtime<T, S> {
+impl<T: Transaction, S: Storage<T::ResourceId>> Runtime<T, S> {
     pub fn process(&mut self, transactions: Vec<T>) -> BatchApi<T> {
         let batch = self.scheduler.schedule(transactions);
         let batch_api = batch.api().clone();

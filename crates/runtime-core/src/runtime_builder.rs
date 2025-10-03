@@ -4,7 +4,7 @@ use crate::{Batch, BatchProcessor, Runtime, Storage, Transaction, TransactionPro
 
 pub struct RuntimeBuilder<
     T: Transaction,
-    S: Storage<T::ResourceID>,
+    S: Storage<T::ResourceId>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > {
@@ -18,7 +18,7 @@ pub struct RuntimeBuilder<
 impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
 where
     T: Transaction,
-    S: Storage<T::ResourceID>,
+    S: Storage<T::ResourceId>,
     P: TransactionProcessor<T>,
 {
     fn default() -> Self {
@@ -32,7 +32,7 @@ where
     }
 }
 
-impl<T: Transaction, S: Storage<T::ResourceID>, P: TransactionProcessor<T>, B: BatchProcessor<T>>
+impl<T: Transaction, S: Storage<T::ResourceId>, P: TransactionProcessor<T>, B: BatchProcessor<T>>
     RuntimeBuilder<T, S, P, B>
 {
     /// Override the number of execution workers.

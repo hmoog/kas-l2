@@ -24,7 +24,7 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
         &self.accessed_resources
     }
 
-    pub(crate) fn new<TxStorage: Storage<Tx::ResourceID>>(
+    pub(crate) fn new<TxStorage: Storage<Tx::ResourceId>>(
         batch_api: BatchApi<Tx>,
         resources: &mut ResourceProvider<Tx, TxStorage>,
         tx: Tx,

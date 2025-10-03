@@ -1,22 +1,22 @@
 use crate::{BatchApi, ResourceProvider, RuntimeTx, Storage, Transaction, VecExt};
 
-pub struct Batch<TX: Transaction> {
-    txs: Vec<RuntimeTx<TX>>,
-    api: BatchApi<TX>,
+pub struct Batch<Tx: Transaction> {
+    txs: Vec<RuntimeTx<Tx>>,
+    api: BatchApi<Tx>,
 }
 
-impl<TX: Transaction> Batch<TX> {
-    pub fn txs(&self) -> &[RuntimeTx<TX>] {
+impl<Tx: Transaction> Batch<Tx> {
+    pub fn txs(&self) -> &[RuntimeTx<Tx>] {
         &self.txs
     }
 
-    pub fn api(&self) -> &BatchApi<TX> {
+    pub fn api(&self) -> &BatchApi<Tx> {
         &self.api
     }
 
-    pub(crate) fn new<S: Storage<TX::ResourceID>>(
-        txs: Vec<TX>,
-        resources: &mut ResourceProvider<TX, S>,
+    pub(crate) fn new<S: Storage<Tx::ResourceId>>(
+        txs: Vec<Tx>,
+        resources: &mut ResourceProvider<Tx, S>,
     ) -> Self {
         let api = BatchApi::new(txs.len());
         Self {

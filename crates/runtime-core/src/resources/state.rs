@@ -4,7 +4,7 @@ use crate::Transaction;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct State<T: Transaction> {
-    pub owner: T::ResourceID,
+    pub owner: T::ResourceId,
     pub data: Vec<u8>,
     pub balance: u64,
     pub executable: bool,
@@ -24,7 +24,7 @@ impl<T: Transaction> Clone for State<T> {
 impl<T: Transaction> Default for State<T> {
     fn default() -> Self {
         Self {
-            owner: T::ResourceID::default(),
+            owner: T::ResourceId::default(),
             data: Vec::new(),
             balance: 0,
             executable: false,

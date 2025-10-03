@@ -38,7 +38,7 @@ impl<T: Transaction> AccessedResource<T> {
         }))
     }
 
-    pub(crate) fn init<S: Storage<T::ResourceID>>(&self, resources: &mut ResourceProvider<T, S>) {
+    pub(crate) fn init<S: Storage<T::ResourceId>>(&self, resources: &mut ResourceProvider<T, S>) {
         match self.prev.load() {
             Some(prev) => {
                 prev.next.store(Arc::downgrade(&self.0));

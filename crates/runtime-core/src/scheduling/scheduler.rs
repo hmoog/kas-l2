@@ -1,10 +1,10 @@
 use crate::{Batch, ResourceProvider, Storage, Transaction};
 
-pub struct Scheduler<T: Transaction, S: Storage<T::ResourceID>> {
+pub struct Scheduler<T: Transaction, S: Storage<T::ResourceId>> {
     resource_provider: ResourceProvider<T, S>,
 }
 
-impl<T: Transaction, S: Storage<T::ResourceID>> Scheduler<T, S> {
+impl<T: Transaction, S: Storage<T::ResourceId>> Scheduler<T, S> {
     pub fn new(resource_provider: ResourceProvider<T, S>) -> Self {
         Self { resource_provider }
     }
