@@ -10,7 +10,7 @@ pub struct AccessHandle<'a, T: Transaction> {
 impl<'a, T: Transaction> AccessHandle<'a, T> {
     #[inline]
     pub fn access_metadata(&self) -> &T::AccessMetadata {
-        self.access
+        self.access.metadata()
     }
 
     #[inline]
@@ -29,12 +29,16 @@ impl<'a, T: Transaction> AccessHandle<'a, T> {
             access,
         }
     }
-}
 
-impl<'a, T: Transaction> Drop for AccessHandle<'a, T> {
-    fn drop(&mut self) {
+    pub(crate) fn commit_changes(self) {
         if self.access.access_type() == AccessType::Write {
             self.access.set_written_state(self.state.clone());
+        }
+    }
+
+    pub(crate) fn rollback_changes(self) {
+        if self.access.access_type() == AccessType::Write {
+            self.access.set_written_state(self.access.read_state());
         }
     }
 }

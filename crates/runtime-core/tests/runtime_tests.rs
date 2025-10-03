@@ -12,6 +12,7 @@ pub fn test_executor() {
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);
+                Ok::<(), ()>(())
             },
         )
         .with_batch_processor(|batch: Batch<Transaction>| {

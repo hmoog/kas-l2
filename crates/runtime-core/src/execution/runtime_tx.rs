@@ -47,7 +47,11 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
 
     pub(crate) fn execute<TxProc: TransactionProcessor<Tx>>(&self, processor: &TxProc) {
         let mut handles = self.resources.as_vec(AccessHandle::new);
-        processor(&self.tx, &mut handles);
+        match processor(&self.tx, &mut handles) {
+            Ok(()) => handles.into_iter().for_each(AccessHandle::commit_changes),
+            Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
+        }
+
         self.batch_api.decrease_pending_txs();
     }
 

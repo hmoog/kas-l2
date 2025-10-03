@@ -19,6 +19,10 @@ pub struct ResourceAccess<T: Transaction> {
 }
 
 impl<T: Transaction> ResourceAccess<T> {
+    pub fn metadata(&self) -> &T::AccessMetadata {
+        &self.metadata
+    }
+
     pub fn read_state(&self) -> Arc<State<T>> {
         self.read_state.load().expect("read state missing")
     }

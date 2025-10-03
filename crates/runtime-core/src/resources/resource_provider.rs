@@ -32,6 +32,7 @@ impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
             {
                 panic!("duplicate access to resource");
             }
+
             resource.access(access.clone(), tx_ref.clone())
         })
     }
