@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{
-    BatchProcessor, Runtime, Storage, Transaction, TransactionProcessor, scheduling::batch::Batch,
-};
+use crate::{Batch, BatchProcessor, Runtime, Storage, Transaction, TransactionProcessor};
 
 pub struct RuntimeBuilder<
     T: Transaction,

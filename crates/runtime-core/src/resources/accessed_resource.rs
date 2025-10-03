@@ -4,8 +4,8 @@ use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
-    AccessMetadata, RuntimeTx, RuntimeTxRef, Storage, Transaction,
-    resources::{access_type::AccessType, resource_provider::ResourceProvider, state::State},
+    AccessMetadata, AccessType, ResourceProvider, RuntimeTx, RuntimeTxRef, State, Storage,
+    Transaction,
 };
 
 #[smart_pointer(deref(access))]

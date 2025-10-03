@@ -7,12 +7,8 @@ use kas_l2_runtime_macros::smart_pointer;
 use tap::Tap;
 
 use crate::{
-    BatchApi, RuntimeTxRef, Storage, Transaction, TransactionProcessor,
-    resources::{
-        accessed_resource::AccessedResource, resource_handle::ResourceHandle,
-        resource_provider::ResourceProvider,
-    },
-    utils::vec_ext::VecExt,
+    AccessedResource, BatchApi, ResourceHandle, ResourceProvider, RuntimeTxRef, Storage,
+    Transaction, TransactionProcessor, VecExt,
 };
 
 #[smart_pointer(deref(tx))]

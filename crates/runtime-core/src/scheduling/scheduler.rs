@@ -1,6 +1,4 @@
-use crate::{
-    Storage, Transaction, resources::resource_provider::ResourceProvider, scheduling::batch::Batch,
-};
+use crate::{Batch, ResourceProvider, Storage, Transaction};
 
 pub struct Scheduler<T: Transaction, S: Storage<T::ResourceID>> {
     resource_provider: ResourceProvider<T, S>,

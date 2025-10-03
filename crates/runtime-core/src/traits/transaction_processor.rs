@@ -1,4 +1,4 @@
-use crate::{Transaction, resources::resource_handle::ResourceHandle};
+use crate::{ResourceHandle, Transaction};
 
 pub trait TransactionProcessor<T: Transaction>:
     Fn(&T, &mut [ResourceHandle<T>]) + Clone + Send + Sync + 'static

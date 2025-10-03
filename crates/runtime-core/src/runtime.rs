@@ -1,7 +1,6 @@
 use crate::{
-    BatchApi, BatchProcessor, RuntimeBuilder, Storage, Transaction, TransactionProcessor,
-    execution::executor::Executor, resources::resource_provider::ResourceProvider,
-    runtime_batch_processor::RuntimeBatchProcessor, scheduling::scheduler::Scheduler,
+    BatchApi, BatchProcessor, Executor, ResourceProvider, RuntimeBatchProcessor, RuntimeBuilder,
+    Scheduler, Storage, Transaction, TransactionProcessor,
 };
 
 pub struct Runtime<T: Transaction, S: Storage<T::ResourceID>> {

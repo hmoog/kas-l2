@@ -1,6 +1,6 @@
 use tap::Tap;
 
-use crate::{RuntimeTxRef, Transaction, resources::accessed_resource::AccessedResource};
+use crate::{AccessedResource, RuntimeTxRef, Transaction};
 
 pub(crate) struct Resource<T: Transaction> {
     last_access: Option<AccessedResource<T>>,

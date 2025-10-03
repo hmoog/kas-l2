@@ -4,10 +4,7 @@ use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 
-use crate::{
-    BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::workers_api::WorkersApi,
-    scheduling::pending_batches::PendingBatches,
-};
+use crate::{BatchApi, PendingBatches, RuntimeTx, Transaction, TransactionProcessor, WorkersApi};
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,

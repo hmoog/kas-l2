@@ -1,6 +1,6 @@
 use std::sync::Weak;
 
-use crate::{RuntimeTx, Transaction, execution::runtime_tx::RuntimeTxData};
+use crate::{RuntimeTx, RuntimeTxData, Transaction};
 
 pub struct RuntimeTxRef<Tx: Transaction>(pub(crate) Weak<RuntimeTxData<Tx>>);
 

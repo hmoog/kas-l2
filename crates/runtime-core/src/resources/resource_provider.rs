@@ -3,9 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, RuntimeTxRef, Storage, Transaction,
-    resources::{accessed_resource::AccessedResource, resource::Resource, state::State},
-    utils::vec_ext::VecExt,
+    AccessMetadata, AccessedResource, Resource, RuntimeTxRef, State, Storage, Transaction, VecExt,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceID>> {

@@ -1,7 +1,4 @@
-use crate::{
-    BatchApi, RuntimeTx, Storage, Transaction, resources::resource_provider::ResourceProvider,
-    utils::vec_ext::VecExt,
-};
+use crate::{BatchApi, ResourceProvider, RuntimeTx, Storage, Transaction, VecExt};
 
 pub struct Batch<TX: Transaction> {
     txs: Vec<RuntimeTx<TX>>,

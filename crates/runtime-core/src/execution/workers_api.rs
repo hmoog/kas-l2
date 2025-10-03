@@ -7,10 +7,7 @@ use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_runtime_macros::smart_pointer;
 use tap::Tap;
 
-use crate::{
-    BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::worker::Worker,
-    utils::vec_ext::VecExt,
-};
+use crate::{BatchApi, RuntimeTx, Transaction, TransactionProcessor, VecExt, Worker};
 
 #[smart_pointer]
 pub(crate) struct WorkersApi<Tx: Transaction> {

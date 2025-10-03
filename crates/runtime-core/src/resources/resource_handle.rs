@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use crate::{
-    AccessMetadata, AccessType, Transaction,
-    resources::{accessed_resource::AccessedResource, state::State},
-};
+use crate::{AccessMetadata, AccessType, AccessedResource, State, Transaction};
 
 pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
