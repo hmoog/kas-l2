@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, AccessedResource, Resource, RuntimeTxRef, State, Storage, Transaction, VecExt,
+    AccessMetadata, Resource, ResourceAccess, RuntimeTxRef, State, Storage, Transaction, VecExt,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceId>> {
@@ -23,17 +23,20 @@ impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
         &mut self,
         transaction: &T,
         tx_ref: RuntimeTxRef<T>,
-    ) -> Vec<AccessedResource<T>> {
+    ) -> Vec<ResourceAccess<T>> {
         transaction.accessed_resources().iter().into_vec(|access| {
             let resource = self.resource(access.id());
-            if resource.last_access().is_some_and(|a| *a.tx_ref() == tx_ref) {
+            if resource
+                .last_access()
+                .is_some_and(|a| *a.tx_ref() == tx_ref)
+            {
                 panic!("duplicate access to resource");
             }
             resource.access(access.clone(), tx_ref.clone())
         })
     }
 
-    pub(crate) fn load_from_storage(&self, resource: &AccessedResource<T>) {
+    pub(crate) fn load_from_storage(&self, resource: &ResourceAccess<T>) {
         resource.set_read_state(Arc::new(match self.permanent_storage.get(&resource.id()) {
             Ok(result) => match result {
                 None => State::default(),

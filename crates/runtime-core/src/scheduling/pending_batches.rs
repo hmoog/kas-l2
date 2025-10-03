@@ -45,7 +45,8 @@ impl<T: Transaction> PendingBatches<T> {
     fn try_pull_new_batches(&mut self) -> bool {
         let mut pulled = false;
         while let Some(batch) = self.new_batches.pop() {
-            self.queue.push_back(Box::new(linked_list::Element::new(batch)));
+            self.queue
+                .push_back(Box::new(linked_list::Element::new(batch)));
             pulled = true;
         }
         pulled

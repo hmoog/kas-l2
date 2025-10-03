@@ -8,9 +8,9 @@ use crate::{
     Transaction,
 };
 
-#[smart_pointer(deref(access))]
-pub struct AccessedResource<T: Transaction> {
-    access: T::Access,
+#[smart_pointer(deref(metadata))]
+pub struct ResourceAccess<T: Transaction> {
+    metadata: T::AccessMetadata,
     tx_ref: RuntimeTxRef<T>,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
@@ -18,7 +18,7 @@ pub struct AccessedResource<T: Transaction> {
     next: AtomicWeak<Self>,
 }
 
-impl<T: Transaction> AccessedResource<T> {
+impl<T: Transaction> ResourceAccess<T> {
     pub fn read_state(&self) -> Arc<State<T>> {
         self.read_state.load().expect("read state missing")
     }
@@ -27,9 +27,13 @@ impl<T: Transaction> AccessedResource<T> {
         self.written_state.load().expect("written state missing")
     }
 
-    pub(crate) fn new(access: T::Access, tx_ref: RuntimeTxRef<T>, prev: Option<Self>) -> Self {
-        Self(Arc::new(AccessedResourceData {
-            access,
+    pub(crate) fn new(
+        metadata: T::AccessMetadata,
+        tx_ref: RuntimeTxRef<T>,
+        prev: Option<Self>,
+    ) -> Self {
+        Self(Arc::new(ResourceAccessData {
+            metadata,
             tx_ref,
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),

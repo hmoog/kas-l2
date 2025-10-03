@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{collections::HashMap, thread::sleep, time::Duration};
 
-use kas_l2_runtime_core::{Batch, ResourceHandle, RuntimeBuilder};
+use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
 
 #[test]
 pub fn test_executor() {
@@ -10,7 +10,7 @@ pub fn test_executor() {
         .with_execution_workers(4)
         .with_storage(KVStore(HashMap::new()))
         .with_transaction_processor(
-            |tx: &Transaction, _resources: &mut [ResourceHandle<Transaction>]| {
+            |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);
             },
         )
@@ -69,8 +69,8 @@ mod runtime_traits {
 
     impl kas_l2_runtime_core::Transaction for Transaction {
         type ResourceId = u32;
-        type Access = Access;
-        fn accessed_resources(&self) -> &[Self::Access] {
+        type AccessMetadata = Access;
+        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
             &self.1
         }
     }

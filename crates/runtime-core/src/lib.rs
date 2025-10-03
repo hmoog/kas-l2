@@ -11,10 +11,10 @@ pub(crate) mod execution {
 }
 
 pub(crate) mod resources {
+    pub(crate) mod access_handle;
     pub(crate) mod access_type;
-    pub(crate) mod accessed_resource;
     pub(crate) mod resource;
-    pub(crate) mod resource_handle;
+    pub(crate) mod resource_access;
     pub(crate) mod resource_provider;
     pub(crate) mod state;
 }
@@ -44,8 +44,7 @@ pub(crate) use crate::{
         executor::Executor, runtime_tx::RuntimeTxData, worker::Worker, workers_api::WorkersApi,
     },
     resources::{
-        accessed_resource::AccessedResource, resource::Resource,
-        resource_provider::ResourceProvider,
+        resource::Resource, resource_access::ResourceAccess, resource_provider::ResourceProvider,
     },
     runtime_batch_processor::RuntimeBatchProcessor,
     scheduling::{pending_batches::PendingBatches, scheduler::Scheduler},
@@ -53,7 +52,7 @@ pub(crate) use crate::{
 };
 pub use crate::{
     execution::{runtime_tx::RuntimeTx, runtime_tx_ref::RuntimeTxRef},
-    resources::{access_type::AccessType, resource_handle::ResourceHandle, state::State},
+    resources::{access_handle::AccessHandle, access_type::AccessType, state::State},
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
     scheduling::{batch::Batch, batch_api::BatchApi},

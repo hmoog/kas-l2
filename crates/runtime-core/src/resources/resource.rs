@@ -1,9 +1,9 @@
 use tap::Tap;
 
-use crate::{AccessedResource, RuntimeTxRef, Transaction};
+use crate::{ResourceAccess, RuntimeTxRef, Transaction};
 
 pub(crate) struct Resource<T: Transaction> {
-    last_access: Option<AccessedResource<T>>,
+    last_access: Option<ResourceAccess<T>>,
 }
 
 impl<T: Transaction> Default for Resource<T> {
@@ -15,14 +15,14 @@ impl<T: Transaction> Default for Resource<T> {
 impl<T: Transaction> Resource<T> {
     pub(crate) fn access(
         &mut self,
-        access: T::Access,
+        access_metadata: T::AccessMetadata,
         tx_ref: RuntimeTxRef<T>,
-    ) -> AccessedResource<T> {
-        AccessedResource::new(access, tx_ref, self.last_access.take())
+    ) -> ResourceAccess<T> {
+        ResourceAccess::new(access_metadata, tx_ref, self.last_access.take())
             .tap(|this| self.last_access = Some(this.clone()))
     }
 
-    pub(crate) fn last_access(&self) -> Option<&AccessedResource<T>> {
+    pub(crate) fn last_access(&self) -> Option<&ResourceAccess<T>> {
         self.last_access.as_ref()
     }
 }

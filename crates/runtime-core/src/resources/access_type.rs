@@ -13,7 +13,6 @@ impl From<AccessType> for u8 {
 
 impl TryFrom<u8> for AccessType {
     type Error = ();
-
     fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
             0 => Ok(AccessType::Read),
