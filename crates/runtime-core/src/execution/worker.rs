@@ -9,7 +9,7 @@ use crate::{BatchApi, PendingBatches, RuntimeTx, Transaction, TransactionProcess
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
     local_queue: WorkerQueue<RuntimeTx<T>>,
-    injector: Arc<ArrayQueue<BatchApi<T>>>,
+    inbox: Arc<ArrayQueue<BatchApi<T>>>,
     processor: P,
     parker: Parker,
 }
@@ -19,7 +19,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         Self {
             id,
             local_queue: WorkerQueue::new_fifo(),
-            injector: Arc::new(ArrayQueue::new(1024)),
+            inbox: Arc::new(ArrayQueue::new(1024)),
             processor,
             parker: Parker::new(),
         }
@@ -37,12 +37,12 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn injector(&self) -> Arc<ArrayQueue<BatchApi<T>>> {
-        self.injector.clone()
+    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<BatchApi<T>>> {
+        self.inbox.clone()
     }
 
     fn run(self, workers_api: WorkersApi<T>) {
-        let mut pending_batches = PendingBatches::new(self.injector);
+        let mut pending_batches = PendingBatches::new(self.inbox);
 
         while !workers_api.is_shutdown() {
             match self

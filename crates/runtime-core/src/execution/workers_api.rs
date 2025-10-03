@@ -11,9 +11,10 @@ use crate::{BatchApi, RuntimeTx, Transaction, TransactionProcessor, VecExt, Work
 
 #[smart_pointer]
 pub(crate) struct WorkersApi<Tx: Transaction> {
+    worker_count: usize,
+    inboxes: Vec<Arc<ArrayQueue<BatchApi<Tx>>>>,
     stealers: Vec<Stealer<RuntimeTx<Tx>>>,
     unparkers: Vec<Unparker>,
-    injectors: Vec<Arc<ArrayQueue<BatchApi<Tx>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
@@ -23,17 +24,18 @@ impl<Tx: Transaction> WorkersApi<Tx> {
         processor: TxProc,
     ) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
+            worker_count,
             stealers: Vec::with_capacity(worker_count),
             unparkers: Vec::with_capacity(worker_count),
-            injectors: Vec::with_capacity(worker_count),
+            inboxes: Vec::with_capacity(worker_count),
             shutdown: AtomicAsyncLatch::new(),
         };
 
         let workers: Vec<Worker<Tx, TxProc>> = (0..worker_count).into_vec(|id| {
             Worker::new(id, processor.clone()).tap(|w| {
+                data.inboxes.push(w.inbox());
                 data.stealers.push(w.stealer());
                 data.unparkers.push(w.unparker());
-                data.injectors.push(w.injector());
             })
         });
 
@@ -43,11 +45,11 @@ impl<Tx: Transaction> WorkersApi<Tx> {
         (this, handles)
     }
 
-    pub fn inject_batch(&self, batch: BatchApi<Tx>) {
-        for (injector, unparker) in self.injectors.iter().zip(&self.unparkers) {
+    pub fn push_batch(&self, batch: BatchApi<Tx>) {
+        for (inbox, unparker) in self.inboxes.iter().zip(&self.unparkers) {
             let mut item = batch.clone();
             loop {
-                match injector.push(item) {
+                match inbox.push(item) {
                     Ok(()) => break,
                     Err(back) => {
                         item = back;
@@ -60,14 +62,17 @@ impl<Tx: Transaction> WorkersApi<Tx> {
     }
 
     pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<Tx>> {
-        // TODO: randomize stealer selection
-        for (id, other) in self.stealers.iter().enumerate() {
-            if id != worker_id {
-                loop {
-                    match other.steal() {
-                        Steal::Success(task) => return Some(task),
-                        Steal::Retry => continue,
-                        Steal::Empty => break,
+        if self.worker_count > 1 {
+            let start = fastrand::usize(..self.worker_count);
+            for offset in 0..self.worker_count {
+                let id = (start + offset) % self.worker_count;
+                if id != worker_id {
+                    loop {
+                        match self.stealers[id].steal() {
+                            Steal::Success(task) => return Some(task),
+                            Steal::Retry => continue,
+                            Steal::Empty => break,
+                        }
                     }
                 }
             }

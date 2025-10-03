@@ -22,10 +22,7 @@ impl<T: Transaction> Resource<T> {
             .tap(|this| self.last_access = Some(this.clone()))
     }
 
-    pub(crate) fn was_accessed_by(&self, tx_ref: &RuntimeTxRef<T>) -> bool {
-        match self.last_access.as_ref() {
-            Some(last_resource) => last_resource.tx_ref() == tx_ref,
-            None => false,
-        }
+    pub(crate) fn last_access(&self) -> Option<&AccessedResource<T>> {
+        self.last_access.as_ref()
     }
 }

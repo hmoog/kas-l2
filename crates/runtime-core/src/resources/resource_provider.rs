@@ -26,8 +26,8 @@ impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
     ) -> Vec<AccessedResource<T>> {
         transaction.accessed_resources().iter().into_vec(|access| {
             let resource = self.resource(access.id());
-            if resource.was_accessed_by(&tx_ref) {
-                panic!("duplicate access to resource")
+            if resource.last_access().is_some_and(|a| *a.tx_ref() == tx_ref) {
+                panic!("duplicate access to resource");
             }
             resource.access(access.clone(), tx_ref.clone())
         })

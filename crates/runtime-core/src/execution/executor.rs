@@ -14,7 +14,7 @@ impl<Tx: Transaction> Executor<Tx> {
     }
 
     pub fn execute(&self, batch: BatchApi<Tx>) {
-        self.workers.inject_batch(batch);
+        self.workers.push_batch(batch);
     }
 
     pub fn shutdown(self) {

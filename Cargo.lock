@@ -3361,6 +3361,7 @@ dependencies = [
  "crossbeam-deque",
  "crossbeam-queue",
  "crossbeam-utils",
+ "fastrand",
  "intrusive-collections",
  "kas-l2-atomic",
  "kas-l2-runtime-macros",
