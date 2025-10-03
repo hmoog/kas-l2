@@ -4,7 +4,7 @@ use crossbeam_deque::Worker as WorkerQueue;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 
-use crate::{BatchApi, RuntimeTx, Transaction, execution::pending_batches::linked_list::*};
+use crate::{BatchApi, RuntimeTx, Transaction, scheduling::pending_batches::linked_list::*};
 
 pub struct PendingBatches<T: Transaction> {
     queue: LinkedList<Adapter<BatchApi<T>>>,

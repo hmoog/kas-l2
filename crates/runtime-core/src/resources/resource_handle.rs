@@ -1,7 +1,9 @@
 use std::sync::Arc;
-use crate::resources::accessed_resource::AccessedResource;
-use crate::resources::state::State;
-use crate::{AccessMetadata, AccessType, Transaction};
+
+use crate::{
+    AccessMetadata, AccessType, Transaction,
+    resources::{accessed_resource::AccessedResource, state::State},
+};
 
 pub struct ResourceHandle<'a, T: Transaction> {
     state: Arc<State<T>>,
@@ -25,7 +27,10 @@ impl<'a, T: Transaction> ResourceHandle<'a, T> {
     }
 
     pub(crate) fn new(resource: &'a AccessedResource<T>) -> Self {
-        Self { state: resource.read_state(), resource }
+        Self {
+            state: resource.read_state(),
+            resource,
+        }
     }
 }
 

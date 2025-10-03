@@ -5,8 +5,8 @@ use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 
 use crate::{
-    BatchApi, RuntimeTx, Transaction, TransactionProcessor,
-    execution::{pending_batches::PendingBatches, workers_api::WorkersApi},
+    BatchApi, RuntimeTx, Transaction, TransactionProcessor, execution::workers_api::WorkersApi,
+    scheduling::pending_batches::PendingBatches,
 };
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
