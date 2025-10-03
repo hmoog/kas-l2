@@ -1,6 +1,7 @@
-use std::{sync::Arc, thread::JoinHandle};
+use std::{hint::spin_loop, sync::Arc, thread::JoinHandle};
 
-use crossbeam_deque::{Injector, Steal, Stealer};
+use crossbeam_deque::{Steal, Stealer};
+use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_runtime_macros::smart_pointer;
@@ -15,7 +16,7 @@ use crate::{
 pub(crate) struct WorkersApi<Tx: Transaction> {
     stealers: Vec<Stealer<RuntimeTx<Tx>>>,
     unparkers: Vec<Unparker>,
-    injectors: Vec<Arc<Injector<BatchApi<Tx>>>>,
+    injectors: Vec<Arc<ArrayQueue<BatchApi<Tx>>>>,
     shutdown: AtomicAsyncLatch,
 }
 
@@ -47,7 +48,16 @@ impl<Tx: Transaction> WorkersApi<Tx> {
 
     pub fn inject_batch(&self, batch: BatchApi<Tx>) {
         for (injector, unparker) in self.injectors.iter().zip(&self.unparkers) {
-            injector.push(batch.clone());
+            let mut item = batch.clone();
+            loop {
+                match injector.push(item) {
+                    Ok(()) => break,
+                    Err(back) => {
+                        item = back;
+                        spin_loop(); // CPU relax; does NOT yield/park
+                    }
+                }
+            }
             unparker.unpark();
         }
     }

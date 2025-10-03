@@ -1,20 +1,21 @@
 use std::sync::Arc;
 
-use crossbeam_deque::{Injector, Steal, Worker as WorkerQueue};
+use crossbeam_deque::Worker as WorkerQueue;
+use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 
-use crate::{BatchApi, RuntimeTx, Transaction, execution::batch_injector::linked_list::*};
+use crate::{BatchApi, RuntimeTx, Transaction, execution::pending_batches::linked_list::*};
 
-pub struct BatchInjector<T: Transaction> {
+pub struct PendingBatches<T: Transaction> {
     queue: LinkedList<Adapter<BatchApi<T>>>,
-    injector: Arc<Injector<BatchApi<T>>>,
+    new_batches: Arc<ArrayQueue<BatchApi<T>>>,
 }
 
-impl<T: Transaction> BatchInjector<T> {
-    pub fn new(injector: Arc<Injector<BatchApi<T>>>) -> Self {
+impl<T: Transaction> PendingBatches<T> {
+    pub fn new(new_batches: Arc<ArrayQueue<BatchApi<T>>>) -> Self {
         Self {
             queue: LinkedList::new(Adapter::new()),
-            injector,
+            new_batches,
         }
     }
 
@@ -28,7 +29,7 @@ impl<T: Transaction> BatchInjector<T> {
                     return Some(transaction);
                 }
 
-                if batch.pending_txs() == 0 && batch.available_txs() == 0 {
+                if batch.is_depleted() {
                     queue_element.remove();
                 } else {
                     queue_element.move_next();
@@ -42,18 +43,12 @@ impl<T: Transaction> BatchInjector<T> {
     }
 
     fn try_pull_new_batches(&mut self) -> bool {
-        let mut success = false;
-        loop {
-            match self.injector.steal() {
-                Steal::Success(batch) => {
-                    self.queue.push_back(Box::new(Element::new(batch)));
-                    success = true;
-                }
-                Steal::Empty => break,
-                Steal::Retry => continue,
-            }
+        let mut pulled = false;
+        while let Some(batch) = self.new_batches.pop() {
+            self.queue.push_back(Box::new(Element::new(batch)));
+            pulled = true;
         }
-        success
+        pulled
     }
 }
 

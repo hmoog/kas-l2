@@ -1,17 +1,18 @@
 use std::{sync::Arc, thread, thread::JoinHandle};
 
-use crossbeam_deque::{Injector, Stealer, Worker as WorkerQueue};
+use crossbeam_deque::{Stealer, Worker as WorkerQueue};
+use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 
 use crate::{
     BatchApi, RuntimeTx, Transaction, TransactionProcessor,
-    execution::{batch_injector::BatchInjector, workers_api::WorkersApi},
+    execution::{pending_batches::PendingBatches, workers_api::WorkersApi},
 };
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
     local_queue: WorkerQueue<RuntimeTx<T>>,
-    injector: Arc<Injector<BatchApi<T>>>,
+    injector: Arc<ArrayQueue<BatchApi<T>>>,
     processor: P,
     parker: Parker,
 }
@@ -21,7 +22,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         Self {
             id,
             local_queue: WorkerQueue::new_fifo(),
-            injector: Arc::new(Injector::new()),
+            injector: Arc::new(ArrayQueue::new(1024)),
             processor,
             parker: Parker::new(),
         }
@@ -39,18 +40,18 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn injector(&self) -> Arc<Injector<BatchApi<T>>> {
+    pub(crate) fn injector(&self) -> Arc<ArrayQueue<BatchApi<T>>> {
         self.injector.clone()
     }
 
     fn run(self, workers_api: WorkersApi<T>) {
-        let mut global_queue = BatchInjector::new(self.injector);
+        let mut pending_batches = PendingBatches::new(self.injector);
 
         while !workers_api.is_shutdown() {
             match self
                 .local_queue
                 .pop()
-                .or_else(|| global_queue.steal(&self.local_queue))
+                .or_else(|| pending_batches.steal(&self.local_queue))
                 .or_else(|| workers_api.steal_from_other_workers(self.id))
             {
                 Some(task) => task.execute(&self.processor),

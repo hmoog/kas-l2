@@ -4,13 +4,13 @@ use crate::{
 };
 
 pub struct Batch<TX: Transaction> {
-    transactions: Vec<RuntimeTx<TX>>,
+    txs: Vec<RuntimeTx<TX>>,
     api: BatchApi<TX>,
 }
 
 impl<TX: Transaction> Batch<TX> {
     pub fn txs(&self) -> &[RuntimeTx<TX>] {
-        &self.transactions
+        &self.txs
     }
 
     pub fn api(&self) -> &BatchApi<TX> {
@@ -23,7 +23,7 @@ impl<TX: Transaction> Batch<TX> {
     ) -> Self {
         let api = BatchApi::new(txs.len());
         Self {
-            transactions: txs.into_vec(|tx| RuntimeTx::new(api.clone(), resources, tx)),
+            txs: txs.into_vec(|tx| RuntimeTx::new(api.clone(), resources, tx)),
             api,
         }
     }

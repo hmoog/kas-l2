@@ -28,6 +28,10 @@ impl<T: Transaction> BatchApi<T> {
         self.pending_txs.load(Ordering::Acquire)
     }
 
+    pub fn is_depleted(&self) -> bool {
+        self.pending_txs.load(Ordering::Acquire) == 0 && self.available_txs.is_empty()
+    }
+
     pub fn is_done(&self) -> bool {
         self.is_done.is_open()
     }

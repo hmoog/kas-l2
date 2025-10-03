@@ -4,8 +4,8 @@ use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
-    AccessMetadata, RuntimeTx, RuntimeTxRef, Transaction,
-    resources::{access_type::AccessType, state::State},
+    AccessMetadata, RuntimeTx, RuntimeTxRef, Storage, Transaction,
+    resources::{access_type::AccessType, resource_provider::ResourceProvider, state::State},
 };
 
 #[smart_pointer(deref(access))]
@@ -38,7 +38,7 @@ impl<T: Transaction> AccessedResource<T> {
         }))
     }
 
-    pub(crate) fn init<F: FnOnce(&Self)>(&self, load_state: F) {
+    pub(crate) fn init<S: Storage<T::ResourceID>>(&self, resources: &mut ResourceProvider<T, S>) {
         match self.prev.load() {
             Some(prev) => {
                 if let Some(written_state) = prev.written_state.load() {
@@ -47,7 +47,7 @@ impl<T: Transaction> AccessedResource<T> {
                     prev.next.store(Arc::downgrade(&self.0));
                 }
             }
-            None => load_state(self),
+            None => resources.load_from_storage(self),
         }
     }
 

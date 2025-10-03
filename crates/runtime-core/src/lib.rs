@@ -3,8 +3,8 @@ mod runtime_batch_processor;
 mod runtime_builder;
 
 pub(crate) mod execution {
-    pub(crate) mod batch_injector;
     pub(crate) mod executor;
+    pub(crate) mod pending_batches;
     pub(crate) mod runtime_tx;
     pub(crate) mod runtime_tx_ref;
     pub(crate) mod worker;

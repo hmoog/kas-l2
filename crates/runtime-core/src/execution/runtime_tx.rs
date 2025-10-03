@@ -45,7 +45,7 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
         }))
         .tap(|this| {
             for resource in this.accessed_resources() {
-                resource.init(|r| resources.load_from_storage(r));
+                resource.init(resources);
             }
         })
     }
