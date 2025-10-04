@@ -5,7 +5,6 @@ mod runtime_builder;
 pub(crate) mod execution {
     pub(crate) mod executor;
     pub(crate) mod runtime_tx;
-    pub(crate) mod runtime_tx_ref;
     pub(crate) mod worker;
     pub(crate) mod workers_api;
 }
@@ -41,7 +40,7 @@ pub(crate) mod utils {
 
 pub(crate) use crate::{
     execution::{
-        executor::Executor, runtime_tx::RuntimeTxData, worker::Worker, workers_api::WorkersApi,
+        executor::Executor, worker::Worker, workers_api::WorkersApi,
     },
     resources::{
         resource::Resource, resource_access::ResourceAccess, resource_provider::ResourceProvider,
@@ -51,7 +50,7 @@ pub(crate) use crate::{
     utils::vec_ext::VecExt,
 };
 pub use crate::{
-    execution::{runtime_tx::RuntimeTx, runtime_tx_ref::RuntimeTxRef},
+    execution::{runtime_tx::RuntimeTx, runtime_tx::RuntimeTxRef},
     resources::{access_handle::AccessHandle, access_type::AccessType, state::State},
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,

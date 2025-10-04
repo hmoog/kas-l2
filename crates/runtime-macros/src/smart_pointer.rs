@@ -71,7 +71,7 @@ impl Parse for Args {
 pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2::TokenStream> {
     // Only named-field structs.
     let fields_named = match &orig.fields {
-        Fields::Named(named) => named, // borrow for later lookup
+        Fields::Named(named) => named,
         _ => {
             return Err(syn::Error::new(
                 orig.span(),
@@ -79,11 +79,12 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
             ));
         }
     };
-    let fields_copy = fields_named.named.clone(); // for the Data struct body
+    let fields_copy = fields_named.named.clone();
 
     let vis_wrapper = &orig.vis;
     let ident = &orig.ident;
     let data_ident = format_ident!("{ident}Data");
+    let weak_ident = format_ident!("{ident}Ref"); // e.g. RuntimeTx -> RuntimeTxRef
 
     // Preserve generics
     let generics_for_header = orig.generics.clone();
@@ -93,12 +94,9 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
     let generics_for_impl = orig.generics.clone();
     let (impl_generics, ty_generics, where_clause_impl) = generics_for_impl.split_for_impl();
 
-    // Data struct is pub(crate)
     let vis_data: syn::Visibility = parse_quote!(pub);
 
-    // Optional: build a Deref impl for the Data struct to a chosen field
     let data_deref_impl = if let Some(field_ident) = args.deref_field {
-        // Find the field and capture its type
         let field = fields_named
             .named
             .iter()
@@ -109,7 +107,6 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
                     format!("`deref` field `{}` not found on struct", field_ident),
                 )
             })?;
-
         let ty = &field.ty;
         Some(quote! {
             impl #impl_generics ::core::ops::Deref for #data_ident #ty_generics #where_clause_impl {
@@ -135,6 +132,11 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
             #fields_copy
         }
 
+        // Weak wrapper struct
+        #vis_wrapper struct #weak_ident <#params> (
+            pub(crate) ::std::sync::Weak<#data_ident #ty_generics>
+        ) #where_clause_hdr ;
+
         // Deref to Data
         impl #impl_generics ::core::ops::Deref for #ident #ty_generics #where_clause_impl {
             type Target = #data_ident #ty_generics;
@@ -146,6 +148,44 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
         impl #impl_generics ::core::clone::Clone for #ident #ty_generics #where_clause_impl {
             #[inline]
             fn clone(&self) -> Self { Self(self.0.clone()) }
+        }
+
+        // PartialEq for strong wrapper
+        impl #impl_generics ::core::cmp::PartialEq for #ident #ty_generics #where_clause_impl {
+            #[inline]
+            fn eq(&self, other: &Self) -> bool {
+                ::std::sync::Arc::ptr_eq(&self.0, &other.0)
+            }
+        }
+
+        // downgrade method on strong wrapper
+        impl #impl_generics #ident #ty_generics #where_clause_impl {
+            #[inline]
+            pub fn downgrade(&self) -> #weak_ident #ty_generics {
+                #weak_ident(::std::sync::Arc::downgrade(&self.0))
+            }
+        }
+
+        // methods for Weak wrapper
+        impl #impl_generics #weak_ident #ty_generics #where_clause_impl {
+            #[inline]
+            pub fn upgrade(&self) -> ::core::option::Option<#ident #ty_generics> {
+                self.0.upgrade().map(#ident)
+            }
+        }
+
+        // Clone for Weak wrapper
+        impl #impl_generics ::core::clone::Clone for #weak_ident #ty_generics #where_clause_impl {
+            #[inline]
+            fn clone(&self) -> Self { Self(self.0.clone()) }
+        }
+
+        // PartialEq for Weak wrapper
+        impl #impl_generics ::core::cmp::PartialEq for #weak_ident #ty_generics #where_clause_impl {
+            #[inline]
+            fn eq(&self, other: &Self) -> bool {
+                ::std::sync::Weak::ptr_eq(&self.0, &other.0)
+            }
         }
 
         // Optional inner-field Deref on the Data struct

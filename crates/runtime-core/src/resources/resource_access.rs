@@ -91,6 +91,10 @@ impl<T: Transaction> ResourceAccess<T> {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
+            if self.first_access_in_batch.load(Ordering::Acquire) {
+                //self.tx().batch_api().set_read_state(self.id(), state.clone());
+            }
+
             if self.access_type() == AccessType::Read {
                 self.set_written_state(state);
             }
@@ -110,7 +114,7 @@ impl<T: Transaction> ResourceAccess<T> {
     pub(crate) fn belongs_to_same_batch(&self, other: &Self) -> bool {
         match self.tx_ref.upgrade() {
             None => false,
-            Some(tx) => tx.batch_api().eq(other.tx().batch_api()),
+            Some(tx) => tx.batch_api() == other.tx().batch_api(),
         }
     }
 }

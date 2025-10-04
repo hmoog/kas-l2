@@ -7,7 +7,7 @@ use kas_l2_runtime_macros::smart_pointer;
 use tap::Tap;
 
 use crate::{
-    AccessHandle, BatchApi, ResourceAccess, ResourceProvider, RuntimeTxRef, Storage, Transaction,
+    AccessHandle, BatchApi, ResourceAccess, ResourceProvider, Storage, Transaction,
     TransactionProcessor, VecExt,
 };
 
