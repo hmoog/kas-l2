@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 use kas_l2_runtime_macros::smart_pointer;
@@ -12,6 +15,8 @@ use crate::{
 pub struct ResourceAccess<T: Transaction> {
     metadata: T::AccessMetadata,
     tx_ref: RuntimeTxRef<T>,
+    first_access_in_batch: AtomicBool,
+    last_access_in_batch: AtomicBool,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
     prev: AtomicOptionArc<Self>,
@@ -39,6 +44,8 @@ impl<T: Transaction> ResourceAccess<T> {
         Self(Arc::new(ResourceAccessData {
             metadata,
             tx_ref,
+            first_access_in_batch: AtomicBool::default(),
+            last_access_in_batch: AtomicBool::default(),
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),
             prev: AtomicOptionArc::new(prev.map(|p| p.0)),
@@ -49,13 +56,26 @@ impl<T: Transaction> ResourceAccess<T> {
     pub(crate) fn init<S: Storage<T::ResourceId>>(&self, resources: &mut ResourceProvider<T, S>) {
         match self.prev.load() {
             Some(prev) => {
+                let prev = Self(prev);
                 prev.next.store(Arc::downgrade(&self.0));
+
+                if prev.belongs_to_same_batch(self) {
+                    prev.last_access_in_batch.store(false, Ordering::Release);
+                    self.last_access_in_batch.store(true, Ordering::Release);
+                } else {
+                    self.first_access_in_batch.store(true, Ordering::Release);
+                }
 
                 if let Some(written_state) = prev.written_state.load() {
                     self.set_read_state(written_state);
                 }
             }
-            None => resources.load_from_storage(self),
+            None => {
+                self.first_access_in_batch.store(true, Ordering::Release);
+                self.last_access_in_batch.store(true, Ordering::Release);
+
+                resources.load_from_storage(self)
+            }
         }
     }
 
@@ -84,6 +104,13 @@ impl<T: Transaction> ResourceAccess<T> {
             if let Some(next) = self.next.load().upgrade() {
                 Self(next).set_read_state(state)
             }
+        }
+    }
+
+    pub(crate) fn belongs_to_same_batch(&self, other: &Self) -> bool {
+        match self.tx_ref.upgrade() {
+            None => false,
+            Some(tx) => tx.batch_api().eq(other.tx().batch_api()),
         }
     }
 }

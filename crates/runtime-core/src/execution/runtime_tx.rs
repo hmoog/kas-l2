@@ -45,6 +45,10 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
         })
     }
 
+    pub(crate) fn batch_api(&self) -> &BatchApi<Tx> {
+        &self.batch_api
+    }
+
     pub(crate) fn execute<TxProc: TransactionProcessor<Tx>>(&self, processor: &TxProc) {
         let mut handles = self.resources.as_vec(AccessHandle::new);
         match processor(&self.tx, &mut handles) {
