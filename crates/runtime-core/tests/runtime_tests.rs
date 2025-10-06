@@ -5,7 +5,7 @@ use std::{collections::HashMap, thread::sleep, time::Duration};
 use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
 
 #[test]
-pub fn test_executor() {
+pub fn test_runtime() {
     let mut runtime = RuntimeBuilder::default()
         .with_execution_workers(4)
         .with_storage(KVStore(HashMap::new()))
@@ -16,7 +16,11 @@ pub fn test_executor() {
             },
         )
         .with_batch_processor(|batch: Batch<Transaction>| {
-            eprintln!(">> Processed batch with {} transactions", batch.txs().len());
+            eprintln!(
+                ">> Processed batch with {} transactions and {} state changes",
+                batch.txs().len(),
+                batch.state_diffs().len()
+            );
         })
         .build();
 
