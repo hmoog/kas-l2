@@ -174,6 +174,12 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
             }
         }
 
+        // Default for Weak wrapper
+        impl #impl_generics ::core::default::Default for #weak_ident #ty_generics #where_clause_impl {
+            #[inline]
+            fn default() -> Self { Self(::std::sync::Weak::default()) }
+        }
+
         // Clone for Weak wrapper
         impl #impl_generics ::core::clone::Clone for #weak_ident #ty_generics #where_clause_impl {
             #[inline]

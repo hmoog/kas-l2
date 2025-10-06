@@ -3,7 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, Resource, ResourceAccess, RuntimeTxRef, State, Storage, Transaction, VecExt,
+    AccessMetadata, BatchApiRef, Resource, ResourceAccess, RuntimeTxRef, State, StateDiff, Storage,
+    Transaction, VecExt,
 };
 
 pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceId>> {
@@ -12,7 +13,7 @@ pub struct ResourceProvider<T: Transaction, K: Storage<T::ResourceId>> {
 }
 
 impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
-    pub fn new(permanent_storage: K) -> Self {
+    pub(crate) fn new(permanent_storage: K) -> Self {
         Self {
             resources: HashMap::new(),
             permanent_storage,
@@ -21,19 +22,18 @@ impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
 
     pub(crate) fn provide(
         &mut self,
-        transaction: &T,
-        tx_ref: RuntimeTxRef<T>,
+        tx: &T,
+        runtime_tx: RuntimeTxRef<T>,
+        batch: &BatchApiRef<T>,
+        state_diffs: &mut Vec<StateDiff<T>>,
     ) -> Vec<ResourceAccess<T>> {
-        transaction.accessed_resources().iter().into_vec(|access| {
+        tx.accessed_resources().iter().into_vec(|access| {
             let resource = self.resource(access.id());
-            if resource
-                .last_access()
-                .is_some_and(|a| *a.tx_ref() == tx_ref)
-            {
-                panic!("duplicate access to resource");
+            let (access, new_state_diff) = resource.access(access, &runtime_tx, batch);
+            if let Some(new_state_diff) = new_state_diff {
+                state_diffs.push(new_state_diff);
             }
-
-            resource.access(access.clone(), tx_ref.clone())
+            access
         })
     }
 
