@@ -1,6 +1,6 @@
 use tap::Tap;
 
-use crate::{AccessMetadata, BatchApiRef, ResourceAccess, RuntimeTxRef, StateDiff, Transaction};
+use crate::{AccessMetadata, BatchRef, ResourceAccess, RuntimeTxRef, StateDiff, Transaction};
 
 pub(crate) struct Resource<T: Transaction> {
     last_access: Option<ResourceAccess<T>>,
@@ -17,7 +17,7 @@ impl<T: Transaction> Resource<T> {
         &mut self,
         meta: &T::AccessMetadata,
         tx: &RuntimeTxRef<T>,
-        batch: &BatchApiRef<T>,
+        batch: &BatchRef<T>,
     ) -> (ResourceAccess<T>, Option<StateDiff<T>>) {
         let (state_diff_ref, prev_access, new_state_diff) = match self.last_access.take() {
             Some(prev_access) if prev_access.tx().belongs_to_batch(batch) => {

@@ -7,12 +7,12 @@ use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_runtime_macros::smart_pointer;
 use tap::Tap;
 
-use crate::{BatchApi, RuntimeTx, Transaction, TransactionProcessor, VecExt, Worker};
+use crate::{Batch, RuntimeTx, Transaction, TransactionProcessor, VecExt, Worker};
 
 #[smart_pointer]
 pub(crate) struct WorkersApi<Tx: Transaction> {
     worker_count: usize,
-    inboxes: Vec<Arc<ArrayQueue<BatchApi<Tx>>>>,
+    inboxes: Vec<Arc<ArrayQueue<Batch<Tx>>>>,
     stealers: Vec<Stealer<RuntimeTx<Tx>>>,
     unparkers: Vec<Unparker>,
     shutdown: AtomicAsyncLatch,
@@ -45,7 +45,7 @@ impl<Tx: Transaction> WorkersApi<Tx> {
         (this, handles)
     }
 
-    pub fn push_batch(&self, batch: BatchApi<Tx>) {
+    pub fn push_batch(&self, batch: Batch<Tx>) {
         for (inbox, unparker) in self.inboxes.iter().zip(&self.unparkers) {
             let mut item = batch.clone();
             loop {

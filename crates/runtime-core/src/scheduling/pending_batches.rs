@@ -4,15 +4,15 @@ use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 
-use crate::{BatchApi, RuntimeTx, Transaction};
+use crate::{Batch, RuntimeTx, Transaction};
 
 pub struct PendingBatches<T: Transaction> {
-    queue: LinkedList<linked_list::Adapter<BatchApi<T>>>,
-    new_batches: Arc<ArrayQueue<BatchApi<T>>>,
+    queue: LinkedList<linked_list::Adapter<Batch<T>>>,
+    new_batches: Arc<ArrayQueue<Batch<T>>>,
 }
 
 impl<T: Transaction> PendingBatches<T> {
-    pub fn new(new_batches: Arc<ArrayQueue<BatchApi<T>>>) -> Self {
+    pub fn new(new_batches: Arc<ArrayQueue<Batch<T>>>) -> Self {
         Self {
             queue: LinkedList::new(linked_list::Adapter::new()),
             new_batches,

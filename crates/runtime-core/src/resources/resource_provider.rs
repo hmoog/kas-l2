@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use borsh::BorshDeserialize;
 
 use crate::{
-    AccessMetadata, BatchApiRef, Resource, ResourceAccess, RuntimeTxRef, State, StateDiff, Storage,
+    AccessMetadata, BatchRef, Resource, ResourceAccess, RuntimeTxRef, State, StateDiff, Storage,
     Transaction, VecExt,
 };
 
@@ -24,7 +24,7 @@ impl<T: Transaction, K: Storage<T::ResourceId>> ResourceProvider<T, K> {
         &mut self,
         tx: &T,
         runtime_tx: RuntimeTxRef<T>,
-        batch: &BatchApiRef<T>,
+        batch: &BatchRef<T>,
         state_diffs: &mut Vec<StateDiff<T>>,
     ) -> Vec<ResourceAccess<T>> {
         tx.accessed_resources().iter().into_vec(|access| {

@@ -1,5 +1,7 @@
+use tap::Tap;
+
 use crate::{
-    BatchApi, BatchProcessor, Executor, ResourceProvider, RuntimeBatchProcessor, RuntimeBuilder,
+    Batch, BatchProcessor, Executor, ResourceProvider, RuntimeBatchProcessor, RuntimeBuilder,
     Scheduler, Storage, Transaction, TransactionProcessor,
 };
 
@@ -10,14 +12,11 @@ pub struct Runtime<T: Transaction, S: Storage<T::ResourceId>> {
 }
 
 impl<T: Transaction, S: Storage<T::ResourceId>> Runtime<T, S> {
-    pub fn process(&mut self, transactions: Vec<T>) -> BatchApi<T> {
-        let batch = self.scheduler.schedule(transactions);
-        let batch_api = batch.api().clone();
-
-        self.executor.execute(batch_api.clone());
-        self.batch_processor.push(batch);
-
-        batch_api
+    pub fn process(&mut self, transactions: Vec<T>) -> Batch<T> {
+        self.scheduler.schedule(transactions).tap(|batch| {
+            self.executor.execute(batch.clone());
+            self.batch_processor.push(batch.clone());
+        })
     }
 
     pub fn shutdown(self) {

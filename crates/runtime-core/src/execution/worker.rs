@@ -4,12 +4,12 @@ use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 
-use crate::{BatchApi, PendingBatches, RuntimeTx, Transaction, TransactionProcessor, WorkersApi};
+use crate::{Batch, PendingBatches, RuntimeTx, Transaction, TransactionProcessor, WorkersApi};
 
 pub struct Worker<T: Transaction, P: TransactionProcessor<T>> {
     id: usize,
     local_queue: WorkerQueue<RuntimeTx<T>>,
-    inbox: Arc<ArrayQueue<BatchApi<T>>>,
+    inbox: Arc<ArrayQueue<Batch<T>>>,
     processor: P,
     parker: Parker,
 }
@@ -37,7 +37,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<BatchApi<T>>> {
+    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Batch<T>>> {
         self.inbox.clone()
     }
 

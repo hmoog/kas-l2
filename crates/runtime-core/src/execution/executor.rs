@@ -1,6 +1,6 @@
 use std::thread::JoinHandle;
 
-use crate::{BatchApi, Transaction, TransactionProcessor, WorkersApi};
+use crate::{Batch, Transaction, TransactionProcessor, WorkersApi};
 
 pub struct Executor<Tx: Transaction> {
     workers: WorkersApi<Tx>,
@@ -13,7 +13,7 @@ impl<Tx: Transaction> Executor<Tx> {
         Self { workers, handles }
     }
 
-    pub fn execute(&self, batch: BatchApi<Tx>) {
+    pub fn execute(&self, batch: Batch<Tx>) {
         self.workers.push_batch(batch);
     }
 

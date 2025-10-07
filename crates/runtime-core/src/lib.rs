@@ -21,7 +21,6 @@ pub(crate) mod resources {
 
 pub(crate) mod scheduling {
     pub(crate) mod batch;
-    pub(crate) mod batch_api;
     pub(crate) mod pending_batches;
     pub(crate) mod scheduler;
 }
@@ -49,10 +48,7 @@ pub use crate::{
     },
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
-    scheduling::{
-        batch::Batch,
-        batch_api::{BatchApi, BatchApiRef},
-    },
+    scheduling::batch::{Batch, BatchRef},
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
         storage::Storage, transaction::Transaction, transaction_processor::TransactionProcessor,

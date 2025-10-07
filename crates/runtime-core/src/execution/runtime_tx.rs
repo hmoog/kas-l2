@@ -4,16 +4,15 @@ use std::sync::{
 };
 
 use kas_l2_runtime_macros::smart_pointer;
-use tap::Tap;
 
 use crate::{
-    AccessHandle, BatchApiRef, ResourceAccess, ResourceProvider, StateDiff, Storage, Transaction,
+    AccessHandle, BatchRef, ResourceAccess, ResourceProvider, StateDiff, Storage, Transaction,
     TransactionProcessor, VecExt,
 };
 
 #[smart_pointer(deref(tx))]
 pub struct RuntimeTx<Tx: Transaction> {
-    batch: BatchApiRef<Tx>,
+    batch: BatchRef<Tx>,
     resources: Vec<ResourceAccess<Tx>>,
     pending_resources: AtomicU64,
     tx: Tx,
@@ -27,7 +26,7 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
     pub(crate) fn new<TxStorage: Storage<Tx::ResourceId>>(
         provider: &mut ResourceProvider<Tx, TxStorage>,
         state_diffs: &mut Vec<StateDiff<Tx>>,
-        batch: BatchApiRef<Tx>,
+        batch: BatchRef<Tx>,
         tx: Tx,
     ) -> Self {
         Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<Tx>>| {
@@ -39,11 +38,6 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
                 resources,
             }
         }))
-        .tap(|this| {
-            for resource in this.accessed_resources() {
-                resource.init(provider);
-            }
-        })
     }
 
     pub(crate) fn execute<TxProc: TransactionProcessor<Tx>>(&self, processor: &TxProc) {
@@ -66,13 +60,13 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
         }
     }
 
-    pub(crate) fn batch(&self) -> &BatchApiRef<Tx> {
+    pub(crate) fn batch(&self) -> &BatchRef<Tx> {
         &self.batch
     }
 }
 
 impl<T: Transaction> RuntimeTxRef<T> {
-    pub(crate) fn belongs_to_batch(&self, batch_api: &BatchApiRef<T>) -> bool {
-        self.upgrade().is_some_and(|tx| tx.batch() == batch_api)
+    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<T>) -> bool {
+        self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }

@@ -50,7 +50,7 @@ impl<T: Transaction> RuntimeBatchProcessor<T> {
                 .block_on(async move {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
-                            batch.api().wait_done().await;
+                            batch.wait_done().await;
                             batch_processor(batch);
                         }
 
