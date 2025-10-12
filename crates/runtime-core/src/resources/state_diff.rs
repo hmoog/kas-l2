@@ -3,18 +3,20 @@ use std::sync::Arc;
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
 
-use crate::{State, Transaction};
+use crate::{BatchRef, State, Transaction};
 
 #[smart_pointer]
 pub struct StateDiff<T: Transaction> {
+    batch: BatchRef<T>,
     resource_id: T::ResourceId,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
 }
 
 impl<T: Transaction> StateDiff<T> {
-    pub fn new(resource_id: T::ResourceId) -> Self {
+    pub fn new(batch: BatchRef<T>, resource_id: T::ResourceId) -> Self {
         Self(Arc::new(StateDiffData {
+            batch,
             resource_id,
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),
@@ -38,6 +40,10 @@ impl<T: Transaction> StateDiff<T> {
     }
 
     pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
+        if let Some(batch) = self.batch.upgrade() {
+            batch.increase_pending_writes();
+        }
+
         self.written_state.store(Some(state))
     }
 }

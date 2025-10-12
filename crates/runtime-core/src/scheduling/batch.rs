@@ -2,7 +2,7 @@ use std::{
     future::Future,
     sync::{
         Arc,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicI64, AtomicU64, Ordering},
     },
 };
 
@@ -19,7 +19,10 @@ pub struct Batch<Tx: Transaction> {
     state_diffs: Vec<StateDiff<Tx>>,
     available_txs: Injector<RuntimeTx<Tx>>,
     pending_txs: AtomicU64,
-    is_done: AtomicAsyncLatch,
+    pending_writes: AtomicI64,
+    was_processed: AtomicAsyncLatch,
+    was_persisted: AtomicAsyncLatch,
+    was_committed: AtomicAsyncLatch,
 }
 
 impl<Tx: Transaction> Batch<Tx> {
@@ -31,24 +34,24 @@ impl<Tx: Transaction> Batch<Tx> {
         &self.state_diffs
     }
 
-    pub fn available_txs(&self) -> u64 {
+    pub fn num_available(&self) -> u64 {
         self.available_txs.len() as u64
     }
 
-    pub fn pending_txs(&self) -> u64 {
+    pub fn num_pending(&self) -> u64 {
         self.pending_txs.load(Ordering::Acquire)
     }
 
     pub fn is_depleted(&self) -> bool {
-        self.pending_txs.load(Ordering::Acquire) == 0 && self.available_txs.is_empty()
+        self.num_pending() == 0 && self.available_txs.is_empty()
     }
 
-    pub fn is_done(&self) -> bool {
-        self.is_done.is_open()
+    pub fn was_processed(&self) -> bool {
+        self.was_processed.is_open()
     }
 
-    pub fn wait_done(&self) -> impl Future<Output = ()> + '_ {
-        self.is_done.wait()
+    pub fn wait_processed(&self) -> impl Future<Output = ()> + '_ {
+        self.was_processed.wait()
     }
 
     pub(crate) fn new<S: Storage<Tx::ResourceId>>(
@@ -59,12 +62,15 @@ impl<Tx: Transaction> Batch<Tx> {
             let mut state_diffs = Vec::new();
             BatchData {
                 pending_txs: AtomicU64::new(txs.len() as u64),
+                pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
                     RuntimeTx::new(provider, &mut state_diffs, BatchRef(this.clone()), tx)
                 }),
                 state_diffs,
                 available_txs: Injector::new(),
-                is_done: Default::default(),
+                was_processed: Default::default(),
+                was_persisted: Default::default(),
+                was_committed: Default::default(),
             }
         }))
         .tap(|this| {
@@ -95,7 +101,17 @@ impl<Tx: Transaction> Batch<Tx> {
 
     pub(crate) fn decrease_pending_txs(&self) {
         if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
-            self.is_done.open();
+            self.was_processed.open();
+        }
+    }
+
+    pub(crate) fn increase_pending_writes(&self) {
+        self.pending_writes.fetch_add(1, Ordering::AcqRel);
+    }
+
+    pub(crate) fn decrease_pending_writes(&self) {
+        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
+            self.was_persisted.open();
         }
     }
 }

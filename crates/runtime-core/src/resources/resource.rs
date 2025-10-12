@@ -25,7 +25,7 @@ impl<T: Transaction> Resource<T> {
                 (prev_access.state_diff(), Some(prev_access), None)
             }
             prev_access => {
-                let new_diff = StateDiff::new(meta.id());
+                let new_diff = StateDiff::new(batch.clone(), meta.id());
                 (new_diff.downgrade(), prev_access, Some(new_diff))
             }
         };

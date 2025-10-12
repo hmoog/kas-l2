@@ -9,6 +9,19 @@ pub(crate) mod execution {
     pub(crate) mod workers_api;
 }
 
+pub(crate) mod io {
+    pub(crate) mod adaptive_readers;
+    pub(crate) mod cmd;
+    pub(crate) mod consts;
+    pub(crate) mod io_manager;
+    pub(crate) mod job_queue;
+    pub(crate) mod kv_store;
+    pub(crate) mod read_worker;
+    pub(crate) mod state_space;
+    pub(crate) mod write_batch;
+    pub(crate) mod writer_worker;
+}
+
 pub(crate) mod resources {
     pub(crate) mod access_handle;
     pub(crate) mod access_type;
