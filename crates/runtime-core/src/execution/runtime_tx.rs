@@ -6,7 +6,7 @@ use std::sync::{
 use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, ResourceProvider, StateDiff, Storage, Transaction,
+    AccessHandle, BatchRef, ResourceAccess, ResourceProvider, StateDiff, Transaction,
     TransactionProcessor, VecExt,
 };
 
@@ -23,8 +23,8 @@ impl<Tx: Transaction> RuntimeTx<Tx> {
         &self.resources
     }
 
-    pub(crate) fn new<TxStorage: Storage<Tx::ResourceId>>(
-        provider: &mut ResourceProvider<Tx, TxStorage>,
+    pub(crate) fn new(
+        provider: &mut ResourceProvider<Tx>,
         state_diffs: &mut Vec<StateDiff<Tx>>,
         batch: BatchRef<Tx>,
         tx: Tx,

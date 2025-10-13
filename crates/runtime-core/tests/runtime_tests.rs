@@ -1,6 +1,11 @@
 extern crate core;
 
-use std::{collections::HashMap, thread::sleep, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+    thread::sleep,
+    time::Duration,
+};
 
 use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
 
@@ -8,7 +13,7 @@ use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
 pub fn test_runtime() {
     let mut runtime = RuntimeBuilder::default()
         .with_execution_workers(4)
-        .with_storage(KVStore(HashMap::new()))
+        .with_storage(KVStore(Arc::new(RwLock::new(HashMap::new()))))
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);
@@ -40,7 +45,7 @@ pub fn test_runtime() {
     runtime.shutdown();
 }
 
-pub struct KVStore(HashMap<u32, Vec<u8>>);
+pub struct KVStore(Arc<RwLock<HashMap<u32, Vec<u8>>>>);
 
 struct Transaction(u32, Vec<Access>);
 
@@ -51,24 +56,61 @@ pub enum Access {
 }
 
 mod runtime_traits {
-    use kas_l2_runtime_core::AccessType;
+    use kas_l2_runtime_core::{AccessType, RuntimeState};
 
     use crate::{Access, KVStore, Transaction};
 
-    impl kas_l2_runtime_core::Storage<u32> for KVStore {
-        type Error = std::io::Error;
+    impl Clone for KVStore {
+        fn clone(&self) -> Self {
+            Self(self.0.clone())
+        }
+    }
 
-        fn get(&self, key: &u32) -> Result<Option<Vec<u8>>, Self::Error> {
-            Ok(self.0.get(key).cloned())
+    impl kas_l2_io_core::KVStore for KVStore {
+        type Namespace = RuntimeState;
+        type Error = std::io::Error;
+        type WriteBatch = Self;
+
+        fn new_batch(&self) -> Self::WriteBatch {
+            self.clone()
         }
 
-        fn put(&mut self, key: u32, value: Vec<u8>) -> Result<(), Self::Error> {
-            self.0.insert(key, value);
+        fn write_batch(
+            &self,
+            _: Self::WriteBatch,
+        ) -> Result<(), <Self as kas_l2_io_core::KVStore>::Error> {
+            // we always write to the underlying storage
+            Ok(())
+        }
+    }
+
+    impl kas_l2_io_core::ReadableKVStore for KVStore {
+        type Namespace = RuntimeState;
+        type Error = std::io::Error;
+
+        fn get(&self, _ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
+            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
+            Ok(self.0.read().expect("failed to read").get(&key).cloned())
+        }
+    }
+
+    impl kas_l2_io_core::WriteableKVStore for KVStore {
+        type Namespace = RuntimeState;
+        type Error = std::io::Error;
+
+        fn put(&self, _ns: Self::Namespace, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
+            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
+            self.0
+                .write()
+                .expect("failed to write")
+                .insert(key, value.to_vec());
             Ok(())
         }
 
-        fn delete(&mut self, key: &u32) -> Result<bool, Self::Error> {
-            Ok(self.0.remove(key).is_some())
+        fn delete(&self, _ns: Self::Namespace, key: &[u8]) -> Result<(), Self::Error> {
+            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
+            self.0.write().expect("failed to write").remove(&key);
+            Ok(())
         }
     }
 

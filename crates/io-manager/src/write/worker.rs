@@ -2,41 +2,41 @@ use std::{
     ops::Deref,
     sync::{
         Arc,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     thread::JoinHandle,
 };
-use std::sync::atomic::AtomicBool;
-use crossbeam_queue::ArrayQueue;
+
 use crossbeam_utils::{
     CachePadded,
     sync::{Parker, Unparker},
 };
+use kas_l2_io_core::KVStore;
 
-use crate::{
-    Transaction,
-    io::{cmd::WriteCmd, job_queue::JobQueue, kv_store::KVStore},
-};
+use crate::{cmd_queue::CmdQueue, write};
 
-pub struct WriterWorker<S: KVStore, T: Transaction> {
-    queue: JobQueue<WriteCmd<T>>,
-    writer_parked: Arc<CachePadded<AtomicBool>>,
+pub struct Worker<S: KVStore, C: write::Cmd<<S as KVStore>::Namespace>> {
     store: Arc<S>,
+    queue: CmdQueue<C>,
+    parked: Arc<CachePadded<AtomicBool>>,
     parker: Parker,
+    is_shutdown: Arc<AtomicBool>,
 }
 
-impl<S: KVStore, T: Transaction> WriterWorker<S, T> {
+impl<Store: KVStore, WriteCmd: write::Cmd<<Store as KVStore>::Namespace>> Worker<Store, WriteCmd> {
     pub fn new(
-        queue: JobQueue<WriteCmd<T>>,
-        writer_parked: Arc<CachePadded<AtomicBool>>,
-        store: Arc<S>,
+        queue: CmdQueue<WriteCmd>,
+        parked: Arc<CachePadded<AtomicBool>>,
+        store: Arc<Store>,
+        is_shutdown: Arc<AtomicBool>,
     ) -> Self {
         Self {
             queue,
-            writer_parked,
+            parked,
             store,
             parker: Parker::new(),
+            is_shutdown,
         }
     }
 
@@ -49,7 +49,7 @@ impl<S: KVStore, T: Transaction> WriterWorker<S, T> {
     }
 
     fn run(self) {
-        loop {
+        while !self.is_shutdown.load(Ordering::Acquire) {
             match self.queue.pop() {
                 (Some(cmd), _) => {
                     cmd.exec(self.store.deref());
@@ -60,7 +60,7 @@ impl<S: KVStore, T: Transaction> WriterWorker<S, T> {
     }
 
     fn park(&self) {
-        self.writer_parked.store(true, Ordering::Relaxed);
+        self.parked.store(true, Ordering::Relaxed);
         while let (Some(cmd), _) = self.queue.pop() {
             cmd.exec(self.store.deref());
         }

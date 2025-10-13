@@ -1,27 +1,34 @@
+use kas_l2_io_core::KVStore;
+use kas_l2_io_manager::IoManager;
 use tap::Tap;
 
 use crate::{
     Batch, BatchProcessor, Executor, ResourceProvider, RuntimeBatchProcessor, RuntimeBuilder,
-    Scheduler, Storage, Transaction, TransactionProcessor,
+    Scheduler, Transaction, TransactionProcessor,
+    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
-pub struct Runtime<T: Transaction, S: Storage<T::ResourceId>> {
-    scheduler: Scheduler<T, S>,
+pub struct Runtime<T: Transaction, S: KVStore<Namespace = RuntimeState>> {
+    io: IoManager<S, Read<T>, Write<T>>,
+    scheduler: Scheduler<T>,
     executor: Executor<T>,
     batch_processor: RuntimeBatchProcessor<T>,
 }
 
-impl<T: Transaction, S: Storage<T::ResourceId>> Runtime<T, S> {
+impl<T: Transaction, S: KVStore<Namespace = RuntimeState>> Runtime<T, S> {
     pub fn process(&mut self, transactions: Vec<T>) -> Batch<T> {
-        self.scheduler.schedule(transactions).tap(|batch| {
-            self.executor.execute(batch.clone());
-            self.batch_processor.push(batch.clone());
-        })
+        self.scheduler
+            .schedule(&self.io, transactions)
+            .tap(|batch| {
+                self.executor.execute(batch.clone());
+                self.batch_processor.push(batch.clone());
+            })
     }
 
     pub fn shutdown(self) {
         self.executor.shutdown();
         self.batch_processor.shutdown();
+        self.io.shutdown();
     }
 
     pub(crate) fn new<P: TransactionProcessor<T>, B: BatchProcessor<T>>(
@@ -35,10 +42,13 @@ impl<T: Transaction, S: Storage<T::ResourceId>> Runtime<T, S> {
             .transaction_processor
             .expect("Processor must be provided before calling build()");
 
+        let io = IoManager::new(storage);
+
         Self {
-            scheduler: Scheduler::new(ResourceProvider::new(storage)),
+            scheduler: Scheduler::new(ResourceProvider::new()),
             executor: Executor::new(builder.execution_workers, transaction_processor),
             batch_processor: RuntimeBatchProcessor::new(builder.batch_processor),
+            io,
         }
     }
 }

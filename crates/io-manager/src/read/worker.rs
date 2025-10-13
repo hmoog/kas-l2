@@ -2,7 +2,7 @@ use std::{
     ops::Deref,
     sync::{
         Arc,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     thread,
     thread::JoinHandle,
@@ -13,28 +13,28 @@ use crossbeam_utils::{
     CachePadded,
     sync::{Parker, Unparker},
 };
+use kas_l2_io_core::KVStore;
 
-use crate::{
-    Transaction,
-    io::{cmd::ReadCommands, job_queue::JobQueue, kv_store::KVStore},
-};
+use crate::{cmd_queue::CmdQueue, read::cmd::Cmd};
 
-pub struct ReadWorker<S: KVStore, T: Transaction> {
+pub struct ReadWorker<S: KVStore, R: Cmd<<S as KVStore>::Namespace>> {
     id: usize,
-    queue: JobQueue<ReadCommands<T>>,
+    queue: CmdQueue<R>,
     store: Arc<S>,
     parked_workers: Arc<ArrayQueue<usize>>,
     readers_active: Arc<CachePadded<AtomicUsize>>,
     parker: Parker,
+    is_shutdown: Arc<AtomicBool>,
 }
 
-impl<S: KVStore, T: Transaction> ReadWorker<S, T> {
+impl<S: KVStore, R: Cmd<<S as KVStore>::Namespace>> ReadWorker<S, R> {
     pub fn new(
         id: usize,
-        queue: JobQueue<ReadCommands<T>>,
+        queue: CmdQueue<R>,
         store: Arc<S>,
         parked_workers: Arc<ArrayQueue<usize>>,
         readers_active: Arc<CachePadded<AtomicUsize>>,
+        is_shutdown: Arc<AtomicBool>,
     ) -> Self {
         Self {
             id,
@@ -43,6 +43,7 @@ impl<S: KVStore, T: Transaction> ReadWorker<S, T> {
             parked_workers,
             readers_active,
             parker: Parker::new(),
+            is_shutdown,
         }
     }
 
@@ -58,7 +59,7 @@ impl<S: KVStore, T: Transaction> ReadWorker<S, T> {
     }
 
     fn run<F: Fn(usize) -> usize>(self, adaptive_park_threshold: F) {
-        loop {
+        while !self.is_shutdown.load(Ordering::Acquire) {
             match self.queue.pop() {
                 (Some(cmd), approx_queue_len) => {
                     cmd.exec(self.store.deref());

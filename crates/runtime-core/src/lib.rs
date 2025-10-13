@@ -10,16 +10,9 @@ pub(crate) mod execution {
 }
 
 pub(crate) mod io {
-    pub(crate) mod adaptive_readers;
-    pub(crate) mod cmd;
-    pub(crate) mod consts;
-    pub(crate) mod io_manager;
-    pub(crate) mod job_queue;
-    pub(crate) mod kv_store;
-    pub(crate) mod read_worker;
-    pub(crate) mod state_space;
-    pub(crate) mod write_batch;
-    pub(crate) mod writer_worker;
+    pub(crate) mod read_cmd;
+    pub(crate) mod runtime_state;
+    pub(crate) mod write_cmd;
 }
 
 pub(crate) mod resources {
@@ -42,7 +35,6 @@ pub(crate) mod traits {
     pub(crate) mod access_metadata;
     pub(crate) mod batch_processor;
     pub(crate) mod resource_id;
-    pub(crate) mod storage;
     pub(crate) mod transaction;
     pub(crate) mod transaction_processor;
 }
@@ -53,6 +45,7 @@ pub(crate) mod utils {
 
 pub use crate::{
     execution::runtime_tx::RuntimeTx,
+    io::runtime_state::RuntimeState,
     resources::{
         access_handle::AccessHandle,
         access_type::AccessType,
@@ -64,7 +57,7 @@ pub use crate::{
     scheduling::batch::{Batch, BatchRef},
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
-        storage::Storage, transaction::Transaction, transaction_processor::TransactionProcessor,
+        transaction::Transaction, transaction_processor::TransactionProcessor,
     },
 };
 pub(crate) use crate::{

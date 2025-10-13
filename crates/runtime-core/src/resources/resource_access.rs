@@ -3,12 +3,15 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
+use borsh::BorshDeserialize;
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
+use kas_l2_io_core::{KVStore, ReadableKVStore};
+use kas_l2_io_manager::IoManager;
 use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
-    AccessMetadata, AccessType, ResourceProvider, RuntimeTxRef, State, StateDiffRef, Storage,
-    Transaction,
+    AccessMetadata, AccessType, ResourceId, RuntimeTxRef, State, StateDiffRef, Transaction,
+    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 #[smart_pointer(deref(metadata))]
@@ -56,7 +59,10 @@ impl<T: Transaction> ResourceAccess<T> {
         }))
     }
 
-    pub(crate) fn init<S: Storage<T::ResourceId>>(&self, resources: &mut ResourceProvider<T, S>) {
+    pub(crate) fn init<S: KVStore<Namespace = RuntimeState>>(
+        &self,
+        io: &IoManager<S, Read<T>, Write<T>>,
+    ) {
         match self.prev.load() {
             Some(prev) => {
                 let prev = Self(prev);
@@ -77,8 +83,38 @@ impl<T: Transaction> ResourceAccess<T> {
                 self.is_batch_head.store(true, Ordering::Release);
                 self.is_batch_tail.store(true, Ordering::Release);
 
-                resources.load_from_storage(self)
+                io.submit_read(Read::ResourceAccess(self.clone()))
             }
+        }
+    }
+
+    pub(crate) fn load_from_storage<Store: ReadableKVStore<Namespace = RuntimeState>>(
+        &self,
+        store: &Store,
+    ) {
+        let id: Vec<u8> = self.metadata.id().to_bytes();
+
+        match store
+            .get(RuntimeState::LatestDataPointers, &id[..])
+            .expect("state space id")
+        {
+            Some(version) => {
+                let mut versioned_id = version;
+                versioned_id.extend_from_slice(&id[..]);
+
+                match store
+                    .get(RuntimeState::Data, &versioned_id[..])
+                    .expect("state data id")
+                {
+                    Some(data) => {
+                        let state = BorshDeserialize::deserialize_reader(&mut &*data)
+                            .expect("Failed to deserialize State");
+                        self.set_read_state(Arc::new(state));
+                    }
+                    None => self.set_read_state(Arc::new(State::default())),
+                }
+            }
+            None => self.set_read_state(Arc::new(State::default())),
         }
     }
 

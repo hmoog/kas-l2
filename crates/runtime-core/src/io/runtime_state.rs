@@ -1,4 +1,4 @@
-pub enum StateSpace {
+pub enum RuntimeState {
     Data,
     LatestDataPointers,
     Diffs,

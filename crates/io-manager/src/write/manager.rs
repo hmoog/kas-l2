@@ -1,55 +1,63 @@
-use std::{sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-}};
-use std::thread::JoinHandle;
-use crossbeam_utils::CachePadded;
-use crossbeam_utils::sync::{Parker, Unparker};
-
-use crate::{
-    Transaction,
-    io::{
-        adaptive_readers::AdaptiveReaders, cmd::WriteCmd, consts::BATCH_SIZE, job_queue::JobQueue,
-        kv_store::KVStore,
+use std::{
+    marker::PhantomData,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
     },
+    thread::JoinHandle,
 };
-use crate::io::writer_worker::WriterWorker;
 
-pub struct BatchWriter<T: Transaction> {
-    queue: JobQueue<WriteCmd<T>>,
-    writer_parked: Arc<CachePadded<AtomicBool>>,
-    writer_unparker: Unparker,
-    writer_handle: JoinHandle<()>,
+use crossbeam_utils::{CachePadded, sync::Unparker};
+use crossbeam_utils::atomic::AtomicCell;
+use kas_l2_io_core::KVStore;
+
+use crate::{cmd_queue::CmdQueue, config::BATCH_SIZE, write, write::worker::Worker};
+
+pub struct Manager<Store: KVStore, WriteCmd: write::Cmd<<Store as KVStore>::Namespace>> {
+    queue: CmdQueue<WriteCmd>,
+    parked: Arc<CachePadded<AtomicBool>>,
+    unparker: Unparker,
+    handle: AtomicCell<Option<JoinHandle<()>>>,
+    _marker: PhantomData<Store>,
 }
 
-impl<T: Transaction> BatchWriter<T> {
-    pub fn new<S: KVStore>(store: Arc<S>) -> Self {
-        let queue = JobQueue::new();
+impl<Store: KVStore, WriteCmd: write::Cmd<<Store as KVStore>::Namespace>> Manager<Store, WriteCmd> {
+    pub fn new(store: Arc<Store>, is_shutdown: Arc<AtomicBool>) -> Self {
+        let queue = CmdQueue::new();
         let writer_parked = Arc::new(CachePadded::new(AtomicBool::new(false)));
-        let writer = WriterWorker::new(queue.clone(), writer_parked.clone(), store);
+        let writer = Worker::new(queue.clone(), writer_parked.clone(), store, is_shutdown);
 
         Self {
             queue,
-            writer_parked,
-            writer_unparker: writer.unparker(),
-            writer_handle: writer.start(),
+            parked: writer_parked,
+            unparker: writer.unparker(),
+            handle: AtomicCell::new(Some(writer.start())),
+            _marker: PhantomData,
         }
     }
 
-    pub fn submit(&self, write: WriteCmd<T>) {
+    pub fn submit(&self, write: WriteCmd) {
         if self.queue.push(write) >= BATCH_SIZE && self.writer_parked() {
             self.unpark_writer();
         }
     }
 
+    pub fn shutdown(&self) {
+        self.unparker.unpark();
+        
+        if let Some(handle) = self.handle.take() {
+            handle.join().expect("write worker panicked");
+        }
+    }
+
     #[inline(always)]
     fn writer_parked(&self) -> bool {
-        self.writer_parked.load(Ordering::Relaxed)
+        self.parked.load(Ordering::Relaxed)
     }
 
     fn unpark_writer(&self) {
-        if self.writer_parked.swap(false, Ordering::Relaxed) {
-            self.writer_unparker.unpark();
+        if self.parked.swap(false, Ordering::Relaxed) {
+            self.unparker.unpark();
         }
     }
 
@@ -126,30 +134,4 @@ impl<T: Transaction> BatchWriter<T> {
     //         unparker.unpark();
     //     }
     // }
-}
-
-pub struct IoManager<T: Transaction, S: KVStore> {
-    store: Arc<S>,
-    readers: AdaptiveReaders<T, S>,
-    writer: BatchWriter<T>,
-}
-
-impl<T: Transaction, S: KVStore> IoManager<T, S> {
-    pub fn new(store: S) -> Self {
-        let store = Arc::new(store);
-
-        Self {
-            readers: AdaptiveReaders::new(store.clone()),
-            writer: BatchWriter::new(store.clone()),
-            store,
-        }
-    }
-
-    pub fn readers(&self) -> &AdaptiveReaders<T, S> {
-        &self.readers
-    }
-
-    pub fn writer(&self) -> &BatchWriter<T> {
-        &self.writer
-    }
 }

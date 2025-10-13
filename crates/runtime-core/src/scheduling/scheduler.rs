@@ -1,15 +1,25 @@
-use crate::{Batch, ResourceProvider, Storage, Transaction};
+use kas_l2_io_core::KVStore;
+use kas_l2_io_manager::IoManager;
 
-pub struct Scheduler<T: Transaction, S: Storage<T::ResourceId>> {
-    resource_provider: ResourceProvider<T, S>,
+use crate::{
+    Batch, ResourceProvider, Transaction,
+    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+};
+
+pub struct Scheduler<T: Transaction> {
+    resource_provider: ResourceProvider<T>,
 }
 
-impl<T: Transaction, S: Storage<T::ResourceId>> Scheduler<T, S> {
-    pub fn new(resource_provider: ResourceProvider<T, S>) -> Self {
+impl<T: Transaction> Scheduler<T> {
+    pub fn new(resource_provider: ResourceProvider<T>) -> Self {
         Self { resource_provider }
     }
 
-    pub fn schedule(&mut self, tasks: Vec<T>) -> Batch<T> {
-        Batch::new(tasks, &mut self.resource_provider)
+    pub fn schedule<S: KVStore<Namespace = RuntimeState>>(
+        &mut self,
+        io: &IoManager<S, Read<T>, Write<T>>,
+        tasks: Vec<T>,
+    ) -> Batch<T> {
+        Batch::new(io, tasks, &mut self.resource_provider)
     }
 }

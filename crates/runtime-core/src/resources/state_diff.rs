@@ -3,7 +3,7 @@ use std::sync::Arc;
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
 
-use crate::{BatchRef, State, Transaction};
+use crate::{BatchRef, State, Transaction, io::write_cmd::Write};
 
 #[smart_pointer]
 pub struct StateDiff<T: Transaction> {
@@ -43,6 +43,8 @@ impl<T: Transaction> StateDiff<T> {
         if let Some(batch) = self.batch.upgrade() {
             batch.increase_pending_writes();
         }
+
+        let _cmd = Write::StateDiff(self.clone());
 
         self.written_state.store(Some(state))
     }

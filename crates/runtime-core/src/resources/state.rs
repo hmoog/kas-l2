@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::Transaction;
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
 pub struct State<T: Transaction> {
     pub owner: T::ResourceId,
     pub data: Vec<u8>,

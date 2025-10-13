@@ -1,0 +1,10 @@
+[package]
+name = "kas-l2-io-manager"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-utils = "0.8.21"
+crossbeam-queue = "0.3.12"
+kas-l2-runtime-macros = { path = "../runtime-macros" }
+kas-l2-io-core = { path = "../io-core"}

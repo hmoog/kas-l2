@@ -1,10 +1,15 @@
 use std::marker::PhantomData;
 
-use crate::{Batch, BatchProcessor, Runtime, Storage, Transaction, TransactionProcessor};
+use kas_l2_io_core::KVStore;
+
+use crate::{
+    Batch, BatchProcessor, Runtime, Transaction, TransactionProcessor,
+    io::runtime_state::RuntimeState,
+};
 
 pub struct RuntimeBuilder<
     T: Transaction,
-    S: Storage<T::ResourceId>,
+    S: KVStore<Namespace = RuntimeState>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > {
@@ -18,7 +23,7 @@ pub struct RuntimeBuilder<
 impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
 where
     T: Transaction,
-    S: Storage<T::ResourceId>,
+    S: KVStore<Namespace = RuntimeState>,
     P: TransactionProcessor<T>,
 {
     fn default() -> Self {
@@ -32,8 +37,12 @@ where
     }
 }
 
-impl<T: Transaction, S: Storage<T::ResourceId>, P: TransactionProcessor<T>, B: BatchProcessor<T>>
-    RuntimeBuilder<T, S, P, B>
+impl<
+    T: Transaction,
+    S: KVStore<Namespace = RuntimeState>,
+    P: TransactionProcessor<T>,
+    B: BatchProcessor<T>,
+> RuntimeBuilder<T, S, P, B>
 {
     /// Override the number of execution workers.
     pub fn with_execution_workers(mut self, workers: usize) -> Self {
