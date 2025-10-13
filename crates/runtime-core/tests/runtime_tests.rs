@@ -71,32 +71,10 @@ mod runtime_traits {
         type Error = std::io::Error;
         type WriteBatch = Self;
 
-        fn new_batch(&self) -> Self::WriteBatch {
-            self.clone()
-        }
-
-        fn write_batch(
-            &self,
-            _: Self::WriteBatch,
-        ) -> Result<(), <Self as kas_l2_io_core::KVStore>::Error> {
-            // we always write to the underlying storage
-            Ok(())
-        }
-    }
-
-    impl kas_l2_io_core::ReadableKVStore for KVStore {
-        type Namespace = RuntimeState;
-        type Error = std::io::Error;
-
         fn get(&self, _ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             Ok(self.0.read().expect("failed to read").get(&key).cloned())
         }
-    }
-
-    impl kas_l2_io_core::WriteableKVStore for KVStore {
-        type Namespace = RuntimeState;
-        type Error = std::io::Error;
 
         fn put(&self, _ns: Self::Namespace, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
@@ -110,6 +88,15 @@ mod runtime_traits {
         fn delete(&self, _ns: Self::Namespace, key: &[u8]) -> Result<(), Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             self.0.write().expect("failed to write").remove(&key);
+            Ok(())
+        }
+
+        fn new_batch(&self) -> Self::WriteBatch {
+            self.clone()
+        }
+
+        fn write_batch(&self, _: Self::WriteBatch) -> Result<(), Self::Error> {
+            // we always write to the underlying storage
             Ok(())
         }
     }

@@ -14,21 +14,21 @@ use crossbeam_utils::{
 };
 use kas_l2_io_core::KVStore;
 
-use crate::{cmd_queue::CmdQueue, write};
+use crate::{WriteCmd, cmd_queue::CmdQueue};
 
-pub struct Worker<S: KVStore, C: write::Cmd<<S as KVStore>::Namespace>> {
-    store: Arc<S>,
-    queue: CmdQueue<C>,
+pub struct WriteWorker<K: KVStore, W: WriteCmd<K::Namespace>> {
+    store: Arc<K>,
+    queue: CmdQueue<W>,
     parked: Arc<CachePadded<AtomicBool>>,
     parker: Parker,
     is_shutdown: Arc<AtomicBool>,
 }
 
-impl<Store: KVStore, WriteCmd: write::Cmd<<Store as KVStore>::Namespace>> Worker<Store, WriteCmd> {
+impl<K: KVStore, W: WriteCmd<K::Namespace>> WriteWorker<K, W> {
     pub fn new(
-        queue: CmdQueue<WriteCmd>,
+        queue: CmdQueue<W>,
         parked: Arc<CachePadded<AtomicBool>>,
-        store: Arc<Store>,
+        store: Arc<K>,
         is_shutdown: Arc<AtomicBool>,
     ) -> Self {
         Self {

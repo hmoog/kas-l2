@@ -9,53 +9,53 @@ use std::{
 };
 
 use crossbeam_queue::ArrayQueue;
-use crossbeam_utils::{CachePadded, sync::Unparker};
-use crossbeam_utils::atomic::AtomicCell;
+use crossbeam_utils::{CachePadded, atomic::AtomicCell, sync::Unparker};
 use kas_l2_io_core::KVStore;
 
 use crate::{
+    ReadCmd,
     cmd_queue::CmdQueue,
     config::{BUFFER_DEPTH_PER_READER, MAX_READERS},
-    read,
+    read_worker::ReadWorker,
 };
 
-pub struct Manager<Store: KVStore, ReadCmd: read::Cmd<<Store as KVStore>::Namespace>> {
-    queue: CmdQueue<ReadCmd>,
+pub struct ReadManager<K: KVStore, R: ReadCmd<K::Namespace>> {
+    queue: CmdQueue<R>,
     workers_active: Arc<CachePadded<AtomicUsize>>,
     parked_workers: Arc<ArrayQueue<usize>>,
     unparkers: [Unparker; MAX_READERS],
     worker_handles: [AtomicCell<Option<JoinHandle<()>>>; MAX_READERS],
-    _marker: PhantomData<Store>,
+    _marker: PhantomData<K>,
 }
 
-impl<Store: KVStore, ReadCmd: read::Cmd<<Store as KVStore>::Namespace>> Manager<Store, ReadCmd> {
-    pub fn new(store: Arc<Store>, shutdown_flag: Arc<AtomicBool>) -> Self {
+impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadManager<K, R> {
+    pub fn new(store: Arc<K>, shutdown_flag: Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         let workers_active = Arc::new(CachePadded::new(AtomicUsize::new(MAX_READERS)));
         let parked_workers = Arc::new(ArrayQueue::new(MAX_READERS));
-        let workers: [read::worker::ReadWorker<Store, ReadCmd>; MAX_READERS] =
-            array::from_fn(|i| {
-                read::worker::ReadWorker::new(
-                    i,
-                    queue.clone(),
-                    store.clone(),
-                    parked_workers.clone(),
-                    workers_active.clone(),
-                    shutdown_flag.clone(),
-                )
-            });
+        let workers: [ReadWorker<K, R>; MAX_READERS] = array::from_fn(|i| {
+            ReadWorker::new(
+                i,
+                queue.clone(),
+                store.clone(),
+                parked_workers.clone(),
+                workers_active.clone(),
+                shutdown_flag.clone(),
+            )
+        });
 
         Self {
             queue,
             workers_active,
             parked_workers,
             unparkers: array::from_fn(|i| workers[i].unparker()),
-            worker_handles: workers.map(|w| AtomicCell::new(Some(w.start(Self::park_worker_threshold)))),
+            worker_handles: workers
+                .map(|w| AtomicCell::new(Some(w.start(Self::park_worker_threshold)))),
             _marker: PhantomData,
         }
     }
 
-    pub fn submit(&self, read: ReadCmd) {
+    pub fn submit(&self, read: R) {
         let queue_len = self.queue.push(read);
 
         let active = self.workers_active.load(Ordering::Acquire);

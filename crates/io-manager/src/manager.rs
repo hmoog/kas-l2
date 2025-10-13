@@ -5,29 +5,24 @@ use std::sync::{
 
 use kas_l2_io_core::KVStore;
 use kas_l2_runtime_macros::smart_pointer;
-use crate::{read, write};
+
+use crate::{ReadCmd, WriteCmd, read_manager::ReadManager, write_manager::WriteManager};
 
 #[smart_pointer]
-pub struct IoManager<
-    Store: KVStore,
-    ReadCmd: read::Cmd<<Store as KVStore>::Namespace>,
-    WriteCmd: write::Cmd<<Store as KVStore>::Namespace>,
-> {
-    reader: read::Manager<Store, ReadCmd>,
-    writer: write::Manager<Store, WriteCmd>,
+pub struct IoManager<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> {
+    reader: ReadManager<K, R>,
+    writer: WriteManager<K, W>,
     shutdown_flag: Arc<AtomicBool>,
 }
 
-impl<S: KVStore, R: read::Cmd<<S as KVStore>::Namespace>, W: write::Cmd<<S as KVStore>::Namespace>>
-    IoManager<S, R, W>
-{
-    pub fn new(store: S) -> Self {
+impl<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> IoManager<K, R, W> {
+    pub fn new(store: K) -> Self {
         let store = Arc::new(store);
         let shutdown_flag = Arc::new(AtomicBool::new(false));
 
         Self(Arc::new(IoManagerData {
-            reader: read::Manager::new(store.clone(), shutdown_flag.clone()),
-            writer: write::Manager::new(store, shutdown_flag.clone()),
+            reader: ReadManager::new(store.clone(), shutdown_flag.clone()),
+            writer: WriteManager::new(store, shutdown_flag.clone()),
             shutdown_flag,
         }))
     }

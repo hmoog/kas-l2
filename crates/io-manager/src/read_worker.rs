@@ -15,23 +15,23 @@ use crossbeam_utils::{
 };
 use kas_l2_io_core::KVStore;
 
-use crate::{cmd_queue::CmdQueue, read::cmd::Cmd};
+use crate::{ReadCmd, cmd_queue::CmdQueue};
 
-pub struct ReadWorker<S: KVStore, R: Cmd<<S as KVStore>::Namespace>> {
+pub struct ReadWorker<K: KVStore, R: ReadCmd<K::Namespace>> {
     id: usize,
     queue: CmdQueue<R>,
-    store: Arc<S>,
+    store: Arc<K>,
     parked_workers: Arc<ArrayQueue<usize>>,
     readers_active: Arc<CachePadded<AtomicUsize>>,
     parker: Parker,
     is_shutdown: Arc<AtomicBool>,
 }
 
-impl<S: KVStore, R: Cmd<<S as KVStore>::Namespace>> ReadWorker<S, R> {
+impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
     pub fn new(
         id: usize,
         queue: CmdQueue<R>,
-        store: Arc<S>,
+        store: Arc<K>,
         parked_workers: Arc<ArrayQueue<usize>>,
         readers_active: Arc<CachePadded<AtomicUsize>>,
         is_shutdown: Arc<AtomicBool>,
