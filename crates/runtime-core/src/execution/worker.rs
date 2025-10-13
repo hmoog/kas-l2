@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread, thread::JoinHandle};
+use std::{sync::Arc, thread, thread::JoinHandle, time::Duration};
 
 use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
@@ -52,7 +52,7 @@ impl<T: Transaction, P: TransactionProcessor<T>> Worker<T, P> {
                 .or_else(|| workers_api.steal_from_other_workers(self.id))
             {
                 Some(task) => task.execute(&self.processor),
-                None => self.parker.park(),
+                None => self.parker.park_timeout(Duration::from_millis(100)),
             }
         }
     }
