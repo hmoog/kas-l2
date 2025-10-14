@@ -6,7 +6,7 @@ use std::sync::{
 use kas_l2_io_core::KVStore;
 use kas_l2_runtime_macros::smart_pointer;
 
-use crate::{ReadCmd, WriteCmd, read_manager::ReadManager, write_manager::WriteManager};
+use crate::{ReadCmd, WriteCmd, read::manager::ReadManager, write::manager::WriteManager};
 
 #[smart_pointer]
 pub struct IoManager<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> {
@@ -21,8 +21,8 @@ impl<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> IoManager<
         let shutdown_flag = Arc::new(AtomicBool::new(false));
 
         Self(Arc::new(IoManagerData {
-            reader: ReadManager::new(store.clone(), shutdown_flag.clone()),
-            writer: WriteManager::new(store, shutdown_flag.clone()),
+            reader: ReadManager::new(&store, &shutdown_flag),
+            writer: WriteManager::new(&store, &shutdown_flag),
             shutdown_flag,
         }))
     }

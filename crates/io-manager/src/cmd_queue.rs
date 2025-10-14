@@ -39,4 +39,9 @@ impl<T> CmdQueue<T> {
     pub fn approx_len(&self) -> usize {
         self.approx_len.load(Ordering::Relaxed)
     }
+
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.queue.is_empty()
+    }
 }

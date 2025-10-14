@@ -14,7 +14,7 @@ use crate::{
     ReadCmd,
     cmd_queue::CmdQueue,
     config::{BUFFER_DEPTH_PER_READER, MAX_READERS},
-    read_worker::ReadWorker,
+    read::worker::ReadWorker,
     worker_handle::WorkerHandle,
 };
 
@@ -26,12 +26,12 @@ pub struct ReadManager<K: KVStore, R: ReadCmd<K::Namespace>> {
 }
 
 impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadManager<K, R> {
-    pub fn new(store: Arc<K>, is_shutdown: Arc<AtomicBool>) -> Self {
+    pub fn new(store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         let active_readers = Arc::new(CachePadded::new(AtomicUsize::new(0)));
         Self {
             worker_handles: array::from_fn(|i| {
-                ReadWorker::spawn(i, &queue, &store, &active_readers, &is_shutdown)
+                ReadWorker::spawn(i, &queue, store, &active_readers, is_shutdown)
             }),
             queue,
             active_readers,
@@ -44,7 +44,8 @@ impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadManager<K, R> {
     }
 
     pub fn shutdown(&self) {
-        self.wake_first_n(MAX_READERS, true);
+        self.wake_readers(MAX_READERS, true);
+
         for handle in &self.worker_handles {
             if let Some(handle) = handle.take_join() {
                 handle.join().expect("read worker panicked")
@@ -56,14 +57,14 @@ impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadManager<K, R> {
         let observed_num = self.active_readers.load(Ordering::Relaxed);
         self.active_readers.store(target_num, Ordering::Relaxed);
         if target_num > observed_num {
-            self.wake_first_n(target_num, false);
+            self.wake_readers(target_num, false);
         }
     }
 
-    fn wake_first_n(&self, n: usize, force: bool) {
-        for i in 0..n.min(MAX_READERS) {
-            if force || self.worker_handles[i].is_parked() {
-                self.worker_handles[i].wake();
+    fn wake_readers(&self, n: usize, force: bool) {
+        for worker in self.worker_handles.iter().take(n) {
+            if force || worker.is_parked() {
+                worker.wake();
             }
         }
     }

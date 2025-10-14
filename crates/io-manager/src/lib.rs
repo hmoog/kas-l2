@@ -1,14 +1,23 @@
 pub(crate) mod cmd_queue;
 pub(crate) mod config;
-pub(crate) mod io_manager;
-pub(crate) mod read_cmd;
-pub(crate) mod read_manager;
-pub(crate) mod read_worker;
-pub(crate) mod worker_handle;
-pub(crate) mod write_cmd;
-pub(crate) mod write_manager;
-pub(crate) mod write_worker;
+pub(crate) mod manager;
 
-pub use io_manager::IoManager;
-pub use read_cmd::ReadCmd;
-pub use write_cmd::WriteCmd;
+pub(crate) mod read {
+    pub(crate) mod cmd;
+    pub(crate) mod config;
+    pub(crate) mod manager;
+    pub(crate) mod worker;
+}
+
+pub(crate) mod write {
+    pub(crate) mod cmd;
+    pub(crate) mod config;
+    pub(crate) mod manager;
+    pub(crate) mod worker;
+}
+
+pub(crate) mod worker_handle;
+
+pub use manager::IoManager;
+pub use read::cmd::ReadCmd;
+pub use write::cmd::WriteCmd;
