@@ -3,26 +3,24 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use kas_l2_io_core::KVStore;
 use kas_l2_runtime_macros::smart_pointer;
 
-use crate::{ReadCmd, WriteCmd, read::manager::ReadManager, write::manager::WriteManager};
+use crate::{IoConfig, ReadCmd, Storage, WriteCmd, read::ReadManager, write::WriteManager};
 
 #[smart_pointer]
-pub struct IoManager<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> {
+pub struct IoManager<K: Storage, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> {
     reader: ReadManager<K, R>,
     writer: WriteManager<K, W>,
     shutdown_flag: Arc<AtomicBool>,
 }
 
-impl<K: KVStore, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> IoManager<K, R, W> {
-    pub fn new(store: K) -> Self {
+impl<K: Storage, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> IoManager<K, R, W> {
+    pub fn new(store: K, config: IoConfig) -> Self {
         let store = Arc::new(store);
         let shutdown_flag = Arc::new(AtomicBool::new(false));
-
         Self(Arc::new(IoManagerData {
-            reader: ReadManager::new(&store, &shutdown_flag),
-            writer: WriteManager::new(&store, &shutdown_flag),
+            reader: ReadManager::new(config.read_config(), &store, &shutdown_flag),
+            writer: WriteManager::new(&store, config.write_config(), &shutdown_flag),
             shutdown_flag,
         }))
     }

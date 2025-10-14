@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use kas_l2_io_core::KVStore;
+use kas_l2_io_manager::{IoConfig, Storage};
 
 use crate::{
     Batch, BatchProcessor, Runtime, Transaction, TransactionProcessor,
@@ -9,7 +9,7 @@ use crate::{
 
 pub struct RuntimeBuilder<
     T: Transaction,
-    S: KVStore<Namespace = RuntimeState>,
+    S: Storage<Namespace = RuntimeState>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > {
@@ -17,13 +17,14 @@ pub struct RuntimeBuilder<
     pub(crate) store: Option<S>,
     pub(crate) transaction_processor: Option<P>,
     pub(crate) batch_processor: B,
+    pub(crate) io_config: IoConfig,
     _marker: PhantomData<T>,
 }
 
 impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
 where
     T: Transaction,
-    S: KVStore<Namespace = RuntimeState>,
+    S: Storage<Namespace = RuntimeState>,
     P: TransactionProcessor<T>,
 {
     fn default() -> Self {
@@ -32,6 +33,7 @@ where
             store: None,
             transaction_processor: None,
             batch_processor: move |_| {},
+            io_config: IoConfig::default(),
             _marker: PhantomData,
         }
     }
@@ -39,7 +41,7 @@ where
 
 impl<
     T: Transaction,
-    S: KVStore<Namespace = RuntimeState>,
+    S: Storage<Namespace = RuntimeState>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > RuntimeBuilder<T, S, P, B>
@@ -72,6 +74,7 @@ impl<
             store: self.store,
             transaction_processor: self.transaction_processor,
             batch_processor: f,
+            io_config: self.io_config,
             _marker: PhantomData,
         }
     }

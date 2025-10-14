@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 
-use crate::WriteableKVStore;
+use crate::write::WriteStorage;
 
-pub trait KVStore: Send + Sync + 'static {
+pub trait Storage: Send + Sync + 'static {
     type Namespace;
     type Error: Debug;
-    type WriteBatch: WriteableKVStore<Namespace = Self::Namespace, Error = Self::Error>;
+    type WriteBatch: WriteStorage<Namespace = Self::Namespace, Error = Self::Error>;
 
     fn get(&self, ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
     fn put(&self, ns: Self::Namespace, key: &[u8], value: &[u8]) -> Result<(), Self::Error>;

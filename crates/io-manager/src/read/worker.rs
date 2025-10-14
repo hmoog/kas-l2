@@ -8,11 +8,13 @@ use std::{
 };
 
 use crossbeam_utils::{CachePadded, sync::Parker};
-use kas_l2_io_core::KVStore;
 
-use crate::{ReadCmd, cmd_queue::CmdQueue, worker_handle::WorkerHandle};
+use crate::{
+    ReadCmd, Storage,
+    utils::{CmdQueue, WorkerHandle},
+};
 
-pub struct ReadWorker<K: KVStore, R: ReadCmd<K::Namespace>> {
+pub struct ReadWorker<K: Storage, R: ReadCmd<K::Namespace>> {
     id: usize,
     queue: CmdQueue<R>,
     store: Arc<K>,
@@ -22,7 +24,7 @@ pub struct ReadWorker<K: KVStore, R: ReadCmd<K::Namespace>> {
     is_parked: Arc<CachePadded<AtomicBool>>,
 }
 
-impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
+impl<K: Storage, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
     pub(crate) fn spawn(
         id: usize,
         queue: &CmdQueue<R>,

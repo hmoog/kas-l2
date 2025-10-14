@@ -1,16 +1,12 @@
-use crate::{read::config::ReadConfig, write::config::WriteConfig};
-
-pub const BATCH_SIZE: usize = 1000;
-pub const MAX_READERS: usize = 8;
-pub const BUFFER_DEPTH_PER_READER: usize = 128;
+use crate::{read::ReadConfig, write::WriteConfig};
 
 #[derive(Default, Clone, Debug)]
-pub struct Config {
+pub struct IoConfig {
     write_config: WriteConfig,
     read_config: ReadConfig,
 }
 
-impl Config {
+impl IoConfig {
     pub fn new() -> Self {
         Self::default()
     }

@@ -1,5 +1,5 @@
-use kas_l2_io_core::WriteableKVStore;
+use crate::WriteStorage;
 
 pub trait WriteCmd<NS>: Send + Sync + 'static {
-    fn exec<S: WriteableKVStore<Namespace = NS>>(&self, store: &S);
+    fn exec<S: WriteStorage<Namespace = NS>>(&self, store: &S);
 }

@@ -1,18 +1,18 @@
 use std::fmt::Debug;
 
-use crate::KVStore;
+use crate::Storage;
 
-pub trait ReadableKVStore {
+pub trait ReadStorage {
     type Namespace;
     type Error: Debug;
     fn get(&self, ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
 }
 
-impl<T: KVStore> ReadableKVStore for T {
+impl<T: Storage> ReadStorage for T {
     type Namespace = T::Namespace;
     type Error = T::Error;
 
     fn get(&self, ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
-        KVStore::get(self, ns, key)
+        Storage::get(self, ns, key)
     }
 }

@@ -5,8 +5,7 @@ use std::sync::{
 
 use borsh::BorshDeserialize;
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
-use kas_l2_io_core::{KVStore, ReadableKVStore};
-use kas_l2_io_manager::IoManager;
+use kas_l2_io_manager::{IoManager, ReadStorage, Storage};
 use kas_l2_runtime_macros::smart_pointer;
 
 use crate::{
@@ -59,7 +58,7 @@ impl<T: Transaction> ResourceAccess<T> {
         }))
     }
 
-    pub(crate) fn init<S: KVStore<Namespace = RuntimeState>>(
+    pub(crate) fn init<S: Storage<Namespace = RuntimeState>>(
         &self,
         io: &IoManager<S, Read<T>, Write<T>>,
     ) {
@@ -88,7 +87,7 @@ impl<T: Transaction> ResourceAccess<T> {
         }
     }
 
-    pub(crate) fn load_from_storage<Store: ReadableKVStore<Namespace = RuntimeState>>(
+    pub(crate) fn load_from_storage<Store: ReadStorage<Namespace = RuntimeState>>(
         &self,
         store: &Store,
     ) {

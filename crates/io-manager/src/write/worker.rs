@@ -8,11 +8,15 @@ use std::{
 };
 
 use crossbeam_utils::{CachePadded, sync::Parker};
-use kas_l2_io_core::KVStore;
 
-use crate::{WriteCmd, cmd_queue::CmdQueue, config::BATCH_SIZE, worker_handle::WorkerHandle};
+use crate::{
+    Storage, WriteCmd,
+    utils::{CmdQueue, WorkerHandle},
+    write::WriteConfig,
+};
 
-pub struct WriteWorker<K: KVStore, W: WriteCmd<K::Namespace>> {
+pub struct WriteWorker<K: Storage, W: WriteCmd<K::Namespace>> {
+    config: WriteConfig,
     store: Arc<K>,
     queue: CmdQueue<W>,
     is_parked: Arc<CachePadded<AtomicBool>>,
@@ -20,13 +24,15 @@ pub struct WriteWorker<K: KVStore, W: WriteCmd<K::Namespace>> {
     is_shutdown: Arc<AtomicBool>,
 }
 
-impl<K: KVStore, W: WriteCmd<K::Namespace>> WriteWorker<K, W> {
+impl<K: Storage, W: WriteCmd<K::Namespace>> WriteWorker<K, W> {
     pub(crate) fn spawn(
+        config: &WriteConfig,
         queue: &CmdQueue<W>,
         store: &Arc<K>,
         is_shutdown: &Arc<AtomicBool>,
     ) -> WorkerHandle {
         let this = Self {
+            config: config.clone(),
             queue: queue.clone(),
             store: store.clone(),
             is_shutdown: is_shutdown.clone(),
@@ -51,7 +57,7 @@ impl<K: KVStore, W: WriteCmd<K::Namespace>> WriteWorker<K, W> {
                     cmd.exec(&batch);
                     batch_size += 1;
 
-                    if batch_size >= BATCH_SIZE {
+                    if batch_size >= self.config.max_batch_size() {
                         self.store.write_batch(batch).expect("write batch failed");
                         batch = self.store.new_batch();
                         batch_size = 0;

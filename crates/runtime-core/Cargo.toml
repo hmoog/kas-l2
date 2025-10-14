@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 kas-l2-atomic = { path = "../atomic"}
-kas-l2-io-core = { path = "../io-core"}
 kas-l2-io-manager = { path = "../io-manager"}
 borsh = {  version = "1.5.7", features = ["derive"] }
 crossbeam-utils = "0.8.21"
