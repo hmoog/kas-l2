@@ -4,6 +4,7 @@ pub(crate) mod io_manager;
 pub(crate) mod read_cmd;
 pub(crate) mod read_manager;
 pub(crate) mod read_worker;
+pub(crate) mod worker_handle;
 pub(crate) mod write_cmd;
 pub(crate) mod write_manager;
 pub(crate) mod write_worker;

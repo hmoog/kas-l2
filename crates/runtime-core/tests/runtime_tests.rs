@@ -13,7 +13,7 @@ use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
 pub fn test_runtime() {
     let mut runtime = RuntimeBuilder::default()
         .with_execution_workers(4)
-        .with_storage(KVStore(Arc::new(RwLock::new(HashMap::new()))))
+        .with_kv_store(KVStore(Arc::new(RwLock::new(HashMap::new()))))
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);

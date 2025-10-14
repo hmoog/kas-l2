@@ -5,66 +5,55 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     thread,
-    thread::JoinHandle,
 };
 
-use crossbeam_queue::ArrayQueue;
-use crossbeam_utils::{
-    CachePadded,
-    sync::{Parker, Unparker},
-};
+use crossbeam_utils::{CachePadded, sync::Parker};
 use kas_l2_io_core::KVStore;
 
-use crate::{ReadCmd, cmd_queue::CmdQueue};
+use crate::{ReadCmd, cmd_queue::CmdQueue, worker_handle::WorkerHandle};
 
 pub struct ReadWorker<K: KVStore, R: ReadCmd<K::Namespace>> {
     id: usize,
     queue: CmdQueue<R>,
     store: Arc<K>,
-    parked_workers: Arc<ArrayQueue<usize>>,
-    readers_active: Arc<CachePadded<AtomicUsize>>,
-    parker: Parker,
+    active_readers: Arc<CachePadded<AtomicUsize>>,
     is_shutdown: Arc<AtomicBool>,
+    parker: Parker,
+    is_parked: Arc<CachePadded<AtomicBool>>,
 }
 
 impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
-    pub fn new(
+    pub(crate) fn spawn(
         id: usize,
-        queue: CmdQueue<R>,
-        store: Arc<K>,
-        parked_workers: Arc<ArrayQueue<usize>>,
-        readers_active: Arc<CachePadded<AtomicUsize>>,
-        is_shutdown: Arc<AtomicBool>,
-    ) -> Self {
-        Self {
+        queue: &CmdQueue<R>,
+        store: &Arc<K>,
+        active_readers: &Arc<CachePadded<AtomicUsize>>,
+        is_shutdown: &Arc<AtomicBool>,
+    ) -> WorkerHandle {
+        let this = Self {
             id,
-            queue,
-            store,
-            parked_workers,
-            readers_active,
+            queue: queue.clone(),
+            store: store.clone(),
+            active_readers: active_readers.clone(),
+            is_shutdown: is_shutdown.clone(),
             parker: Parker::new(),
-            is_shutdown,
-        }
+            is_parked: Arc::new(CachePadded::new(AtomicBool::new(false))),
+        };
+
+        WorkerHandle::new(
+            this.parker.unparker().clone(),
+            this.is_parked.clone(),
+            thread::spawn(move || this.run()),
+        )
     }
 
-    pub fn unparker(&self) -> Unparker {
-        self.parker.unparker().clone()
-    }
-
-    pub fn start<F>(self, park_threshold: F) -> JoinHandle<()>
-    where
-        F: Fn(usize) -> usize + Send + Sync + 'static,
-    {
-        thread::spawn(move || self.run(park_threshold))
-    }
-
-    fn run<F: Fn(usize) -> usize>(self, adaptive_park_threshold: F) {
-        while !self.is_shutdown.load(Ordering::Acquire) {
+    fn run(self) {
+        while !self.is_shutdown() {
             match self.queue.pop() {
-                (Some(cmd), approx_queue_len) => {
+                (Some(cmd), _) => {
                     cmd.exec(self.store.deref());
 
-                    if approx_queue_len < adaptive_park_threshold(self.id) {
+                    if self.should_park() {
                         self.park()
                     }
                 }
@@ -73,15 +62,21 @@ impl<K: KVStore, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
         }
     }
 
+    #[inline(always)]
+    fn is_shutdown(&self) -> bool {
+        self.is_shutdown.load(Ordering::Acquire)
+    }
+
+    #[inline(always)]
+    fn should_park(&self) -> bool {
+        self.id >= self.active_readers.load(Ordering::Relaxed)
+    }
+
     fn park(&self) {
-        self.parked_workers
-            .push(self.id)
-            .expect("parked_workers full");
-        if self.readers_active.fetch_sub(1, Ordering::Release) == 1 {
-            while let (Some(cmd), _) = self.queue.pop() {
-                cmd.exec(self.store.deref());
-            }
+        self.is_parked.store(true, Ordering::Relaxed);
+        if !self.is_shutdown() && self.should_park() {
+            self.parker.park();
         }
-        self.parker.park();
+        self.is_parked.store(false, Ordering::Relaxed);
     }
 }

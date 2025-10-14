@@ -35,7 +35,7 @@ impl<T: Transaction, S: KVStore<Namespace = RuntimeState>> Runtime<T, S> {
         builder: RuntimeBuilder<T, S, P, B>,
     ) -> Self {
         let storage = builder
-            .storage
+            .store
             .expect("Storage must be provided before calling build()");
 
         let transaction_processor = builder

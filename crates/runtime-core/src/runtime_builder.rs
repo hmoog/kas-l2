@@ -14,7 +14,7 @@ pub struct RuntimeBuilder<
     B: BatchProcessor<T>,
 > {
     pub(crate) execution_workers: usize,
-    pub(crate) storage: Option<S>,
+    pub(crate) store: Option<S>,
     pub(crate) transaction_processor: Option<P>,
     pub(crate) batch_processor: B,
     _marker: PhantomData<T>,
@@ -29,7 +29,7 @@ where
     fn default() -> Self {
         RuntimeBuilder {
             execution_workers: num_cpus::get_physical(),
-            storage: None,
+            store: None,
             transaction_processor: None,
             batch_processor: move |_| {},
             _marker: PhantomData,
@@ -51,8 +51,8 @@ impl<
     }
 
     /// Provide a storage backend for the runtime.
-    pub fn with_storage(mut self, storage: S) -> Self {
-        self.storage = Some(storage);
+    pub fn with_kv_store(mut self, store: S) -> Self {
+        self.store = Some(store);
         self
     }
 
@@ -69,7 +69,7 @@ impl<
     ) -> RuntimeBuilder<T, S, P, BNew> {
         RuntimeBuilder {
             execution_workers: self.execution_workers,
-            storage: self.storage,
+            store: self.store,
             transaction_processor: self.transaction_processor,
             batch_processor: f,
             _marker: PhantomData,

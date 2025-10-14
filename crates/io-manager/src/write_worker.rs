@@ -14,7 +14,7 @@ use crossbeam_utils::{
 };
 use kas_l2_io_core::KVStore;
 
-use crate::{WriteCmd, cmd_queue::CmdQueue};
+use crate::{WriteCmd, cmd_queue::CmdQueue, config::BATCH_SIZE};
 
 pub struct WriteWorker<K: KVStore, W: WriteCmd<K::Namespace>> {
     store: Arc<K>,
@@ -49,13 +49,31 @@ impl<K: KVStore, W: WriteCmd<K::Namespace>> WriteWorker<K, W> {
     }
 
     fn run(self) {
+        let mut batch = self.store.new_batch();
+        let mut batch_size = 0;
+
         while !self.is_shutdown.load(Ordering::Acquire) {
             match self.queue.pop() {
                 (Some(cmd), _) => {
-                    cmd.exec(self.store.deref());
+                    cmd.exec(&batch);
+                    batch_size += 1;
+
+                    if batch_size >= BATCH_SIZE {
+                        self.store
+                            .write_batch(batch)
+                            .expect("failed to write batch");
+                        batch = self.store.new_batch();
+                        batch_size = 0;
+                    }
                 }
                 _ => self.park(),
             }
+        }
+
+        if batch_size > 0 {
+            self.store
+                .write_batch(batch)
+                .expect("failed to write batch");
         }
     }
 
