@@ -9,14 +9,14 @@ use crate::{
     write::{WriteConfig, WriteWorker},
 };
 
-pub struct WriteManager<K: Storage, W: WriteCmd<K::Namespace>> {
+pub struct WriteManager<K: Storage, W: WriteCmd<K::StateSpace>> {
     config: WriteConfig,
     queue: CmdQueue<W>,
     worker: WorkerHandle,
     _marker: PhantomData<K>,
 }
 
-impl<K: Storage, W: WriteCmd<K::Namespace>> WriteManager<K, W> {
+impl<K: Storage, W: WriteCmd<K::StateSpace>> WriteManager<K, W> {
     pub fn new(store: &Arc<K>, config: &WriteConfig, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         Self {

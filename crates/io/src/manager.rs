@@ -8,13 +8,13 @@ use kas_l2_runtime_macros::smart_pointer;
 use crate::{IoConfig, ReadCmd, Storage, WriteCmd, read::ReadManager, write::WriteManager};
 
 #[smart_pointer]
-pub struct IoManager<K: Storage, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> {
+pub struct IoManager<K: Storage, R: ReadCmd<K::StateSpace>, W: WriteCmd<K::StateSpace>> {
     reader: ReadManager<K, R>,
     writer: WriteManager<K, W>,
     shutdown_flag: Arc<AtomicBool>,
 }
 
-impl<K: Storage, R: ReadCmd<K::Namespace>, W: WriteCmd<K::Namespace>> IoManager<K, R, W> {
+impl<K: Storage, R: ReadCmd<K::StateSpace>, W: WriteCmd<K::StateSpace>> IoManager<K, R, W> {
     pub fn new(store: K, config: IoConfig) -> Self {
         let store = Arc::new(store);
         let shutdown_flag = Arc::new(AtomicBool::new(false));

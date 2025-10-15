@@ -14,7 +14,7 @@ use crate::{
     utils::{CmdQueue, WorkerHandle},
 };
 
-pub struct ReadWorker<K: Storage, R: ReadCmd<K::Namespace>> {
+pub struct ReadWorker<K: Storage, R: ReadCmd<K::StateSpace>> {
     id: usize,
     queue: CmdQueue<R>,
     store: Arc<K>,
@@ -24,7 +24,7 @@ pub struct ReadWorker<K: Storage, R: ReadCmd<K::Namespace>> {
     is_parked: Arc<CachePadded<AtomicBool>>,
 }
 
-impl<K: Storage, R: ReadCmd<K::Namespace>> ReadWorker<K, R> {
+impl<K: Storage, R: ReadCmd<K::StateSpace>> ReadWorker<K, R> {
     pub(crate) fn spawn(
         id: usize,
         queue: &CmdQueue<R>,

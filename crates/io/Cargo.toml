@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-io-manager"
+name = "kas-l2-io"
 version = "0.1.0"
 edition = "2021"
 

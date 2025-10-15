@@ -1,4 +1,4 @@
-use kas_l2_io_manager::{IoManager, Storage};
+use kas_l2_io::{IoManager, Storage};
 
 use crate::{
     Batch, ResourceProvider, Transaction,
@@ -14,7 +14,7 @@ impl<T: Transaction> Scheduler<T> {
         Self { resource_provider }
     }
 
-    pub fn schedule<S: Storage<Namespace = RuntimeState>>(
+    pub fn schedule<S: Storage<StateSpace = RuntimeState>>(
         &mut self,
         io: &IoManager<S, Read<T>, Write<T>>,
         tasks: Vec<T>,

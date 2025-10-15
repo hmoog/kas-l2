@@ -1,4 +1,4 @@
-use kas_l2_io_manager::{ReadCmd, ReadStorage};
+use kas_l2_io::{ReadCmd, ReadStorage};
 
 use crate::{
     Transaction, io::runtime_state::RuntimeState, resources::resource_access::ResourceAccess,
@@ -9,7 +9,7 @@ pub enum Read<Tx: Transaction> {
 }
 
 impl<Tx: Transaction> ReadCmd<RuntimeState> for Read<Tx> {
-    fn exec<S: ReadStorage<Namespace = RuntimeState>>(&self, store: &S) {
+    fn exec<S: ReadStorage<StateSpace = RuntimeState>>(&self, store: &S) {
         match self {
             Read::ResourceAccess(access) => access.load_from_storage(store),
         }

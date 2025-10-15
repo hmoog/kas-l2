@@ -66,17 +66,17 @@ mod runtime_traits {
         }
     }
 
-    impl kas_l2_io_manager::Storage for KVStore {
-        type Namespace = RuntimeState;
+    impl kas_l2_io::Storage for KVStore {
+        type StateSpace = RuntimeState;
         type Error = std::io::Error;
         type WriteBatch = Self;
 
-        fn get(&self, _ns: Self::Namespace, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
+        fn get(&self, _ns: RuntimeState, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             Ok(self.0.read().expect("failed to read").get(&key).cloned())
         }
 
-        fn put(&self, _ns: Self::Namespace, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
+        fn put(&self, _ns: RuntimeState, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             self.0
                 .write()
@@ -85,7 +85,7 @@ mod runtime_traits {
             Ok(())
         }
 
-        fn delete(&self, _ns: Self::Namespace, key: &[u8]) -> Result<(), Self::Error> {
+        fn delete(&self, _ns: RuntimeState, key: &[u8]) -> Result<(), Self::Error> {
             let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             self.0.write().expect("failed to write").remove(&key);
             Ok(())

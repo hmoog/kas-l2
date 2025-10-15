@@ -1,4 +1,4 @@
-use kas_l2_io_manager::{IoManager, Storage};
+use kas_l2_io::{IoManager, Storage};
 use tap::Tap;
 
 use crate::{
@@ -7,14 +7,14 @@ use crate::{
     io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
-pub struct Runtime<T: Transaction, S: Storage<Namespace = RuntimeState>> {
+pub struct Runtime<T: Transaction, S: Storage<StateSpace = RuntimeState>> {
     io: IoManager<S, Read<T>, Write<T>>,
     scheduler: Scheduler<T>,
     executor: Executor<T>,
     batch_processor: RuntimeBatchProcessor<T>,
 }
 
-impl<T: Transaction, S: Storage<Namespace = RuntimeState>> Runtime<T, S> {
+impl<T: Transaction, S: Storage<StateSpace = RuntimeState>> Runtime<T, S> {
     pub fn process(&mut self, transactions: Vec<T>) -> Batch<T> {
         self.scheduler
             .schedule(&self.io, transactions)

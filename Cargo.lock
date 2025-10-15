@@ -3343,7 +3343,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-io-manager"
+name = "kas-l2-io"
 version = "0.1.0"
 dependencies = [
  "crossbeam-queue",
@@ -3373,7 +3373,7 @@ dependencies = [
  "fastrand",
  "intrusive-collections",
  "kas-l2-atomic",
- "kas-l2-io-manager",
+ "kas-l2-io",
  "kas-l2-runtime-macros",
  "num_cpus",
  "tap",
