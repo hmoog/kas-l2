@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use kas_l2_io::{IoConfig, Storage};
+use kas_l2_storage::{StorageConfig, Store};
 
 use crate::{
     Batch, BatchProcessor, Runtime, Transaction, TransactionProcessor,
@@ -9,7 +9,7 @@ use crate::{
 
 pub struct RuntimeBuilder<
     T: Transaction,
-    S: Storage<StateSpace = RuntimeState>,
+    S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > {
@@ -17,14 +17,14 @@ pub struct RuntimeBuilder<
     pub(crate) store: Option<S>,
     pub(crate) transaction_processor: Option<P>,
     pub(crate) batch_processor: B,
-    pub(crate) io_config: IoConfig,
+    pub(crate) storage_config: StorageConfig,
     _marker: PhantomData<T>,
 }
 
 impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
 where
     T: Transaction,
-    S: Storage<StateSpace = RuntimeState>,
+    S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<T>,
 {
     fn default() -> Self {
@@ -33,7 +33,7 @@ where
             store: None,
             transaction_processor: None,
             batch_processor: move |_| {},
-            io_config: IoConfig::default(),
+            storage_config: StorageConfig::default(),
             _marker: PhantomData,
         }
     }
@@ -41,7 +41,7 @@ where
 
 impl<
     T: Transaction,
-    S: Storage<StateSpace = RuntimeState>,
+    S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<T>,
     B: BatchProcessor<T>,
 > RuntimeBuilder<T, S, P, B>
@@ -74,7 +74,7 @@ impl<
             store: self.store,
             transaction_processor: self.transaction_processor,
             batch_processor: f,
-            io_config: self.io_config,
+            storage_config: self.storage_config,
             _marker: PhantomData,
         }
     }

@@ -1,12 +1,12 @@
 use crate::{read::ReadConfig, write::WriteConfig};
 
 #[derive(Default, Clone, Debug)]
-pub struct IoConfig {
+pub struct StorageConfig {
     write_config: WriteConfig,
     read_config: ReadConfig,
 }
 
-impl IoConfig {
+impl StorageConfig {
     pub fn new() -> Self {
         Self::default()
     }

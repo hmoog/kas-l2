@@ -9,12 +9,12 @@ use std::{
 use crossbeam_utils::CachePadded;
 
 use crate::{
-    ReadCmd, Storage,
+    ReadCmd, Store,
     read::{ReadConfig, ReadWorker},
     utils::{CmdQueue, WorkerHandle},
 };
 
-pub struct ReadManager<K: Storage, R: ReadCmd<K::StateSpace>> {
+pub struct ReadManager<K: Store, R: ReadCmd<K::StateSpace>> {
     config: ReadConfig,
     queue: CmdQueue<R>,
     active_readers: Arc<CachePadded<AtomicUsize>>,
@@ -22,7 +22,7 @@ pub struct ReadManager<K: Storage, R: ReadCmd<K::StateSpace>> {
     _marker: PhantomData<K>,
 }
 
-impl<K: Storage, R: ReadCmd<K::StateSpace>> ReadManager<K, R> {
+impl<K: Store, R: ReadCmd<K::StateSpace>> ReadManager<K, R> {
     pub fn new(config: &ReadConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         let active_readers = Arc::new(CachePadded::new(AtomicUsize::new(0)));

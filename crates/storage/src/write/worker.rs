@@ -1,42 +1,40 @@
 use std::{
-    ops::Deref,
     sync::{
         Arc,
-        atomic::{AtomicBool, AtomicUsize, Ordering},
+        atomic::{AtomicBool, Ordering},
     },
     thread,
+    time::Duration,
 };
 
 use crossbeam_utils::{CachePadded, sync::Parker};
 
 use crate::{
-    ReadCmd, Storage,
+    Store, WriteCmd,
     utils::{CmdQueue, WorkerHandle},
+    write::WriteConfig,
 };
 
-pub struct ReadWorker<K: Storage, R: ReadCmd<K::StateSpace>> {
-    id: usize,
-    queue: CmdQueue<R>,
+pub struct WriteWorker<K: Store, W: WriteCmd<K::StateSpace>> {
+    config: WriteConfig,
     store: Arc<K>,
-    active_readers: Arc<CachePadded<AtomicUsize>>,
-    is_shutdown: Arc<AtomicBool>,
-    parker: Parker,
+    queue: CmdQueue<W>,
     is_parked: Arc<CachePadded<AtomicBool>>,
+    parker: Parker,
+    is_shutdown: Arc<AtomicBool>,
 }
 
-impl<K: Storage, R: ReadCmd<K::StateSpace>> ReadWorker<K, R> {
+impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
     pub(crate) fn spawn(
-        id: usize,
-        queue: &CmdQueue<R>,
+        config: &WriteConfig,
+        queue: &CmdQueue<W>,
         store: &Arc<K>,
-        active_readers: &Arc<CachePadded<AtomicUsize>>,
         is_shutdown: &Arc<AtomicBool>,
     ) -> WorkerHandle {
         let this = Self {
-            id,
+            config: config.clone(),
             queue: queue.clone(),
             store: store.clone(),
-            active_readers: active_readers.clone(),
             is_shutdown: is_shutdown.clone(),
             parker: Parker::new(),
             is_parked: Arc::new(CachePadded::new(AtomicBool::new(false))),
@@ -50,17 +48,27 @@ impl<K: Storage, R: ReadCmd<K::StateSpace>> ReadWorker<K, R> {
     }
 
     fn run(self) {
+        let mut batch = self.store.new_batch();
+        let mut batch_size = 0;
+
         while !self.is_shutdown() {
             match self.queue.pop() {
                 (Some(cmd), _) => {
-                    cmd.exec(self.store.deref());
+                    cmd.exec(&batch);
+                    batch_size += 1;
 
-                    if self.should_park() {
-                        self.park()
+                    if batch_size >= self.config.max_batch_size() {
+                        self.store.write_batch(batch).expect("write batch failed");
+                        batch = self.store.new_batch();
+                        batch_size = 0;
                     }
                 }
                 _ => self.park(),
             }
+        }
+
+        if batch_size > 0 {
+            self.store.write_batch(batch).expect("write batch failed");
         }
     }
 
@@ -69,15 +77,10 @@ impl<K: Storage, R: ReadCmd<K::StateSpace>> ReadWorker<K, R> {
         self.is_shutdown.load(Ordering::Acquire)
     }
 
-    #[inline(always)]
-    fn should_park(&self) -> bool {
-        self.id >= self.active_readers.load(Ordering::Relaxed)
-    }
-
     fn park(&self) {
         self.is_parked.store(true, Ordering::Relaxed);
-        if !self.is_shutdown() && self.should_park() {
-            self.parker.park();
+        if !self.is_shutdown() && self.queue.is_empty() {
+            self.parker.park_timeout(Duration::from_millis(100));
         }
         self.is_parked.store(false, Ordering::Relaxed);
     }

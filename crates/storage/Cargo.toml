@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-io"
+name = "kas-l2-storage"
 version = "0.1.0"
 edition = "2021"
 

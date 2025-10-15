@@ -66,7 +66,7 @@ mod runtime_traits {
         }
     }
 
-    impl kas_l2_io::Storage for KVStore {
+    impl kas_l2_storage::Store for KVStore {
         type StateSpace = RuntimeState;
         type Error = std::io::Error;
         type WriteBatch = Self;

@@ -8,8 +8,8 @@ use std::{
 
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_io::{IoManager, Storage};
 use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_storage::{Storage, Store};
 use tap::Tap;
 
 use crate::{
@@ -58,8 +58,8 @@ impl<Tx: Transaction> Batch<Tx> {
         self.was_processed.wait()
     }
 
-    pub(crate) fn new<S: Storage<StateSpace = RuntimeState>>(
-        io: &IoManager<S, Read<Tx>, Write<Tx>>,
+    pub(crate) fn new<S: Store<StateSpace = RuntimeState>>(
+        io: &Storage<S, Read<Tx>, Write<Tx>>,
         txs: Vec<Tx>,
         provider: &mut ResourceProvider<Tx>,
     ) -> Self {

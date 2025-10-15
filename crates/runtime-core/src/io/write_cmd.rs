@@ -1,4 +1,4 @@
-use kas_l2_io::{WriteCmd, WriteStorage};
+use kas_l2_storage::{WriteCmd, WriteStore};
 
 use crate::{Batch, StateDiff, Transaction, io::runtime_state::RuntimeState};
 
@@ -8,7 +8,7 @@ pub enum Write<T: Transaction> {
 }
 
 impl<Tx: Transaction> WriteCmd<RuntimeState> for Write<Tx> {
-    fn exec<S: WriteStorage<StateSpace = RuntimeState>>(&self, _store: &S) {
+    fn exec<S: WriteStore<StateSpace = RuntimeState>>(&self, _store: &S) {
         match self {
             Write::StateDiff(_state_diff) => {}
             Write::Batch(_batch) => {}

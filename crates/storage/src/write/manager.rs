@@ -4,20 +4,20 @@ use std::{
 };
 
 use crate::{
-    Storage, WriteCmd,
+    Store, WriteCmd,
     utils::{CmdQueue, WorkerHandle},
     write::{WriteConfig, WriteWorker},
 };
 
-pub struct WriteManager<K: Storage, W: WriteCmd<K::StateSpace>> {
+pub struct WriteManager<K: Store, W: WriteCmd<K::StateSpace>> {
     config: WriteConfig,
     queue: CmdQueue<W>,
     worker: WorkerHandle,
     _marker: PhantomData<K>,
 }
 
-impl<K: Storage, W: WriteCmd<K::StateSpace>> WriteManager<K, W> {
-    pub fn new(store: &Arc<K>, config: &WriteConfig, is_shutdown: &Arc<AtomicBool>) -> Self {
+impl<K: Store, W: WriteCmd<K::StateSpace>> WriteManager<K, W> {
+    pub fn new(config: &WriteConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         Self {
             worker: WriteWorker::spawn(config, &queue, store, is_shutdown),

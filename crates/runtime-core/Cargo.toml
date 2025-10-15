@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 kas-l2-atomic = { path = "../atomic"}
-kas-l2-io = { path = "../io" }
+kas-l2-storage = { path = "../storage" }
 borsh = {  version = "1.5.7", features = ["derive"] }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"

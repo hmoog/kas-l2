@@ -5,8 +5,8 @@ use std::sync::{
 
 use borsh::BorshDeserialize;
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
-use kas_l2_io::{IoManager, ReadStorage, Storage};
 use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_storage::{ReadStore, Storage, Store};
 
 use crate::{
     AccessMetadata, AccessType, ResourceId, RuntimeTxRef, State, StateDiffRef, Transaction,
@@ -58,9 +58,9 @@ impl<T: Transaction> ResourceAccess<T> {
         }))
     }
 
-    pub(crate) fn init<S: Storage<StateSpace = RuntimeState>>(
+    pub(crate) fn init<S: Store<StateSpace = RuntimeState>>(
         &self,
-        io: &IoManager<S, Read<T>, Write<T>>,
+        io: &Storage<S, Read<T>, Write<T>>,
     ) {
         match self.prev.load() {
             Some(prev) => {
@@ -87,7 +87,7 @@ impl<T: Transaction> ResourceAccess<T> {
         }
     }
 
-    pub(crate) fn load_from_storage<Store: ReadStorage<StateSpace = RuntimeState>>(
+    pub(crate) fn load_from_storage<Store: ReadStore<StateSpace = RuntimeState>>(
         &self,
         store: &Store,
     ) {

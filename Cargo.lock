@@ -3343,15 +3343,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-io"
-version = "0.1.0"
-dependencies = [
- "crossbeam-queue",
- "crossbeam-utils",
- "kas-l2-runtime-macros",
-]
-
-[[package]]
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
@@ -3373,8 +3364,8 @@ dependencies = [
  "fastrand",
  "intrusive-collections",
  "kas-l2-atomic",
- "kas-l2-io",
  "kas-l2-runtime-macros",
+ "kas-l2-storage",
  "num_cpus",
  "tap",
  "tokio",
@@ -3387,6 +3378,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "kas-l2-storage"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-queue",
+ "crossbeam-utils",
+ "kas-l2-runtime-macros",
 ]
 
 [[package]]
