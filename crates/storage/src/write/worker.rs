@@ -4,7 +4,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread,
-    time::Duration,
+    time::Instant,
 };
 
 use crossbeam_utils::{CachePadded, sync::Parker};
@@ -48,28 +48,38 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
     }
 
     fn run(self) {
+        let mut batch_cmds = Vec::with_capacity(self.config.max_batch_size());
         let mut write_batch = self.store.write_batch();
-        let mut write_batch_size = 0;
+        let mut created = Instant::now();
 
         while !self.is_shutdown() {
+            if !batch_cmds.is_empty() && self.should_commit(batch_cmds.len(), created) {
+                self.store
+                    .commit(write_batch)
+                    .expect("commit should never fail");
+                batch_cmds.drain(..).for_each(W::commit);
+
+                write_batch = self.store.write_batch();
+                created = Instant::now();
+            }
+
             match self.queue.pop() {
                 (Some(cmd), _) => {
                     cmd.exec(&write_batch);
-                    write_batch_size += 1;
-
-                    if write_batch_size >= self.config.max_batch_size() {
-                        self.store.commit(write_batch).expect("write batch failed");
-                        write_batch = self.store.write_batch();
-                        write_batch_size = 0;
-                    }
+                    batch_cmds.push(cmd);
                 }
                 _ => self.park(),
             }
         }
+    }
 
-        if write_batch_size > 0 {
-            self.store.commit(write_batch).expect("write batch failed");
-        }
+    fn should_commit(&self, batch_size: usize, created: Instant) -> bool {
+        self.batch_is_full(batch_size) || created.elapsed() >= self.config.max_batch_duration()
+    }
+
+    #[inline(always)]
+    fn batch_is_full(&self, batch_size: usize) -> bool {
+        batch_size >= self.config.max_batch_size()
     }
 
     #[inline(always)]
@@ -80,7 +90,7 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
     fn park(&self) {
         self.is_parked.store(true, Ordering::Relaxed);
         if !self.is_shutdown() && self.queue.is_empty() {
-            self.parker.park_timeout(Duration::from_millis(100));
+            self.parker.park_timeout(self.config.max_batch_duration());
         }
         self.is_parked.store(false, Ordering::Relaxed);
     }

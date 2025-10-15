@@ -10,8 +10,8 @@ use crate::{
 pub struct RuntimeBuilder<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<T>,
-    B: BatchProcessor<T>,
+    P: TransactionProcessor<S, T>,
+    B: BatchProcessor<S, T>,
 > {
     pub(crate) execution_workers: usize,
     pub(crate) transaction_processor: Option<P>,
@@ -20,11 +20,11 @@ pub struct RuntimeBuilder<
     _marker: PhantomData<T>,
 }
 
-impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<T>)>
+impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<S, T>)>
 where
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<T>,
+    P: TransactionProcessor<S, T>,
 {
     fn default() -> Self {
         RuntimeBuilder {
@@ -40,8 +40,8 @@ where
 impl<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<T>,
-    B: BatchProcessor<T>,
+    P: TransactionProcessor<S, T>,
+    B: BatchProcessor<S, T>,
 > RuntimeBuilder<T, S, P, B>
 {
     /// Override the number of execution workers.
@@ -57,7 +57,7 @@ impl<
     }
 
     /// Provide the batch processor callback.
-    pub fn with_batch_processor<BNew: BatchProcessor<T>>(
+    pub fn with_batch_processor<BNew: BatchProcessor<S, T>>(
         self,
         f: BNew,
     ) -> RuntimeBuilder<T, S, P, BNew> {
@@ -76,7 +76,7 @@ impl<
     }
 
     /// Consume the builder and produce a runtime.
-    pub fn build(self) -> Runtime<T, S> {
+    pub fn build(self) -> Runtime<S, T> {
         Runtime::new(self)
     }
 }

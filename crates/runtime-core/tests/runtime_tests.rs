@@ -18,12 +18,12 @@ pub fn test_runtime() {
             StorageConfig::default().with_store(KVStore(Arc::new(RwLock::new(HashMap::new())))),
         )
         .with_transaction_processor(
-            |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
+            |tx: &Transaction, _resources: &mut [AccessHandle<KVStore, Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);
                 Ok::<(), ()>(())
             },
         )
-        .with_batch_processor(|batch: Batch<Transaction>| {
+        .with_batch_processor(|batch: Batch<KVStore, Transaction>| {
             eprintln!(
                 ">> Processed batch with {} transactions and {} state changes",
                 batch.txs().len(),

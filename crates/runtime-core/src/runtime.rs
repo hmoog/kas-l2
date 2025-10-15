@@ -7,15 +7,15 @@ use crate::{
     io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
-pub struct Runtime<T: Transaction, S: Store<StateSpace = RuntimeState>> {
-    storage: Storage<S, Read<T>, Write<T>>,
-    scheduler: Scheduler<T>,
-    executor: Executor<T>,
-    batch_processor: RuntimeBatchProcessor<T>,
+pub struct Runtime<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+    storage: Storage<S, Read<S, T>, Write<S, T>>,
+    scheduler: Scheduler<S, T>,
+    executor: Executor<S, T>,
+    batch_processor: RuntimeBatchProcessor<S, T>,
 }
 
-impl<T: Transaction, S: Store<StateSpace = RuntimeState>> Runtime<T, S> {
-    pub fn process(&mut self, transactions: Vec<T>) -> Batch<T> {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
+    pub fn process(&mut self, transactions: Vec<T>) -> Batch<S, T> {
         self.scheduler
             .schedule(&self.storage, transactions)
             .tap(|batch| {
@@ -30,7 +30,7 @@ impl<T: Transaction, S: Store<StateSpace = RuntimeState>> Runtime<T, S> {
         self.storage.shutdown();
     }
 
-    pub(crate) fn new<P: TransactionProcessor<T>, B: BatchProcessor<T>>(
+    pub(crate) fn new<P: TransactionProcessor<S, T>, B: BatchProcessor<S, T>>(
         builder: RuntimeBuilder<T, S, P, B>,
     ) -> Self {
         let transaction_processor = builder

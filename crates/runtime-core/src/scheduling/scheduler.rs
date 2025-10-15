@@ -5,20 +5,20 @@ use crate::{
     io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
-pub struct Scheduler<T: Transaction> {
-    resource_provider: ResourceProvider<T>,
+pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+    resource_provider: ResourceProvider<S, T>,
 }
 
-impl<T: Transaction> Scheduler<T> {
-    pub fn new(resource_provider: ResourceProvider<T>) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
+    pub fn new(resource_provider: ResourceProvider<S, T>) -> Self {
         Self { resource_provider }
     }
 
-    pub fn schedule<S: Store<StateSpace = RuntimeState>>(
+    pub fn schedule(
         &mut self,
-        io: &Storage<S, Read<T>, Write<T>>,
+        io: &Storage<S, Read<S, T>, Write<S, T>>,
         tasks: Vec<T>,
-    ) -> Batch<T> {
+    ) -> Batch<S, T> {
         Batch::new(io, tasks, &mut self.resource_provider)
     }
 }

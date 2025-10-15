@@ -1,17 +1,19 @@
-use crate::{AccessHandle, Transaction};
+use kas_l2_storage::Store;
 
-pub trait TransactionProcessor<Tx>:
-    Fn(&Tx, &mut [AccessHandle<Tx>]) -> Result<(), Self::Error> + Clone + Send + Sync + 'static
+use crate::{AccessHandle, RuntimeState, Transaction};
+
+pub trait TransactionProcessor<S: Store<StateSpace = RuntimeState>, Tx>:
+    Fn(&Tx, &mut [AccessHandle<S, Tx>]) -> Result<(), Self::Error> + Clone + Send + Sync + 'static
 where
     Tx: Transaction,
 {
     type Error;
 }
 
-impl<Tx, Err, T> TransactionProcessor<Tx> for T
+impl<S: Store<StateSpace = RuntimeState>, Tx, Err, T> TransactionProcessor<S, Tx> for T
 where
     Tx: Transaction,
-    T: Fn(&Tx, &mut [AccessHandle<Tx>]) -> Result<(), Err> + Clone + Send + Sync + 'static,
+    T: Fn(&Tx, &mut [AccessHandle<S, Tx>]) -> Result<(), Err> + Clone + Send + Sync + 'static,
 {
     type Error = Err;
 }

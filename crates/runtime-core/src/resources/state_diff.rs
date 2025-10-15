@@ -2,20 +2,30 @@ use std::sync::Arc;
 
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_storage::{Storage, Store};
 
-use crate::{BatchRef, State, Transaction, io::write_cmd::Write};
+use crate::{
+    BatchRef, RuntimeState, State, Transaction,
+    io::{read_cmd::Read, write_cmd::Write},
+};
 
 #[smart_pointer]
-pub struct StateDiff<T: Transaction> {
-    batch: BatchRef<T>,
+pub struct StateDiff<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+    storage: Storage<S, Read<S, T>, Write<S, T>>,
+    batch: BatchRef<S, T>,
     resource_id: T::ResourceId,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
 }
 
-impl<T: Transaction> StateDiff<T> {
-    pub fn new(batch: BatchRef<T>, resource_id: T::ResourceId) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
+    pub fn new(
+        storage: Storage<S, Read<S, T>, Write<S, T>>,
+        batch: BatchRef<S, T>,
+        resource_id: T::ResourceId,
+    ) -> Self {
         Self(Arc::new(StateDiffData {
+            storage,
             batch,
             resource_id,
             read_state: AtomicOptionArc::empty(),
@@ -40,12 +50,19 @@ impl<T: Transaction> StateDiff<T> {
     }
 
     pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
+        self.written_state.store(Some(state));
+
         if let Some(batch) = self.batch.upgrade() {
             batch.increase_pending_writes();
+            eprintln!("SUBMITTING WRITE TO STATE DIFF");
+            self.storage.submit_write(Write::StateDiff(self.clone()));
         }
+    }
 
-        let _cmd = Write::StateDiff(self.clone());
-
-        self.written_state.store(Some(state))
+    pub(crate) fn commit(self) {
+        if let Some(batch) = self.batch.upgrade() {
+            eprintln!("COMMIT DATA");
+            batch.decrease_pending_writes();
+        }
     }
 }

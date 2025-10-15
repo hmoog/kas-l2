@@ -1,4 +1,15 @@
-use crate::{Batch, Transaction};
+use kas_l2_storage::Store;
 
-pub trait BatchProcessor<T: Transaction>: Fn(Batch<T>) + Clone + Send + Sync + 'static {}
-impl<T: Transaction, F: Fn(Batch<T>) + Clone + Send + Sync + 'static> BatchProcessor<T> for F {}
+use crate::{Batch, RuntimeState, Transaction};
+
+pub trait BatchProcessor<S: Store<StateSpace = RuntimeState>, T: Transaction>:
+    Fn(Batch<S, T>) + Clone + Send + Sync + 'static
+{
+}
+impl<
+    S: Store<StateSpace = RuntimeState>,
+    T: Transaction,
+    F: Fn(Batch<S, T>) + Clone + Send + Sync + 'static,
+> BatchProcessor<S, T> for F
+{
+}

@@ -18,23 +18,23 @@ use crate::{
 };
 
 #[smart_pointer]
-pub struct Batch<Tx: Transaction> {
-    txs: Vec<RuntimeTx<Tx>>,
-    state_diffs: Vec<StateDiff<Tx>>,
-    available_txs: Injector<RuntimeTx<Tx>>,
+pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
+    txs: Vec<RuntimeTx<S, Tx>>,
+    state_diffs: Vec<StateDiff<S, Tx>>,
+    available_txs: Injector<RuntimeTx<S, Tx>>,
     pending_txs: AtomicU64,
     pending_writes: AtomicI64,
     was_processed: AtomicAsyncLatch,
-    // was_persisted: AtomicAsyncLatch,
+    was_persisted: AtomicAsyncLatch,
     // was_committed: AtomicAsyncLatch,
 }
 
-impl<Tx: Transaction> Batch<Tx> {
-    pub fn txs(&self) -> &[RuntimeTx<Tx>] {
+impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
+    pub fn txs(&self) -> &[RuntimeTx<S, Tx>] {
         &self.txs
     }
 
-    pub fn state_diffs(&self) -> &[StateDiff<Tx>] {
+    pub fn state_diffs(&self) -> &[StateDiff<S, Tx>] {
         &self.state_diffs
     }
 
@@ -58,10 +58,10 @@ impl<Tx: Transaction> Batch<Tx> {
         self.was_processed.wait()
     }
 
-    pub(crate) fn new<S: Store<StateSpace = RuntimeState>>(
-        io: &Storage<S, Read<Tx>, Write<Tx>>,
+    pub(crate) fn new(
+        io: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
         txs: Vec<Tx>,
-        provider: &mut ResourceProvider<Tx>,
+        provider: &mut ResourceProvider<S, Tx>,
     ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
@@ -69,12 +69,18 @@ impl<Tx: Transaction> Batch<Tx> {
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
-                    RuntimeTx::new(provider, &mut state_diffs, BatchRef(this.clone()), tx)
+                    RuntimeTx::new(
+                        io.clone(),
+                        provider,
+                        &mut state_diffs,
+                        BatchRef(this.clone()),
+                        tx,
+                    )
                 }),
                 state_diffs,
                 available_txs: Injector::new(),
                 was_processed: Default::default(),
-                // was_persisted: Default::default(),
+                was_persisted: Default::default(),
                 // was_committed: Default::default(),
             }
         }))
@@ -90,14 +96,14 @@ impl<Tx: Transaction> Batch<Tx> {
         })
     }
 
-    pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<Tx>) {
+    pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, Tx>) {
         self.available_txs.push(tx.clone());
     }
 
     pub(crate) fn steal_available_txs(
         &self,
-        worker: &Worker<RuntimeTx<Tx>>,
-    ) -> Option<RuntimeTx<Tx>> {
+        worker: &Worker<RuntimeTx<S, Tx>>,
+    ) -> Option<RuntimeTx<S, Tx>> {
         loop {
             match self.available_txs.steal_batch_and_pop(worker) {
                 Steal::Success(task) => return Some(task),
@@ -117,9 +123,9 @@ impl<Tx: Transaction> Batch<Tx> {
         self.pending_writes.fetch_add(1, Ordering::AcqRel);
     }
 
-    // pub(crate) fn decrease_pending_writes(&self) {
-    //     if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
-    //         self.was_persisted.open();
-    //     }
-    // }
+    pub(crate) fn decrease_pending_writes(&self) {
+        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
+            self.was_persisted.open();
+        }
+    }
 }

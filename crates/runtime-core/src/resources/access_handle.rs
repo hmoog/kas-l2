@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
-use crate::{AccessMetadata, AccessType, ResourceAccess, State, Transaction};
+use kas_l2_storage::Store;
 
-pub struct AccessHandle<'a, T: Transaction> {
+use crate::{AccessMetadata, AccessType, ResourceAccess, RuntimeState, State, Transaction};
+
+pub struct AccessHandle<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> {
     state: Arc<State<T>>,
-    access: &'a ResourceAccess<T>,
+    access: &'a ResourceAccess<S, T>,
 }
 
-impl<'a, T: Transaction> AccessHandle<'a, T> {
+impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S, T> {
     #[inline]
     pub fn access_metadata(&self) -> &T::AccessMetadata {
         self.access.metadata()
@@ -23,7 +25,7 @@ impl<'a, T: Transaction> AccessHandle<'a, T> {
         Arc::make_mut(&mut self.state)
     }
 
-    pub(crate) fn new(access: &'a ResourceAccess<T>) -> Self {
+    pub(crate) fn new(access: &'a ResourceAccess<S, T>) -> Self {
         Self {
             state: access.read_state(),
             access,

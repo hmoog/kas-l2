@@ -14,10 +14,10 @@ use crate::{
 };
 
 #[smart_pointer(deref(metadata))]
-pub struct ResourceAccess<T: Transaction> {
+pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     metadata: T::AccessMetadata,
-    tx: RuntimeTxRef<T>,
-    state_diff: StateDiffRef<T>,
+    tx: RuntimeTxRef<S, T>,
+    state_diff: StateDiffRef<S, T>,
     is_batch_head: AtomicBool,
     is_batch_tail: AtomicBool,
     read_state: AtomicOptionArc<State<T>>,
@@ -26,7 +26,7 @@ pub struct ResourceAccess<T: Transaction> {
     next: AtomicWeak<Self>,
 }
 
-impl<T: Transaction> ResourceAccess<T> {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
     pub fn metadata(&self) -> &T::AccessMetadata {
         &self.metadata
     }
@@ -41,8 +41,8 @@ impl<T: Transaction> ResourceAccess<T> {
 
     pub(crate) fn new(
         metadata: T::AccessMetadata,
-        tx: RuntimeTxRef<T>,
-        state_diff: StateDiffRef<T>,
+        tx: RuntimeTxRef<S, T>,
+        state_diff: StateDiffRef<S, T>,
         prev: Option<Self>,
     ) -> Self {
         Self(Arc::new(ResourceAccessData {
@@ -58,10 +58,7 @@ impl<T: Transaction> ResourceAccess<T> {
         }))
     }
 
-    pub(crate) fn init<S: Store<StateSpace = RuntimeState>>(
-        &self,
-        io: &Storage<S, Read<T>, Write<T>>,
-    ) {
+    pub(crate) fn init(&self, io: &Storage<S, Read<S, T>, Write<S, T>>) {
         match self.prev.load() {
             Some(prev) => {
                 let prev = Self(prev);
@@ -117,11 +114,11 @@ impl<T: Transaction> ResourceAccess<T> {
         }
     }
 
-    pub(crate) fn tx(&self) -> &RuntimeTxRef<T> {
+    pub(crate) fn tx(&self) -> &RuntimeTxRef<S, T> {
         &self.tx
     }
 
-    pub(crate) fn state_diff(&self) -> StateDiffRef<T> {
+    pub(crate) fn state_diff(&self) -> StateDiffRef<S, T> {
         self.state_diff.clone()
     }
 

@@ -3,23 +3,24 @@ use std::sync::Arc;
 use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
+use kas_l2_storage::Store;
 
-use crate::{Batch, RuntimeTx, Transaction};
+use crate::{Batch, RuntimeState, RuntimeTx, Transaction};
 
-pub struct PendingBatches<T: Transaction> {
-    queue: LinkedList<linked_list::Adapter<Batch<T>>>,
-    new_batches: Arc<ArrayQueue<Batch<T>>>,
+pub struct PendingBatches<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+    queue: LinkedList<linked_list::Adapter<Batch<S, T>>>,
+    new_batches: Arc<ArrayQueue<Batch<S, T>>>,
 }
 
-impl<T: Transaction> PendingBatches<T> {
-    pub fn new(new_batches: Arc<ArrayQueue<Batch<T>>>) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> PendingBatches<S, T> {
+    pub fn new(new_batches: Arc<ArrayQueue<Batch<S, T>>>) -> Self {
         Self {
             queue: LinkedList::new(linked_list::Adapter::new()),
             new_batches,
         }
     }
 
-    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<T>>) -> Option<RuntimeTx<T>> {
+    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, T>>) -> Option<RuntimeTx<S, T>> {
         loop {
             let mut queue_element = self.queue.cursor_mut();
             queue_element.move_next();

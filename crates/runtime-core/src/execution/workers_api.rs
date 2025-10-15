@@ -5,21 +5,22 @@ use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_storage::Store;
 use tap::Tap;
 
-use crate::{Batch, RuntimeTx, Transaction, TransactionProcessor, VecExt, Worker};
+use crate::{Batch, RuntimeState, RuntimeTx, Transaction, TransactionProcessor, VecExt, Worker};
 
 #[smart_pointer]
-pub(crate) struct WorkersApi<Tx: Transaction> {
+pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
     worker_count: usize,
-    inboxes: Vec<Arc<ArrayQueue<Batch<Tx>>>>,
-    stealers: Vec<Stealer<RuntimeTx<Tx>>>,
+    inboxes: Vec<Arc<ArrayQueue<Batch<S, Tx>>>>,
+    stealers: Vec<Stealer<RuntimeTx<S, Tx>>>,
     unparkers: Vec<Unparker>,
     shutdown: AtomicAsyncLatch,
 }
 
-impl<Tx: Transaction> WorkersApi<Tx> {
-    pub fn new_with_workers<TxProc: TransactionProcessor<Tx>>(
+impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> WorkersApi<S, Tx> {
+    pub fn new_with_workers<TxProc: TransactionProcessor<S, Tx>>(
         worker_count: usize,
         processor: TxProc,
     ) -> (Self, Vec<JoinHandle<()>>) {
@@ -31,7 +32,7 @@ impl<Tx: Transaction> WorkersApi<Tx> {
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        let workers: Vec<Worker<Tx, TxProc>> = (0..worker_count).into_vec(|id| {
+        let workers: Vec<Worker<S, Tx, TxProc>> = (0..worker_count).into_vec(|id| {
             Worker::new(id, processor.clone()).tap(|w| {
                 data.inboxes.push(w.inbox());
                 data.stealers.push(w.stealer());
@@ -45,7 +46,7 @@ impl<Tx: Transaction> WorkersApi<Tx> {
         (this, handles)
     }
 
-    pub fn push_batch(&self, batch: Batch<Tx>) {
+    pub fn push_batch(&self, batch: Batch<S, Tx>) {
         for (inbox, unparker) in self.inboxes.iter().zip(&self.unparkers) {
             let mut item = batch.clone();
             loop {
@@ -61,7 +62,7 @@ impl<Tx: Transaction> WorkersApi<Tx> {
         }
     }
 
-    pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<Tx>> {
+    pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<S, Tx>> {
         if self.worker_count > 1 {
             let start = fastrand::usize(..self.worker_count);
             for offset in 0..self.worker_count {
