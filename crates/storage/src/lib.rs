@@ -39,7 +39,7 @@ pub(crate) mod write {
 }
 
 pub use config::StorageConfig;
-pub use storage::Storage;
 pub use read::{ReadCmd, ReadStore};
+pub use storage::Storage;
 pub use store::Store;
 pub use write::{WriteCmd, WriteStore};

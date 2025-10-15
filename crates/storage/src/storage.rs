@@ -15,12 +15,15 @@ pub struct Storage<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpac
 }
 
 impl<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpace>> Storage<S, R, W> {
-    pub fn new(store: S, config: StorageConfig) -> Self {
+    pub fn new(config: StorageConfig<S>) -> Self {
+        let (store, write_config, read_config) = config.unpack();
+
         let store = Arc::new(store);
         let is_shutdown = Arc::new(AtomicBool::new(false));
+
         Self(Arc::new(StorageData {
-            reader: ReadManager::new(config.read_config(), &store, &is_shutdown),
-            writer: WriteManager::new(config.write_config(), &store, &is_shutdown),
+            reader: ReadManager::new(read_config, &store, &is_shutdown),
+            writer: WriteManager::new(write_config, &store, &is_shutdown),
             is_shutdown,
         }))
     }

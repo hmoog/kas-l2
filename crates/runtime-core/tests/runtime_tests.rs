@@ -8,12 +8,15 @@ use std::{
 };
 
 use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeBuilder};
+use kas_l2_storage::StorageConfig;
 
 #[test]
 pub fn test_runtime() {
     let mut runtime = RuntimeBuilder::default()
         .with_execution_workers(4)
-        .with_kv_store(KVStore(Arc::new(RwLock::new(HashMap::new()))))
+        .with_storage_config(
+            StorageConfig::default().with_store(KVStore(Arc::new(RwLock::new(HashMap::new())))),
+        )
         .with_transaction_processor(
             |tx: &Transaction, _resources: &mut [AccessHandle<Transaction>]| {
                 eprintln!("Processed transaction with id {}", tx.0);
@@ -91,11 +94,11 @@ mod runtime_traits {
             Ok(())
         }
 
-        fn new_batch(&self) -> Self::WriteBatch {
+        fn write_batch(&self) -> Self::WriteBatch {
             self.clone()
         }
 
-        fn write_batch(&self, _: Self::WriteBatch) -> Result<(), Self::Error> {
+        fn commit(&self, _: Self::WriteBatch) -> Result<(), Self::Error> {
             // we always write to the underlying storage
             Ok(())
         }

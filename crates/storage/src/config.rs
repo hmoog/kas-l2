@@ -1,14 +1,20 @@
-use crate::{read::ReadConfig, write::WriteConfig};
+use crate::{Store, read::ReadConfig, write::WriteConfig};
 
-#[derive(Default, Clone, Debug)]
-pub struct StorageConfig {
-    write_config: WriteConfig,
-    read_config: ReadConfig,
+#[derive(Clone, Debug)]
+pub struct StorageConfig<S: Store> {
+    pub(crate) store: Option<S>,
+    pub(crate) write_config: WriteConfig,
+    pub(crate) read_config: ReadConfig,
 }
 
-impl StorageConfig {
+impl<S: Store> StorageConfig<S> {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn with_store(mut self, store: S) -> Self {
+        self.store = Some(store);
+        self
     }
 
     pub fn with_write_config(mut self, write_config: WriteConfig) -> Self {
@@ -21,11 +27,21 @@ impl StorageConfig {
         self
     }
 
-    pub fn write_config(&self) -> &WriteConfig {
-        &self.write_config
+    pub fn unpack(mut self) -> (S, WriteConfig, ReadConfig) {
+        (
+            self.store.take().expect("unpack requires store to be set"),
+            self.write_config,
+            self.read_config,
+        )
     }
+}
 
-    pub fn read_config(&self) -> &ReadConfig {
-        &self.read_config
+impl<S: Store> Default for StorageConfig<S> {
+    fn default() -> Self {
+        Self {
+            store: None,
+            write_config: WriteConfig::default(),
+            read_config: ReadConfig::default(),
+        }
     }
 }

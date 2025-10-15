@@ -23,7 +23,7 @@ pub struct ReadManager<K: Store, R: ReadCmd<K::StateSpace>> {
 }
 
 impl<K: Store, R: ReadCmd<K::StateSpace>> ReadManager<K, R> {
-    pub fn new(config: &ReadConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
+    pub fn new(config: ReadConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         let active_readers = Arc::new(CachePadded::new(AtomicUsize::new(0)));
         Self {
@@ -31,7 +31,7 @@ impl<K: Store, R: ReadCmd<K::StateSpace>> ReadManager<K, R> {
                 (0..config.max_readers())
                     .map(|i| ReadWorker::spawn(i, &queue, store, &active_readers, is_shutdown)),
             ),
-            config: config.clone(),
+            config,
             queue,
             active_readers,
             _marker: PhantomData,

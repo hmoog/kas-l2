@@ -33,10 +33,6 @@ impl<T: Transaction, S: Store<StateSpace = RuntimeState>> Runtime<T, S> {
     pub(crate) fn new<P: TransactionProcessor<T>, B: BatchProcessor<T>>(
         builder: RuntimeBuilder<T, S, P, B>,
     ) -> Self {
-        let storage = builder
-            .store
-            .expect("Storage must be provided before calling build()");
-
         let transaction_processor = builder
             .transaction_processor
             .expect("Processor must be provided before calling build()");
@@ -45,7 +41,7 @@ impl<T: Transaction, S: Store<StateSpace = RuntimeState>> Runtime<T, S> {
             scheduler: Scheduler::new(ResourceProvider::new()),
             executor: Executor::new(builder.execution_workers, transaction_processor),
             batch_processor: RuntimeBatchProcessor::new(builder.batch_processor),
-            storage: Storage::new(storage, builder.storage_config),
+            storage: Storage::new(builder.storage_config),
         }
     }
 }

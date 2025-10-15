@@ -19,6 +19,6 @@ pub trait Store: Send + Sync + 'static {
         value: &[u8],
     ) -> Result<(), Self::Error>;
     fn delete(&self, state_space: Self::StateSpace, key: &[u8]) -> Result<(), Self::Error>;
-    fn new_batch(&self) -> Self::WriteBatch;
-    fn write_batch(&self, batch: Self::WriteBatch) -> Result<(), Self::Error>;
+    fn write_batch(&self) -> Self::WriteBatch;
+    fn commit(&self, write_batch: Self::WriteBatch) -> Result<(), Self::Error>;
 }

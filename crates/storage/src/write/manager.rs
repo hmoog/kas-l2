@@ -17,12 +17,12 @@ pub struct WriteManager<K: Store, W: WriteCmd<K::StateSpace>> {
 }
 
 impl<K: Store, W: WriteCmd<K::StateSpace>> WriteManager<K, W> {
-    pub fn new(config: &WriteConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
+    pub fn new(config: WriteConfig, store: &Arc<K>, is_shutdown: &Arc<AtomicBool>) -> Self {
         let queue = CmdQueue::new();
         Self {
-            worker: WriteWorker::spawn(config, &queue, store, is_shutdown),
+            worker: WriteWorker::spawn(&config, &queue, store, is_shutdown),
             queue,
-            config: config.clone(),
+            config,
             _marker: PhantomData,
         }
     }

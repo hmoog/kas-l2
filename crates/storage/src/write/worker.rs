@@ -48,27 +48,27 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
     }
 
     fn run(self) {
-        let mut batch = self.store.new_batch();
-        let mut batch_size = 0;
+        let mut write_batch = self.store.write_batch();
+        let mut write_batch_size = 0;
 
         while !self.is_shutdown() {
             match self.queue.pop() {
                 (Some(cmd), _) => {
-                    cmd.exec(&batch);
-                    batch_size += 1;
+                    cmd.exec(&write_batch);
+                    write_batch_size += 1;
 
-                    if batch_size >= self.config.max_batch_size() {
-                        self.store.write_batch(batch).expect("write batch failed");
-                        batch = self.store.new_batch();
-                        batch_size = 0;
+                    if write_batch_size >= self.config.max_batch_size() {
+                        self.store.commit(write_batch).expect("write batch failed");
+                        write_batch = self.store.write_batch();
+                        write_batch_size = 0;
                     }
                 }
                 _ => self.park(),
             }
         }
 
-        if batch_size > 0 {
-            self.store.write_batch(batch).expect("write batch failed");
+        if write_batch_size > 0 {
+            self.store.commit(write_batch).expect("write batch failed");
         }
     }
 
