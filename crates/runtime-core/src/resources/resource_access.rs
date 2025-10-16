@@ -58,7 +58,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }))
     }
 
-    pub(crate) fn init(&self, io: &Storage<S, Read<S, T>, Write<S, T>>) {
+    pub(crate) fn init(&self, storage: &Storage<S, Read<S, T>, Write<S, T>>) {
         match self.prev.load() {
             Some(prev) => {
                 let prev = Self(prev);
@@ -79,15 +79,12 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
                 self.is_batch_head.store(true, Ordering::Release);
                 self.is_batch_tail.store(true, Ordering::Release);
 
-                io.submit_read(Read::ResourceAccess(self.clone()))
+                storage.submit_read(Read::ResourceAccess(self.clone()))
             }
         }
     }
 
-    pub(crate) fn load_from_storage<Store: ReadStore<StateSpace = RuntimeState>>(
-        &self,
-        store: &Store,
-    ) {
+    pub(crate) fn load_from<Store: ReadStore<StateSpace = RuntimeState>>(&self, store: &Store) {
         let id: Vec<u8> = self.metadata.id().to_bytes();
 
         match store

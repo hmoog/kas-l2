@@ -9,7 +9,7 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_runtime_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store};
+use kas_l2_storage::{Storage, Store, WriteStore};
 use tap::Tap;
 
 use crate::{
@@ -19,6 +19,7 @@ use crate::{
 
 #[smart_pointer]
 pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
+    storage: Storage<S, Read<S, Tx>, Write<S, Tx>>,
     txs: Vec<RuntimeTx<S, Tx>>,
     state_diffs: Vec<StateDiff<S, Tx>>,
     available_txs: Injector<RuntimeTx<S, Tx>>,
@@ -26,7 +27,7 @@ pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
     pending_writes: AtomicI64,
     was_processed: AtomicAsyncLatch,
     was_persisted: AtomicAsyncLatch,
-    // was_committed: AtomicAsyncLatch,
+    was_committed: AtomicAsyncLatch,
 }
 
 impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
@@ -59,18 +60,19 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
     }
 
     pub(crate) fn new(
-        io: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
+        storage: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
         txs: Vec<Tx>,
         provider: &mut ResourceProvider<S, Tx>,
     ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
+                storage: storage.clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
                     RuntimeTx::new(
-                        io.clone(),
+                        storage.clone(),
                         provider,
                         &mut state_diffs,
                         BatchRef(this.clone()),
@@ -81,18 +83,15 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
                 available_txs: Injector::new(),
                 was_processed: Default::default(),
                 was_persisted: Default::default(),
-                // was_committed: Default::default(),
+                was_committed: Default::default(),
             }
         }))
         .tap(|this| {
             for tx in this.txs() {
                 for resource in tx.accessed_resources() {
-                    resource.init(io);
+                    resource.init(storage);
                 }
             }
-
-            // TOD: REMOVE REMOVE REMOVE
-            let _cmd = Write::Batch(this.clone());
         })
     }
 
@@ -125,7 +124,22 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
 
     pub(crate) fn decrease_pending_writes(&self) {
         if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
+            eprintln!("BATCH FULLY PERSISTED");
             self.was_persisted.open();
+            self.storage.submit_write(Write::Batch(self.clone()));
         }
+    }
+
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, _store: &WS) {
+        eprintln!("COMMITTING BATCH");
+        // TODO: WRITE METADATA
+        // TODO: REMOVE STALE STATE
+        // TODO: POINTER FLIP
+    }
+
+    pub(crate) fn mark_committed(self) {
+        eprintln!("COMMITTING BATCH DONE");
+        // TODO: EVICT STUFF
+        self.was_committed.open();
     }
 }

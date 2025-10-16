@@ -8,17 +8,17 @@ pub enum Write<S: Store<StateSpace = RuntimeState>, T: Transaction> {
 }
 
 impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> WriteCmd<RuntimeState> for Write<S, Tx> {
-    fn exec<WS: WriteStore<StateSpace = RuntimeState>>(&self, _store: &WS) {
+    fn exec<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
         match self {
-            Write::StateDiff(_state_diff) => {}
-            Write::Batch(_batch) => {}
+            Write::StateDiff(state_diff) => state_diff.write_to(store),
+            Write::Batch(batch) => batch.write_to(store),
         }
     }
 
-    fn commit(self) {
+    fn mark_committed(self) {
         match self {
-            Write::StateDiff(state_diff) => state_diff.commit(),
-            Write::Batch(_batch) => {}
+            Write::StateDiff(state_diff) => state_diff.mark_committed(),
+            Write::Batch(batch) => batch.mark_committed(),
         }
     }
 }

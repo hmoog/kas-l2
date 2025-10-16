@@ -57,7 +57,7 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
                 self.store
                     .commit(write_batch)
                     .expect("commit should never fail");
-                batch_cmds.drain(..).for_each(W::commit);
+                batch_cmds.drain(..).for_each(W::mark_committed);
 
                 write_batch = self.store.write_batch();
                 created = Instant::now();

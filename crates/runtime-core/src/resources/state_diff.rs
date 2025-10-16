@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store};
+use kas_l2_storage::{Storage, Store, WriteStore};
 
 use crate::{
     BatchRef, RuntimeState, State, Transaction,
@@ -54,14 +54,17 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
 
         if let Some(batch) = self.batch.upgrade() {
             batch.increase_pending_writes();
-            eprintln!("SUBMITTING WRITE TO STATE DIFF");
             self.storage.submit_write(Write::StateDiff(self.clone()));
         }
     }
 
-    pub(crate) fn commit(self) {
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, _store: &WS) {
+        // TODO: WRITE LATEST STATE
+        // TODO: WRITE STATE_DIFF FOR ROLLBACK
+    }
+
+    pub(crate) fn mark_committed(self) {
         if let Some(batch) = self.batch.upgrade() {
-            eprintln!("COMMIT DATA");
             batch.decrease_pending_writes();
         }
     }
