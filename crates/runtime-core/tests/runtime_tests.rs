@@ -48,7 +48,7 @@ pub fn test_runtime() {
     runtime.shutdown();
 }
 
-pub struct KVStore(Arc<RwLock<HashMap<u32, Vec<u8>>>>);
+pub struct KVStore(Arc<RwLock<HashMap<Vec<u8>, Vec<u8>>>>);
 
 struct Transaction(u32, Vec<Access>);
 
@@ -75,22 +75,19 @@ mod runtime_traits {
         type WriteBatch = Self;
 
         fn get(&self, _ns: RuntimeState, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
-            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
-            Ok(self.0.read().expect("failed to read").get(&key).cloned())
+            Ok(self.0.read().expect("failed to read").get(key).cloned())
         }
 
         fn put(&self, _ns: RuntimeState, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
-            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
             self.0
                 .write()
                 .expect("failed to write")
-                .insert(key, value.to_vec());
+                .insert(key.to_vec(), value.to_vec());
             Ok(())
         }
 
         fn delete(&self, _ns: RuntimeState, key: &[u8]) -> Result<(), Self::Error> {
-            let key = u32::from_le_bytes(key.try_into().expect("key length mismatch"));
-            self.0.write().expect("failed to write").remove(&key);
+            self.0.write().expect("failed to write").remove(key);
             Ok(())
         }
 

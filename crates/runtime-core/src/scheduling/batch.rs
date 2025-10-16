@@ -14,7 +14,7 @@ use tap::Tap;
 
 use crate::{
     ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
-    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 #[smart_pointer]

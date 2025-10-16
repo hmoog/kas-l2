@@ -9,7 +9,7 @@ pub(crate) mod execution {
     pub(crate) mod workers_api;
 }
 
-pub(crate) mod io {
+pub(crate) mod storage {
     pub(crate) mod read_cmd;
     pub(crate) mod runtime_state;
     pub(crate) mod write_cmd;
@@ -45,7 +45,6 @@ pub(crate) mod utils {
 
 pub use crate::{
     execution::runtime_tx::RuntimeTx,
-    io::runtime_state::RuntimeState,
     resources::{
         access_handle::AccessHandle,
         access_type::AccessType,
@@ -55,6 +54,7 @@ pub use crate::{
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
     scheduling::batch::{Batch, BatchRef},
+    storage::runtime_state::RuntimeState,
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
         transaction::Transaction, transaction_processor::TransactionProcessor,

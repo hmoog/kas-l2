@@ -3,7 +3,7 @@ use tap::Tap;
 
 use crate::{
     AccessMetadata, BatchRef, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff, Transaction,
-    io::{read_cmd::Read, write_cmd::Write},
+    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 pub(crate) struct Resource<S: Store<StateSpace = RuntimeState>, T: Transaction> {

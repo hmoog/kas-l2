@@ -9,7 +9,7 @@ use kas_l2_storage::{Storage, Store};
 use crate::{
     AccessHandle, BatchRef, ResourceAccess, ResourceProvider, RuntimeState, StateDiff, Transaction,
     TransactionProcessor, VecExt,
-    io::{read_cmd::Read, write_cmd::Write},
+    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 #[smart_pointer(deref(tx))]

@@ -5,8 +5,8 @@ use kas_l2_runtime_macros::smart_pointer;
 use kas_l2_storage::{Storage, Store, WriteStore};
 
 use crate::{
-    BatchRef, RuntimeState, State, Transaction,
-    io::{read_cmd::Read, write_cmd::Write},
+    BatchRef, ResourceId, RuntimeState, State, Transaction,
+    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 #[smart_pointer]
@@ -58,7 +58,26 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, _store: &WS) {
+    fn index(&self) -> u64 {
+        1
+    }
+
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
+        let id: Vec<u8> = self.resource_id().clone().to_bytes();
+        let latest_version = self.index().to_le_bytes().to_vec();
+        store
+            .put(
+                RuntimeState::LatestDataPointers,
+                &id[..],
+                &latest_version[..],
+            )
+            .expect("failed to update latest data pointers");
+
+        let mut versioned_id = latest_version;
+        versioned_id.extend_from_slice(&id[..]);
+        store
+            .put(RuntimeState::Data, &versioned_id[..], &[])
+            .expect("failed to write state");
         // TODO: WRITE LATEST STATE
         // TODO: WRITE STATE_DIFF FOR ROLLBACK
     }

@@ -1,6 +1,6 @@
 use kas_l2_storage::{Store, WriteCmd, WriteStore};
 
-use crate::{Batch, StateDiff, Transaction, io::runtime_state::RuntimeState};
+use crate::{Batch, StateDiff, Transaction, storage::runtime_state::RuntimeState};
 
 pub enum Write<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     StateDiff(StateDiff<S, T>),

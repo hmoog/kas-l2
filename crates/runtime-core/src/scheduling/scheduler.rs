@@ -2,7 +2,7 @@ use kas_l2_storage::{Storage, Store};
 
 use crate::{
     Batch, ResourceProvider, Transaction,
-    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {

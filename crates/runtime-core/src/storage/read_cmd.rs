@@ -1,7 +1,7 @@
 use kas_l2_storage::{ReadCmd, ReadStore, Store};
 
 use crate::{
-    Transaction, io::runtime_state::RuntimeState, resources::resource_access::ResourceAccess,
+    Transaction, resources::resource_access::ResourceAccess, storage::runtime_state::RuntimeState,
 };
 
 pub enum Read<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {

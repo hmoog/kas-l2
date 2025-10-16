@@ -4,7 +4,7 @@ use tap::Tap;
 use crate::{
     Batch, BatchProcessor, Executor, ResourceProvider, RuntimeBatchProcessor, RuntimeBuilder,
     Scheduler, Transaction, TransactionProcessor,
-    io::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 pub struct Runtime<S: Store<StateSpace = RuntimeState>, T: Transaction> {

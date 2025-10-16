@@ -5,7 +5,7 @@ use kas_l2_storage::{Storage, Store};
 use crate::{
     AccessMetadata, BatchRef, Resource, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff,
     Transaction, VecExt,
-    io::{read_cmd::Read, write_cmd::Write},
+    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 pub struct ResourceProvider<S: Store<StateSpace = RuntimeState>, T: Transaction> {

@@ -4,7 +4,7 @@ use kas_l2_storage::{StorageConfig, Store};
 
 use crate::{
     Batch, BatchProcessor, Runtime, Transaction, TransactionProcessor,
-    io::runtime_state::RuntimeState,
+    storage::runtime_state::RuntimeState,
 };
 
 pub struct RuntimeBuilder<
