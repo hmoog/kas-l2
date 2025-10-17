@@ -82,18 +82,12 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
     pub(crate) fn load_from<Store: ReadStore<StateSpace = RuntimeState>>(&self, store: &Store) {
         let id: Vec<u8> = self.metadata.id().to_bytes();
 
-        match store
-            .get(RuntimeState::LatestDataPointers, &id[..])
-            .expect("state space id")
-        {
+        match store.get(RuntimeState::DataPointers, &id) {
             Some(version) => {
                 let mut versioned_id = version;
-                versioned_id.extend_from_slice(&id[..]);
+                versioned_id.extend_from_slice(&id);
 
-                match store
-                    .get(RuntimeState::Data, &versioned_id[..])
-                    .expect("state data id")
-                {
+                match store.get(RuntimeState::Data, &versioned_id) {
                     Some(data) => {
                         let state = BorshDeserialize::deserialize_reader(&mut &*data)
                             .expect("Failed to deserialize State");

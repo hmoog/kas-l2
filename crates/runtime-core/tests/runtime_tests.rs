@@ -71,33 +71,29 @@ mod runtime_traits {
 
     impl kas_l2_storage::Store for KVStore {
         type StateSpace = RuntimeState;
-        type Error = std::io::Error;
         type WriteBatch = Self;
 
-        fn get(&self, _ns: RuntimeState, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
-            Ok(self.0.read().expect("failed to read").get(key).cloned())
+        fn get(&self, _ns: RuntimeState, key: &[u8]) -> Option<Vec<u8>> {
+            self.0.read().expect("failed to read").get(key).cloned()
         }
 
-        fn put(&self, _ns: RuntimeState, key: &[u8], value: &[u8]) -> Result<(), Self::Error> {
+        fn put(&self, _ns: RuntimeState, key: &[u8], value: &[u8]) {
             self.0
                 .write()
                 .expect("failed to write")
                 .insert(key.to_vec(), value.to_vec());
-            Ok(())
         }
 
-        fn delete(&self, _ns: RuntimeState, key: &[u8]) -> Result<(), Self::Error> {
+        fn delete(&self, _ns: RuntimeState, key: &[u8]) {
             self.0.write().expect("failed to write").remove(key);
-            Ok(())
         }
 
         fn write_batch(&self) -> Self::WriteBatch {
             self.clone()
         }
 
-        fn commit(&self, _: Self::WriteBatch) -> Result<(), Self::Error> {
+        fn commit(&self, _: Self::WriteBatch) {
             // we always write to the underlying storage
-            Ok(())
         }
     }
 

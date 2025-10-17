@@ -71,13 +71,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
             &self.resource_id().to_bytes()
         );
 
-        let Ok(()) = store.put(RuntimeState::Diffs, &versioned_id, &read_state.to_bytes()) else {
-            panic!("writing prev state data must succeed");
-        };
-
-        let Ok(()) = store.put(RuntimeState::Data, &versioned_id, &written_state.to_bytes()) else {
-            panic!("writing new state data must succeed");
-        };
+        store.put(RuntimeState::Diffs, &versioned_id, &read_state.to_bytes());
+        store.put(RuntimeState::Data, &versioned_id, &written_state.to_bytes());
     }
 
     pub(crate) fn mark_committed(self) {
