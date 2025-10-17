@@ -13,7 +13,7 @@ use kas_l2_storage::{Storage, Store, WriteStore};
 use tap::Tap;
 
 use crate::{
-    ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
+    ResourceId, ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
@@ -124,21 +124,26 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
 
     pub(crate) fn decrease_pending_writes(&self) {
         if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
-            eprintln!("BATCH FULLY PERSISTED");
             self.was_persisted.open();
             self.storage.submit_write(Write::Batch(self.clone()));
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, _store: &WS) {
-        eprintln!("COMMITTING BATCH");
-        // TODO: WRITE METADATA
-        // TODO: REMOVE STALE STATE
-        // TODO: POINTER FLIP
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
+        for state_diff in self.state_diffs() {
+            let read_state = state_diff.read_state();
+            let written_state = state_diff.written_state();
+            store.delete(RuntimeState::Data, &read_state.id());
+            store.put(
+                RuntimeState::DataPointers,
+                &written_state.resource_id.to_bytes(),
+                &written_state.version.to_be_bytes(),
+            );
+            // TODO: WRITE METADATA
+        }
     }
 
     pub(crate) fn mark_committed(self) {
-        eprintln!("COMMITTING BATCH DONE");
         // TODO: EVICT STUFF
         self.was_committed.open();
     }
