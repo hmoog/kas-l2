@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store, WriteStore};
+use kas_l2_storage::{Storage, Store, WriteStore, concat_bytes};
 
 use crate::{
     BatchRef, ResourceId, RuntimeState, State, Transaction,
@@ -58,28 +58,26 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
         }
     }
 
-    fn index(&self) -> u64 {
-        1
-    }
-
     pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
-        let id: Vec<u8> = self.resource_id().clone().to_bytes();
-        let latest_version = self.index().to_le_bytes().to_vec();
-        store
-            .put(
-                RuntimeState::LatestDataPointers,
-                &id[..],
-                &latest_version[..],
-            )
-            .expect("failed to update latest data pointers");
+        let Some(read_state) = self.read_state.load() else {
+            panic!("read_state must be known at write time");
+        };
+        let Some(written_state) = self.written_state.load() else {
+            panic!("written_state must be known at write time");
+        };
 
-        let mut versioned_id = latest_version;
-        versioned_id.extend_from_slice(&id[..]);
-        store
-            .put(RuntimeState::Data, &versioned_id[..], &[])
-            .expect("failed to write state");
-        // TODO: WRITE LATEST STATE
-        // TODO: WRITE STATE_DIFF FOR ROLLBACK
+        let versioned_id = concat_bytes!(
+            &written_state.version.to_be_bytes(),
+            &self.resource_id().to_bytes()
+        );
+
+        let Ok(()) = store.put(RuntimeState::Diffs, &versioned_id, &read_state.to_bytes()) else {
+            panic!("writing prev state data must succeed");
+        };
+
+        let Ok(()) = store.put(RuntimeState::Data, &versioned_id, &written_state.to_bytes()) else {
+            panic!("writing new state data must succeed");
+        };
     }
 
     pub(crate) fn mark_committed(self) {

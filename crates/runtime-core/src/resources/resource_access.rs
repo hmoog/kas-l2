@@ -45,12 +45,20 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         state_diff: StateDiffRef<S, T>,
         prev: Option<Self>,
     ) -> Self {
+        let (is_batch_head, is_batch_tail) = match &prev {
+            Some(prev) if prev.state_diff == state_diff => {
+                prev.is_batch_tail.store(false, Ordering::Release);
+                (false, true)
+            }
+            _ => (true, true),
+        };
+
         Self(Arc::new(ResourceAccessData {
             metadata,
             tx,
             state_diff,
-            is_batch_head: AtomicBool::default(),
-            is_batch_tail: AtomicBool::default(),
+            is_batch_head: AtomicBool::new(is_batch_head),
+            is_batch_tail: AtomicBool::new(is_batch_tail),
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),
             prev: AtomicOptionArc::new(prev.map(|p| p.0)),
@@ -61,26 +69,13 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
     pub(crate) fn init(&self, storage: &Storage<S, Read<S, T>, Write<S, T>>) {
         match self.prev.load() {
             Some(prev) => {
-                let prev = Self(prev);
                 prev.next.store(Arc::downgrade(&self.0));
-
-                if prev.state_diff == self.state_diff {
-                    prev.is_batch_head.store(false, Ordering::Release);
-                    self.is_batch_tail.store(true, Ordering::Release);
-                } else {
-                    self.is_batch_head.store(true, Ordering::Release);
-                }
 
                 if let Some(written_state) = prev.written_state.load() {
                     self.set_read_state(written_state);
                 }
             }
-            None => {
-                self.is_batch_head.store(true, Ordering::Release);
-                self.is_batch_tail.store(true, Ordering::Release);
-
-                storage.submit_read(Read::ResourceAccess(self.clone()))
-            }
+            None => storage.submit_read(Read::ResourceAccess(self.clone())),
         }
     }
 

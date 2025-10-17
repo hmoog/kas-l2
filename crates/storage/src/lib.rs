@@ -4,6 +4,7 @@ pub(crate) mod store;
 
 pub(crate) mod utils {
     mod cmd_queue;
+    mod concat_bytes;
     mod worker_handle;
 
     pub use cmd_queue::CmdQueue;
