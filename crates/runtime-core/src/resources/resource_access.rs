@@ -8,7 +8,7 @@ use kas_l2_runtime_macros::smart_pointer;
 use kas_l2_storage::{ReadStore, Storage, Store};
 
 use crate::{
-    AccessMetadata, AccessType, RuntimeTxRef, State, StateDiffRef, Transaction,
+    AccessMetadata, AccessType, RuntimeTxRef, StateDiffRef, Transaction, VersionedState,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
@@ -19,8 +19,8 @@ pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     is_batch_tail: AtomicBool,
     tx: RuntimeTxRef<S, T>,
     state_diff: StateDiffRef<S, T>,
-    read_state: AtomicOptionArc<State<T>>,
-    written_state: AtomicOptionArc<State<T>>,
+    read_state: AtomicOptionArc<VersionedState<T>>,
+    written_state: AtomicOptionArc<VersionedState<T>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
 }
@@ -30,11 +30,11 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         &self.metadata
     }
 
-    pub fn read_state(&self) -> Arc<State<T>> {
+    pub fn read_state(&self) -> Arc<VersionedState<T>> {
         self.read_state.load().expect("state unavailable")
     }
 
-    pub fn written_state(&self) -> Arc<State<T>> {
+    pub fn written_state(&self) -> Arc<VersionedState<T>> {
         self.written_state.load().expect("state unavailable")
     }
 
@@ -79,7 +79,10 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         &self,
         store: &Store,
     ) {
-        self.set_read_state(Arc::new(State::from_store(store, self.metadata.id())));
+        self.set_read_state(Arc::new(VersionedState::from_store(
+            store,
+            self.metadata.id(),
+        )));
     }
 
     pub(crate) fn tx(&self) -> &RuntimeTxRef<S, T> {
@@ -90,7 +93,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         self.state_diff.clone()
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<State<T>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<T>>) {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
@@ -110,7 +113,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }
     }
 
-    pub(crate) fn set_written_state(&self, state: Arc<State<T>>) {
+    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<T>>) {
         if self.written_state.publish(state.clone()) {
             if self.is_batch_tail.load(Ordering::Acquire) {
                 if let Some(state_diff) = self.state_diff.upgrade() {
