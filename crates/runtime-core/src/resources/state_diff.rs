@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_runtime_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store, WriteStore, concat_bytes};
+use kas_l2_storage::{Storage, Store, WriteStore};
 
 use crate::{
-    BatchRef, ResourceId, RuntimeState, State, Transaction,
+    BatchRef, RuntimeState, State, Transaction,
     storage::{read_cmd::Read, write_cmd::Write},
 };
 
@@ -66,13 +66,9 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
             panic!("written_state must be known at write time");
         };
 
-        let versioned_id = concat_bytes!(
-            &written_state.version.to_be_bytes(),
-            &self.resource_id().to_bytes()
-        );
-
-        store.put(RuntimeState::Diffs, &versioned_id, &read_state.to_bytes());
+        let versioned_id = written_state.versioned_id();
         store.put(RuntimeState::Data, &versioned_id, &written_state.to_bytes());
+        store.put(RuntimeState::Diffs, &versioned_id, &read_state.to_bytes());
     }
 
     pub(crate) fn mark_committed(self) {

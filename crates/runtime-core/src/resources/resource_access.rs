@@ -84,7 +84,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
 
         match store.get(RuntimeState::DataPointers, &id) {
             Some(version) => {
-                let mut versioned_id = version;
+                let mut versioned_id = version.clone();
                 versioned_id.extend_from_slice(&id);
 
                 match store.get(RuntimeState::Data, &versioned_id) {
@@ -93,10 +93,13 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
                             .expect("Failed to deserialize State");
                         self.set_read_state(Arc::new(state));
                     }
-                    None => self.set_read_state(Arc::new(State::default())),
+                    None => self.set_read_state(Arc::new(State::new(
+                        self.metadata.id(),
+                        u64::from_be_bytes(version.try_into().unwrap()),
+                    ))),
                 }
             }
-            None => self.set_read_state(Arc::new(State::default())),
+            None => self.set_read_state(Arc::new(State::new(self.metadata.id(), 0))),
         }
     }
 
