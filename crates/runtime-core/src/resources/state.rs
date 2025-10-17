@@ -1,8 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_storage::concat_bytes;
-use tap::Tap;
+use kas_l2_storage::{ReadStore, concat_bytes};
 
-use crate::{ResourceId, Transaction};
+use crate::{ResourceId, RuntimeState, Transaction};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
 pub struct State<T: Transaction> {
@@ -31,7 +30,27 @@ impl<T: Transaction> State<T> {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        Vec::new().tap_mut(|s| self.serialize(s).expect("serializing state must succeed"))
+        borsh::to_vec(self).expect("failed to serialize State")
+    }
+
+    pub fn from_store<Store: ReadStore<StateSpace = RuntimeState>>(
+        store: &Store,
+        id: T::ResourceId,
+    ) -> Self {
+        let id_bytes: Vec<u8> = id.to_bytes();
+        match store.get(RuntimeState::DataPointers, &id_bytes) {
+            Some(version) => {
+                let Some(data) = store.get(RuntimeState::Data, &concat_bytes!(&version, &id_bytes))
+                else {
+                    panic!(
+                        "data for resource id {:?} with version {:?} not found in storage",
+                        id, version
+                    );
+                };
+                borsh::from_slice(&data).expect("failed to deserialize State")
+            }
+            None => State::new(id.clone(), 0),
+        }
     }
 }
 

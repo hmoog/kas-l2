@@ -1,9 +1,9 @@
-use std::hash::Hash;
+use std::{fmt::Debug, hash::Hash};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
 pub trait ResourceId:
-    BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static
+    BorshSerialize + BorshDeserialize + Debug + Default + Eq + Hash + Clone + Send + Sync + 'static
 {
     fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::new();
@@ -18,6 +18,15 @@ pub trait ResourceId:
     }
 }
 impl<T> ResourceId for T where
-    T: BorshSerialize + BorshDeserialize + Default + Eq + Hash + Clone + Send + Sync + 'static
+    T: BorshSerialize
+        + BorshDeserialize
+        + Debug
+        + Default
+        + Eq
+        + Hash
+        + Clone
+        + Send
+        + Sync
+        + 'static
 {
 }

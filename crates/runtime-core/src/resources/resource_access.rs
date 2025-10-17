@@ -3,23 +3,22 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use borsh::BorshDeserialize;
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
 use kas_l2_runtime_macros::smart_pointer;
 use kas_l2_storage::{ReadStore, Storage, Store};
 
 use crate::{
-    AccessMetadata, AccessType, ResourceId, RuntimeTxRef, State, StateDiffRef, Transaction,
+    AccessMetadata, AccessType, RuntimeTxRef, State, StateDiffRef, Transaction,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 #[smart_pointer(deref(metadata))]
 pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     metadata: T::AccessMetadata,
-    tx: RuntimeTxRef<S, T>,
-    state_diff: StateDiffRef<S, T>,
     is_batch_head: AtomicBool,
     is_batch_tail: AtomicBool,
+    tx: RuntimeTxRef<S, T>,
+    state_diff: StateDiffRef<S, T>,
     read_state: AtomicOptionArc<State<T>>,
     written_state: AtomicOptionArc<State<T>>,
     prev: AtomicOptionArc<Self>,
@@ -45,20 +44,18 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         state_diff: StateDiffRef<S, T>,
         prev: Option<Self>,
     ) -> Self {
-        let (is_batch_head, is_batch_tail) = match &prev {
-            Some(prev) if prev.state_diff == state_diff => {
-                prev.is_batch_tail.store(false, Ordering::Release);
-                (false, true)
-            }
-            _ => (true, true),
-        };
-
         Self(Arc::new(ResourceAccessData {
             metadata,
+            is_batch_head: AtomicBool::new(match &prev {
+                Some(prev) if prev.state_diff == state_diff => {
+                    prev.is_batch_tail.store(false, Ordering::Release);
+                    false
+                }
+                _ => true,
+            }),
+            is_batch_tail: AtomicBool::new(true),
             tx,
             state_diff,
-            is_batch_head: AtomicBool::new(is_batch_head),
-            is_batch_tail: AtomicBool::new(is_batch_tail),
             read_state: AtomicOptionArc::empty(),
             written_state: AtomicOptionArc::empty(),
             prev: AtomicOptionArc::new(prev.map(|p| p.0)),
@@ -70,7 +67,6 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         match self.prev.load() {
             Some(prev) => {
                 prev.next.store(Arc::downgrade(&self.0));
-
                 if let Some(written_state) = prev.written_state.load() {
                     self.set_read_state(written_state);
                 }
@@ -79,28 +75,11 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }
     }
 
-    pub(crate) fn load_from<Store: ReadStore<StateSpace = RuntimeState>>(&self, store: &Store) {
-        let id: Vec<u8> = self.metadata.id().to_bytes();
-
-        match store.get(RuntimeState::DataPointers, &id) {
-            Some(version) => {
-                let mut versioned_id = version.clone();
-                versioned_id.extend_from_slice(&id);
-
-                match store.get(RuntimeState::Data, &versioned_id) {
-                    Some(data) => {
-                        let state = BorshDeserialize::deserialize_reader(&mut &*data)
-                            .expect("Failed to deserialize State");
-                        self.set_read_state(Arc::new(state));
-                    }
-                    None => self.set_read_state(Arc::new(State::new(
-                        self.metadata.id(),
-                        u64::from_be_bytes(version.try_into().unwrap()),
-                    ))),
-                }
-            }
-            None => self.set_read_state(Arc::new(State::new(self.metadata.id(), 0))),
-        }
+    pub(crate) fn read_from_store<Store: ReadStore<StateSpace = RuntimeState>>(
+        &self,
+        store: &Store,
+    ) {
+        self.set_read_state(Arc::new(State::from_store(store, self.metadata.id())));
     }
 
     pub(crate) fn tx(&self) -> &RuntimeTxRef<S, T> {

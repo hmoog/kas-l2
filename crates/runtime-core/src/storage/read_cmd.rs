@@ -11,7 +11,7 @@ pub enum Read<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
 impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> ReadCmd<RuntimeState> for Read<S, Tx> {
     fn exec<RS: ReadStore<StateSpace = RuntimeState>>(&self, store: &RS) {
         match self {
-            Read::ResourceAccess(access) => access.load_from(store),
+            Read::ResourceAccess(access) => access.read_from_store(store),
         }
     }
 }
