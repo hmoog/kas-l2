@@ -20,12 +20,12 @@ pub struct StateDiff<S: Store<StateSpace = RuntimeState>, T: Transaction> {
 
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
     pub fn new(
-        storage: Storage<S, Read<S, T>, Write<S, T>>,
+        storage: &Storage<S, Read<S, T>, Write<S, T>>,
         batch: BatchRef<S, T>,
         resource_id: T::ResourceId,
     ) -> Self {
         Self(Arc::new(StateDiffData {
-            storage,
+            storage: storage.clone(),
             batch,
             resource_id,
             read_state: AtomicOptionArc::empty(),

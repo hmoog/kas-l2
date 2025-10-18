@@ -72,7 +72,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
                 pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
                     RuntimeTx::new(
-                        storage.clone(),
+                        storage,
                         provider,
                         &mut state_diffs,
                         BatchRef(this.clone()),

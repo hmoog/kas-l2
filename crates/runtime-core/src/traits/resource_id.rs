@@ -6,15 +6,11 @@ pub trait ResourceId:
     BorshSerialize + BorshDeserialize + Debug + Default + Eq + Hash + Clone + Send + Sync + 'static
 {
     fn to_bytes(&self) -> Vec<u8> {
-        let mut buf = Vec::new();
-        self.serialize(&mut buf)
-            .expect("Failed to serialize ResourceId");
-        buf
+        borsh::to_vec(self).expect("failed to serialize ResourceId")
     }
 
     fn from_bytes(bytes: &[u8]) -> Self {
-        BorshDeserialize::deserialize_reader(&mut &*bytes)
-            .expect("Failed to deserialize ResourceId")
+        borsh::from_slice(bytes).expect("failed to deserialize ResourceId")
     }
 }
 impl<T> ResourceId for T where

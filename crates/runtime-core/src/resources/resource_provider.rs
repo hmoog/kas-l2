@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use kas_l2_storage::{Storage, Store};
+use tap::Tap;
 
 use crate::{
     AccessMetadata, BatchRef, Resource, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff,
@@ -21,24 +22,22 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceProvider<S, T>
 
     pub(crate) fn provide(
         &mut self,
-        storage: Storage<S, Read<S, T>, Write<S, T>>,
+        storage: &Storage<S, Read<S, T>, Write<S, T>>,
         tx: &T,
         runtime_tx: RuntimeTxRef<S, T>,
         batch: &BatchRef<S, T>,
         state_diffs: &mut Vec<StateDiff<S, T>>,
     ) -> Vec<ResourceAccess<S, T>> {
         tx.accessed_resources().iter().into_vec(|access| {
-            let resource = self.resource(access.id());
-            let (access, new_state_diff) =
-                resource.access(storage.clone(), access, &runtime_tx, batch);
-            if let Some(new_state_diff) = new_state_diff {
-                state_diffs.push(new_state_diff);
-            }
-            access
+            self.resources
+                .entry(access.id())
+                .or_default()
+                .access(storage, access, &runtime_tx, batch)
+                .tap(|access| {
+                    if access.is_batch_head() {
+                        state_diffs.push(access.state_diff());
+                    }
+                })
         })
-    }
-
-    fn resource(&mut self, resource_id: T::ResourceId) -> &mut Resource<S, T> {
-        self.resources.entry(resource_id).or_default()
     }
 }

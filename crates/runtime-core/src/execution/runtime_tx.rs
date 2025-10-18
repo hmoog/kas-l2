@@ -26,7 +26,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
     }
 
     pub(crate) fn new(
-        storage: Storage<S, Read<S, Tx>, Write<S, Tx>>,
+        storage: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
         provider: &mut ResourceProvider<S, Tx>,
         state_diffs: &mut Vec<StateDiff<S, Tx>>,
         batch: BatchRef<S, Tx>,
