@@ -58,7 +58,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
         let Some(read_state) = self.read_state.load() else {
             panic!("read_state must be known at write time");
         };

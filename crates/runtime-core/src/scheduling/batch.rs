@@ -129,7 +129,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &WS) {
+    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
         for state_diff in self.state_diffs() {
             let read_state = state_diff.read_state();
             let written_state = state_diff.written_state();

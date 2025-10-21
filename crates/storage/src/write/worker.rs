@@ -63,7 +63,7 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
 
             match self.queue.pop() {
                 (Some(cmd), _) => {
-                    cmd.exec(&write_batch);
+                    cmd.exec(&mut write_batch);
                     batch_cmds.push(cmd);
                 }
                 _ => self.park(),

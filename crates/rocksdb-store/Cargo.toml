@@ -1,0 +1,11 @@
+[package]
+name = "kas-l2-rocksdb-store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocksdb = "0.24.0"
+kas-l2-storage = { path = "../storage" }
+kas-l2-runtime-core = { path = "../runtime-core" }
+num_cpus = "1.17.0"
+tap = "1.0.1"
