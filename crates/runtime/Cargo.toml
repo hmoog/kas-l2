@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-blake3 = "1.8.2"
-solana-sbpf = "0.12.2"
-solana-program = "3.0.0"
-kas-l2-vm = { path = "../vm" }
-kas-l2-runtime-macros = { path = "../runtime-macros" }
+kas-l2-runtime-core = { path = "../runtime-core" }
+kas-l2-rocksdb-store = { path = "../rocksdb-store" }
+kas-l2-storage = { path = "../storage" }
+tempfile = "3.23.0"

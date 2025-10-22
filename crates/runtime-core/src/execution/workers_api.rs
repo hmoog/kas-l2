@@ -4,7 +4,7 @@ use crossbeam_deque::{Steal, Stealer};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
 use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 use kas_l2_storage::Store;
 use tap::Tap;
 

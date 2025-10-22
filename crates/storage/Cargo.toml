@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 crossbeam-utils = "0.8.21"
 crossbeam-queue = "0.3.12"
-kas-l2-runtime-macros = { path = "../runtime-macros" }
+kas-l2-macros = { path = "../macros" }

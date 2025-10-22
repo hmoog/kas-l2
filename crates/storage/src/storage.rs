@@ -3,7 +3,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 
 use crate::{ReadCmd, StorageConfig, Store, WriteCmd, read::ReadManager, write::WriteManager};
 

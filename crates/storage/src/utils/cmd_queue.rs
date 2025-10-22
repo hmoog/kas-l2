@@ -5,7 +5,7 @@ use std::sync::{
 
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::CachePadded;
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 
 #[smart_pointer]
 pub struct CmdQueue<T> {

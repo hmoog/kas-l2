@@ -1,7 +1,7 @@
 use std::{error::Error, io};
 
 use blake3;
-use kas_l2_runtime_macros::builtin;
+use kas_l2_macros::builtin;
 use solana_sbpf::{
     error::StableResult,
     memory_region::{AccessType, MemoryMapping},

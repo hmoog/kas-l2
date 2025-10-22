@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use kas_l2_runtime_macros::builtin;
+use kas_l2_macros::builtin;
 use solana_sbpf::memory_region::MemoryMapping;
 
 use crate::runtime_context::RuntimeContext;

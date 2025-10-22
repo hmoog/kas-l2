@@ -3,7 +3,7 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{Storage, Store};
 
 use crate::{

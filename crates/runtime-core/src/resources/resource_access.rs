@@ -4,7 +4,7 @@ use std::sync::{
 };
 
 use kas_l2_atomic::{AtomicOptionArc, AtomicWeak};
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{ReadStore, Storage, Store};
 
 use crate::{

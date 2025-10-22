@@ -8,7 +8,7 @@ use std::{
 
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{Storage, Store, WriteStore};
 use tap::Tap;
 

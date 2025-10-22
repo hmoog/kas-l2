@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use kas_l2_atomic::AtomicOptionArc;
-use kas_l2_runtime_macros::smart_pointer;
+use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{Storage, Store, WriteStore};
 
 use crate::{
