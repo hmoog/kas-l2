@@ -3,17 +3,15 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_rocksdb_store::RocksDbStore;
-use kas_l2_runtime_core::{
-    AccessHandle, AccessMetadata, AccessType, Batch, RuntimeBuilder, RuntimeState, Transaction,
-    VersionedState,
-};
-use kas_l2_storage::{ReadStore, StorageConfig};
+use kas_l2_runtime_core::{Batch, RuntimeBuilder};
+use kas_l2_storage::StorageConfig;
 use tempfile::TempDir;
+
+use crate::test_framework::{Access, AssertWrittenState, Tx};
 
 #[test]
 pub fn test_runtime() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
-
     {
         let store = RocksDbStore::open(temp_dir.path());
 
@@ -56,62 +54,70 @@ pub fn test_runtime() {
     }
 }
 
-struct Tx(usize, Vec<Access>);
+mod test_framework {
+    use kas_l2_rocksdb_store::RocksDbStore;
+    use kas_l2_runtime_core::{
+        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VersionedState,
+    };
+    use kas_l2_storage::ReadStore;
 
-impl Tx {
-    pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
-        for resource in resources {
-            if resource.access_metadata().access_type() == AccessType::Write {
-                resource
-                    .state_mut()
-                    .data
-                    .extend_from_slice(&self.0.to_be_bytes());
+    pub struct Tx(pub usize, pub Vec<Access>);
+
+    impl Tx {
+        pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
+            for resource in resources {
+                if resource.access_metadata().access_type() == AccessType::Write {
+                    resource
+                        .state_mut()
+                        .data
+                        .extend_from_slice(&self.0.to_be_bytes());
+                }
+            }
+            Ok::<(), ()>(())
+        }
+    }
+
+    impl Transaction for Tx {
+        type ResourceId = usize;
+        type AccessMetadata = Access;
+
+        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+            &self.1
+        }
+    }
+
+    #[derive(Clone)]
+    pub enum Access {
+        Read(usize),
+        Write(usize),
+    }
+
+    impl AccessMetadata<usize> for Access {
+        fn id(&self) -> usize {
+            match self {
+                Access::Read(id) => *id,
+                Access::Write(id) => *id,
             }
         }
-        Ok::<(), ()>(())
-    }
-}
 
-impl Transaction for Tx {
-    type ResourceId = usize;
-    type AccessMetadata = Access;
-
-    fn accessed_resources(&self) -> &[Self::AccessMetadata] {
-        &self.1
-    }
-}
-
-#[derive(Clone)]
-pub enum Access {
-    Read(usize),
-    Write(usize),
-}
-
-impl AccessMetadata<usize> for Access {
-    fn id(&self) -> usize {
-        match self {
-            Access::Read(id) => *id,
-            Access::Write(id) => *id,
+        fn access_type(&self) -> AccessType {
+            match self {
+                Access::Read(_) => AccessType::Read,
+                Access::Write(_) => AccessType::Write,
+            }
         }
     }
 
-    fn access_type(&self) -> AccessType {
-        match self {
-            Access::Read(_) => AccessType::Read,
-            Access::Write(_) => AccessType::Write,
+    pub struct AssertWrittenState(pub usize, pub Vec<usize>);
+
+    impl AssertWrittenState {
+        pub fn assert<S: ReadStore<StateSpace = RuntimeState>>(&self, store: &S) {
+            let writer_count = self.1.len();
+            let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
+
+            let versioned_state = VersionedState::<Tx>::from_store(store, self.0);
+            assert_eq!(versioned_state.version, writer_count as u64);
+            assert_eq!(versioned_state.state.data, writer_log);
         }
-    }
-}
-
-struct AssertWrittenState(usize, Vec<usize>);
-
-impl AssertWrittenState {
-    fn assert<S: ReadStore<StateSpace = RuntimeState>>(&self, store: &S) {
-        let writer_count = self.1.len();
-        let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
-
-        let versioned_state = VersionedState::<Tx>::from_store(store, self.0);
-        assert_eq!(versioned_state.version, writer_count as u64);
-        assert_eq!(versioned_state.state.data, writer_log);
     }
 }
