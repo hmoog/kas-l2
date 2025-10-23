@@ -36,21 +36,22 @@ Intermediate states disappear when the DAG is dropped.
 
 The key persistence primitive is the **pointer flip**:
 
-1. Each resource has immutable versioned state entries:
+1. Each resource has immutable versioned state entries in the **versioned object store**:
 
    ```
    (resource_id, version_id) → serialized_state
    ```
 
-2. A separate pointer map records which version is “current”:
+2. Two pointer maps record which versions are current and which are needed for rollback:
 
    ```
-   resource_id → version_id
+   latest_ptr:   resource_id            → version_id
+   rollback_ptr: (batch_id, resource_id) → version_id
    ```
 
 3. When a new batch finishes executing:
     - all `(resource_id, new_version)` values are written first,
-    - then a single **atomic WriteBatch** updates the pointer map.
+    - then a single **atomic WriteBatch** updates the `latest_ptr` map.
 
    ```
    Before:
@@ -59,8 +60,9 @@ The key persistence primitive is the **pointer flip**:
        id=42 → version=101
    ```
 
-That atomic pointer update makes the new version visible instantly.  
-The old version can immediately be garbage-collected.
+That atomic pointer update makes the new version visible instantly.
+The old version remains in the versioned object store so that
+`rollback_ptr` entries can reference it if a reorg must revert the write.
 
 ### Crash semantics
 
@@ -80,10 +82,10 @@ Each logical data type lives in its own namespace (mapped to a RocksDB **column 
 
 | Namespace | Contents | Access pattern |
 |------------|-----------|----------------|
-| **StateData** | `(resource_id, version_id) → state` | Bulk sequential writes |
-| **LatestPointers** | `resource_id → version_id` | Small random updates |
-| **Diffs** | `(batch_id, resource_id) → StateDiff` | Append-only, rollback support |
-| **Meta** | runtime metadata | low frequency |
+| **Data** | `(resource_id, version_id) → state` | Bulk sequential writes |
+| **LatestPtr** | `resource_id → version_id` | Small random updates |
+| **RollbackPtr** | `(batch_id, resource_id) → previous_version_id` | Append-only, rollback support |
+| **Metas** | runtime metadata | Low frequency |
 
 Column families allow independent tuning and compaction while keeping atomic multi-CF commits.
 
@@ -99,7 +101,7 @@ Column families allow independent tuning and compaction while keeping atomic mul
     - Submit asynchronously to RocksDB (`sync = false`).
 4. **Commit coordinator:**
     - Waits until all writes for batch *N* are acknowledged.
-    - Issues one atomic `WriteBatch` to update `LatestPointers`.
+    - Issues one atomic `WriteBatch` to update `LatestPtr`.
     - Declares batch *N* final (“pointer flip”).
 
 This approach maximizes WAL throughput and ensures causal ordering.
@@ -132,10 +134,18 @@ If that ordering is preserved, RocksDB’s own WAL replay guarantees crash safet
   RocksDB replays the WAL to the last consistent sequence.  
   Old pointers remain valid; unreferenced states are ignored.
 
-- **Reorg:**  
-  `StateDiff`s contain both the read and written states.  
-  A rollback re-applies the old (read) states and resets pointers.  
-  Once finalized, old diffs can be deleted.
+- **Reorg:**
+  `StateDiff`s capture both the read and written `VersionedState`s.
+  `rollback_ptr` records which version was read so rollbacks can reload the
+  previous state from the versioned object store and re-point `latest_ptr`.
+  Once finalized, rollback pointers and stale versions are pruned.
+
+### Automatic version bumps
+
+Every time `AccessHandle::state_mut` is invoked the runtime increments the
+in-memory version counter before the write is persisted. This guarantees each
+mutation produces a new version that becomes visible after the pointer flip and
+remains available for rollback via the `rollback_ptr` index.
 
 ---
 
@@ -146,10 +156,10 @@ To hide RocksDB details, the runtime depends on a minimal generic interface:
 ```rust
 pub enum Namespace {
     Default,
-    StateData,
-    LatestPointers,
-    Diffs,
-    Meta,
+    Data,
+    LatestPtr,
+    RollbackPtr,
+    Metas,
 }
 
 pub trait KeyValueStore {
