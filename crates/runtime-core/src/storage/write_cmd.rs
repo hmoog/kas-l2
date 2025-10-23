@@ -11,7 +11,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> WriteCmd<RuntimeState
     fn exec<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
         match self {
             Write::StateDiff(state_diff) => state_diff.write_to(store),
-            Write::Batch(batch) => batch.write_to(store),
+            Write::Batch(batch) => batch.write_latest_ptrs(store),
         }
     }
 

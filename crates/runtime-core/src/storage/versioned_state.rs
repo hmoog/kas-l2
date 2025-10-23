@@ -1,6 +1,6 @@
-use kas_l2_storage::{ReadStore, concat_bytes};
+use kas_l2_storage::{ReadStore, WriteStore, concat_bytes};
 
-use crate::{ResourceId, RuntimeState, Transaction, storage::state::State};
+use crate::{ResourceId, RuntimeState, RuntimeState::Data, Transaction, storage::state::State};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<T: Transaction> {
@@ -15,7 +15,7 @@ impl<T: Transaction> VersionedState<T> {
         id: T::ResourceId,
     ) -> Self {
         let id_bytes: Vec<u8> = id.to_bytes();
-        match store.get(RuntimeState::DataPointers, &id_bytes) {
+        match store.get(RuntimeState::LatestPtr, &id_bytes) {
             Some(version) => {
                 let Some(data) = store.get(RuntimeState::Data, &concat_bytes!(&version, &id_bytes))
                 else {
@@ -38,8 +38,16 @@ impl<T: Transaction> VersionedState<T> {
         }
     }
 
-    pub fn id(&self) -> Vec<u8> {
-        concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes())
+    pub fn write_data<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
+        let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
+        let value = self.state.to_bytes();
+        store.put(Data, &key, &value);
+    }
+
+    pub fn write_latest_ptr<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
+        let key = self.resource_id.to_bytes();
+        let value = self.version.to_be_bytes();
+        store.put(RuntimeState::LatestPtr, &key, &value);
     }
 }
 

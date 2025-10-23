@@ -9,16 +9,19 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store, WriteStore};
+use kas_l2_storage::{Storage, Store, WriteStore, concat_bytes};
 use tap::Tap;
 
 use crate::{
-    ResourceId, ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
+    ResourceId, ResourceProvider,
+    RuntimeState::RollbackPtr,
+    RuntimeTx, StateDiff, Transaction, VecExt, VersionedState,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
 #[smart_pointer]
 pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
+    index: u64,
     storage: Storage<S, Read<S, Tx>, Write<S, Tx>>,
     txs: Vec<RuntimeTx<S, Tx>>,
     state_diffs: Vec<StateDiff<S, Tx>>,
@@ -31,6 +34,10 @@ pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
 }
 
 impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
+    pub fn index(&self) -> u64 {
+        self.index
+    }
+
     pub fn txs(&self) -> &[RuntimeTx<S, Tx>] {
         &self.txs
     }
@@ -60,6 +67,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
     }
 
     pub(crate) fn new(
+        index: u64,
         storage: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
         txs: Vec<Tx>,
         provider: &mut ResourceProvider<S, Tx>,
@@ -67,6 +75,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
+                index,
                 storage: storage.clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
@@ -129,17 +138,19 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
+    pub(crate) fn write_rollback_ptr(
+        &self,
+        store: &mut impl WriteStore<StateSpace = RuntimeState>,
+        state: &VersionedState<Tx>,
+    ) {
+        let key = concat_bytes!(&self.index.to_be_bytes(), &state.resource_id.to_bytes());
+        let value = state.version.to_be_bytes();
+        store.put(RollbackPtr, &key, &value);
+    }
+
+    pub(crate) fn write_latest_ptrs(&self, store: &mut impl WriteStore<StateSpace = RuntimeState>) {
         for state_diff in self.state_diffs() {
-            // let read_state = state_diff.read_state();
-            // store.delete(RuntimeState::Data, &read_state.id());
-            let written_state = state_diff.written_state();
-            store.put(
-                RuntimeState::DataPointers,
-                &written_state.resource_id.to_bytes(),
-                &written_state.version.to_be_bytes(),
-            );
-            // TODO: WRITE METADATA
+            state_diff.written_state().write_latest_ptr(store);
         }
     }
 

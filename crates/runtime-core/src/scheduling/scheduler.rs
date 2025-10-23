@@ -7,11 +7,15 @@ use crate::{
 
 pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     resource_provider: ResourceProvider<S, T>,
+    batch_index: u64,
 }
 
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
     pub fn new(resource_provider: ResourceProvider<S, T>) -> Self {
-        Self { resource_provider }
+        Self {
+            batch_index: 0,
+            resource_provider,
+        }
     }
 
     pub fn schedule(
@@ -19,6 +23,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
         io: &Storage<S, Read<S, T>, Write<S, T>>,
         tasks: Vec<T>,
     ) -> Batch<S, T> {
-        Batch::new(io, tasks, &mut self.resource_provider)
+        self.batch_index += 1;
+        Batch::new(self.batch_index, io, tasks, &mut self.resource_provider)
     }
 }

@@ -59,6 +59,9 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
     }
 
     pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
+        let Some(batch) = self.batch.upgrade() else {
+            panic!("batch must be known at write time");
+        };
         let Some(read_state) = self.read_state.load() else {
             panic!("read_state must be known at write time");
         };
@@ -66,17 +69,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
             panic!("written_state must be known at write time");
         };
 
-        let versioned_id = written_state.id();
-        store.put(
-            RuntimeState::Data,
-            &versioned_id,
-            &written_state.state.to_bytes(),
-        );
-        store.put(
-            RuntimeState::Diffs,
-            &versioned_id,
-            &read_state.state.to_bytes(),
-        );
+        written_state.write_data(store);
+        batch.write_rollback_ptr(store, &read_state);
     }
 
     pub(crate) fn mark_committed(self) {

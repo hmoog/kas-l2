@@ -1,6 +1,6 @@
 pub enum RuntimeState {
     Data,
-    DataPointers,
-    Diffs,
+    LatestPtr,
+    RollbackPtr,
     Metas,
 }

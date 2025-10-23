@@ -42,7 +42,7 @@ pub fn test_runtime() {
 
         sleep(Duration::from_secs(1));
 
-        for assertion in vec![
+        for assertion in [
             AssertWrittenState(1, vec![0, 1, 3]),
             AssertWrittenState(2, vec![1]),
             AssertWrittenState(3, vec![]),
@@ -90,8 +90,8 @@ pub enum Access {
 impl AccessMetadata<usize> for Access {
     fn id(&self) -> usize {
         match self {
-            Access::Read(id) => *id as usize,
-            Access::Write(id) => *id as usize,
+            Access::Read(id) => *id,
+            Access::Write(id) => *id,
         }
     }
 

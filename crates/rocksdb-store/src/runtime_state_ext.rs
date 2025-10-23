@@ -12,8 +12,8 @@ impl<C: Config> RuntimeStateExt<C> for RuntimeState {
     fn cf_name(&self) -> &'static str {
         match self {
             RuntimeState::Data => "data",
-            RuntimeState::DataPointers => "data_pointers",
-            RuntimeState::Diffs => "diffs",
+            RuntimeState::LatestPtr => "latest_ptr",
+            RuntimeState::RollbackPtr => "rollback_ptr",
             RuntimeState::Metas => "metas",
         }
     }
@@ -24,9 +24,9 @@ impl<C: Config> RuntimeStateExt<C> for RuntimeState {
         vec![
             ColumnFamilyDescriptor::new("default", Options::default()),
             ColumnFamilyDescriptor::new(cf_name(&Data), C::cf_data_opts()),
-            ColumnFamilyDescriptor::new(cf_name(&DataPointers), C::cf_latest_pointers_opts()),
-            ColumnFamilyDescriptor::new(cf_name(&Diffs), C::cf_old_pointers_opts()),
-            ColumnFamilyDescriptor::new(cf_name(&Metas), C::cf_meta_opts()),
+            ColumnFamilyDescriptor::new(cf_name(&LatestPtr), C::cf_latest_ptr_opts()),
+            ColumnFamilyDescriptor::new(cf_name(&RollbackPtr), C::cf_rollback_ptr_opts()),
+            ColumnFamilyDescriptor::new(cf_name(&Metas), C::cf_metas_opts()),
         ]
     }
 }

@@ -51,15 +51,15 @@ pub trait Config: Send + Sync + 'static {
         Options::default()
     }
 
-    fn cf_latest_pointers_opts() -> Options {
+    fn cf_latest_ptr_opts() -> Options {
         Options::default()
     }
 
-    fn cf_old_pointers_opts() -> Options {
+    fn cf_rollback_ptr_opts() -> Options {
         Options::default()
     }
 
-    fn cf_meta_opts() -> Options {
+    fn cf_metas_opts() -> Options {
         Options::default()
     }
 }
