@@ -70,7 +70,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
         };
 
         written_state.write_data(store);
-        batch.write_rollback_ptr(store, &read_state);
+        read_state.write_rollback_ptr(store, batch.index());
     }
 
     pub(crate) fn mark_committed(self) {

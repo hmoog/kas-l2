@@ -1,6 +1,6 @@
 use kas_l2_storage::{ReadStore, WriteStore, concat_bytes};
 
-use crate::{ResourceId, RuntimeState, RuntimeState::Data, Transaction, storage::state::State};
+use crate::{ResourceId, RuntimeState, Transaction, storage::state::State};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<T: Transaction> {
@@ -41,13 +41,23 @@ impl<T: Transaction> VersionedState<T> {
     pub fn write_data<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
         let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
         let value = self.state.to_bytes();
-        store.put(Data, &key, &value);
+        store.put(RuntimeState::Data, &key, &value);
     }
 
     pub fn write_latest_ptr<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
         let key = self.resource_id.to_bytes();
         let value = self.version.to_be_bytes();
         store.put(RuntimeState::LatestPtr, &key, &value);
+    }
+
+    pub(crate) fn write_rollback_ptr(
+        &self,
+        store: &mut impl WriteStore<StateSpace = RuntimeState>,
+        batch_index: u64,
+    ) {
+        let key = concat_bytes!(&batch_index.to_be_bytes(), &self.resource_id.to_bytes());
+        let value = self.version.to_be_bytes();
+        store.put(RuntimeState::RollbackPtr, &key, &value);
     }
 }
 

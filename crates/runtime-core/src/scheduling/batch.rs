@@ -9,13 +9,11 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_macros::smart_pointer;
-use kas_l2_storage::{Storage, Store, WriteStore, concat_bytes};
+use kas_l2_storage::{Storage, Store, WriteStore};
 use tap::Tap;
 
 use crate::{
-    ResourceId, ResourceProvider,
-    RuntimeState::RollbackPtr,
-    RuntimeTx, StateDiff, Transaction, VecExt, VersionedState,
+    ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
@@ -136,16 +134,6 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
             self.was_persisted.open();
             self.storage.submit_write(Write::Batch(self.clone()));
         }
-    }
-
-    pub(crate) fn write_rollback_ptr(
-        &self,
-        store: &mut impl WriteStore<StateSpace = RuntimeState>,
-        state: &VersionedState<Tx>,
-    ) {
-        let key = concat_bytes!(&self.index.to_be_bytes(), &state.resource_id.to_bytes());
-        let value = state.version.to_be_bytes();
-        store.put(RollbackPtr, &key, &value);
     }
 
     pub(crate) fn write_latest_ptrs(&self, store: &mut impl WriteStore<StateSpace = RuntimeState>) {
