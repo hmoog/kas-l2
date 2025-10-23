@@ -4,9 +4,10 @@ use std::{thread::sleep, time::Duration};
 
 use kas_l2_rocksdb_store::RocksDbStore;
 use kas_l2_runtime_core::{
-    AccessHandle, AccessMetadata, AccessType, Batch, RuntimeBuilder, Transaction, VersionedState,
+    AccessHandle, AccessMetadata, AccessType, Batch, RuntimeBuilder, RuntimeState, Transaction,
+    VersionedState,
 };
-use kas_l2_storage::StorageConfig;
+use kas_l2_storage::{ReadStore, StorageConfig};
 use tempfile::TempDir;
 
 #[test]
@@ -41,32 +42,30 @@ pub fn test_runtime() {
 
         sleep(Duration::from_secs(1));
 
-        assert_eq!(
-            3,
-            vec_to_u64(&VersionedState::<Tx>::from_store(&store, 1u32).state.data)
-        );
+        for assertion in vec![
+            AssertWrittenState(1, vec![0, 1, 3]),
+            AssertWrittenState(2, vec![1]),
+            AssertWrittenState(3, vec![]),
+            AssertWrittenState(10, vec![4]),
+            AssertWrittenState(20, vec![4]),
+        ] {
+            assertion.assert(&store);
+        }
 
         runtime.shutdown();
     }
 }
 
-struct Tx(u32, Vec<Access>);
+struct Tx(usize, Vec<Access>);
 
 impl Tx {
-    pub fn process(&self, _resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
-        for resource in _resources {
+    pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
+        for resource in resources {
             if resource.access_metadata().access_type() == AccessType::Write {
-                let resource_id = resource.access_metadata().id();
-                let state = &mut resource.state_mut();
-
-                let read_value = vec_to_u64(&state.data);
-                let written_value = read_value.wrapping_add(1);
-                eprintln!(
-                    "tx{}.resource[{}] = {}; // prev: {}",
-                    self.0, resource_id, written_value, read_value
-                );
-
-                state.data = u64_to_vec(written_value);
+                resource
+                    .state_mut()
+                    .data
+                    .extend_from_slice(&self.0.to_be_bytes());
             }
         }
         Ok::<(), ()>(())
@@ -74,7 +73,7 @@ impl Tx {
 }
 
 impl Transaction for Tx {
-    type ResourceId = u32;
+    type ResourceId = usize;
     type AccessMetadata = Access;
 
     fn accessed_resources(&self) -> &[Self::AccessMetadata] {
@@ -88,11 +87,11 @@ pub enum Access {
     Write(usize),
 }
 
-impl AccessMetadata<u32> for Access {
-    fn id(&self) -> u32 {
+impl AccessMetadata<usize> for Access {
+    fn id(&self) -> usize {
         match self {
-            Access::Read(id) => *id as u32,
-            Access::Write(id) => *id as u32,
+            Access::Read(id) => *id as usize,
+            Access::Write(id) => *id as usize,
         }
     }
 
@@ -104,14 +103,15 @@ impl AccessMetadata<u32> for Access {
     }
 }
 
-fn vec_to_u64(bytes: &Vec<u8>) -> u64 {
-    if bytes.len() == 8 {
-        u64::from_le_bytes(bytes.as_slice().try_into().unwrap())
-    } else {
-        0
-    }
-}
+struct AssertWrittenState(usize, Vec<usize>);
 
-fn u64_to_vec(value: u64) -> Vec<u8> {
-    value.to_le_bytes().to_vec()
+impl AssertWrittenState {
+    fn assert<S: ReadStore<StateSpace = RuntimeState>>(&self, store: &S) {
+        let writer_count = self.1.len();
+        let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
+
+        let versioned_state = VersionedState::<Tx>::from_store(store, self.0);
+        assert_eq!(versioned_state.version, writer_count as u64);
+        assert_eq!(versioned_state.state.data, writer_log);
+    }
 }
