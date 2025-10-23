@@ -10,7 +10,6 @@ use crate::{
     write_batch::WriteBatch,
 };
 
-#[derive(Clone)]
 pub struct RocksDbStore<C: Config = DefaultConfig> {
     db: Arc<DB>,
     write_opts: Arc<rocksdb::WriteOptions>,
@@ -78,6 +77,16 @@ impl<C: Config> Store for RocksDbStore<C> {
     fn commit(&self, write_batch: WriteBatch<C>) {
         if let Err(err) = self.db.write_opt(write_batch.into(), &self.write_opts) {
             panic!("rocksdb write-batch commit failed: {err}");
+        }
+    }
+}
+
+impl<C: Config> Clone for RocksDbStore<C> {
+    fn clone(&self) -> Self {
+        RocksDbStore {
+            db: self.db.clone(),
+            write_opts: self.write_opts.clone(),
+            _marker: PhantomData,
         }
     }
 }

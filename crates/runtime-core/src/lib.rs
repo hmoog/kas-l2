@@ -54,6 +54,7 @@ pub use crate::{
         runtime_state::RuntimeState,
         state::State,
         state_diff::{StateDiff, StateDiffRef},
+        versioned_state::VersionedState,
     },
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
@@ -69,6 +70,5 @@ pub(crate) use crate::{
     },
     runtime_batch_processor::RuntimeBatchProcessor,
     scheduling::{pending_batches::PendingBatches, scheduler::Scheduler},
-    storage::versioned_state::VersionedState,
     utils::vec_ext::VecExt,
 };
