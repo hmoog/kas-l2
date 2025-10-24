@@ -23,9 +23,11 @@ pub(crate) mod storage {
 
 pub(crate) mod resources {
     pub(crate) mod access_handle;
+    pub(crate) mod access_metadata;
     pub(crate) mod access_type;
     pub(crate) mod resource;
     pub(crate) mod resource_access;
+    pub(crate) mod resource_id;
 }
 
 pub(crate) mod scheduling {
@@ -35,9 +37,7 @@ pub(crate) mod scheduling {
 }
 
 pub(crate) mod traits {
-    pub(crate) mod access_metadata;
     pub(crate) mod batch_processor;
-    pub(crate) mod resource_id;
     pub(crate) mod transaction;
     pub(crate) mod transaction_processor;
 }
@@ -53,14 +53,17 @@ pub use crate::{
         versioned_state::VersionedState,
     },
     execution::runtime_tx::RuntimeTx,
-    resources::{access_handle::AccessHandle, access_type::AccessType},
+    resources::{
+        access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
+        resource_id::ResourceId,
+    },
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
     scheduling::batch::{Batch, BatchRef},
     storage::runtime_state::RuntimeState,
     traits::{
-        access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
-        transaction::Transaction, transaction_processor::TransactionProcessor,
+        batch_processor::BatchProcessor, transaction::Transaction,
+        transaction_processor::TransactionProcessor,
     },
 };
 pub(crate) use crate::{
