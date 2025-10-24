@@ -1,6 +1,11 @@
 use kas_l2_storage::{ReadStore, WriteStore, concat_bytes};
 
-use crate::{ResourceId, RuntimeState, Transaction, storage::state::State};
+use crate::{
+    ResourceId, RuntimeState,
+    RuntimeState::{Data, LatestPtr, RollbackPtr},
+    Transaction,
+    storage::state::State,
+};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<T: Transaction> {
@@ -10,54 +15,57 @@ pub struct VersionedState<T: Transaction> {
 }
 
 impl<T: Transaction> VersionedState<T> {
-    pub fn from_store<Store: ReadStore<StateSpace = RuntimeState>>(
-        store: &Store,
-        id: T::ResourceId,
-    ) -> Self {
+    pub fn empty() -> Self {
+        Self {
+            resource_id: T::ResourceId::default(),
+            version: 0,
+            state: State::default(),
+        }
+    }
+
+    pub fn from_store<S>(store: &S, id: T::ResourceId) -> Self
+    where
+        S: ReadStore<StateSpace = RuntimeState>,
+    {
         let id_bytes: Vec<u8> = id.to_bytes();
-        match store.get(RuntimeState::LatestPtr, &id_bytes) {
-            Some(version) => {
-                let Some(data) = store.get(RuntimeState::Data, &concat_bytes!(&version, &id_bytes))
-                else {
-                    panic!(
-                        "data for resource id {:?} with version {:?} not found in storage",
-                        id, version
-                    );
-                };
-                Self {
+        match store.get(LatestPtr, &id_bytes) {
+            None => Self::empty(),
+            Some(version) => match store.get(Data, &concat_bytes!(&version, &id_bytes)) {
+                None => panic!("missing data for resource_{:?}@v{:?}", id, version),
+                Some(data) => Self {
                     resource_id: id,
                     version: u64::from_be_bytes(version[..8].try_into().unwrap()),
                     state: borsh::from_slice(&data).expect("failed to deserialize State"),
-                }
-            }
-            None => Self {
-                resource_id: id,
-                version: 0,
-                state: State::default(),
+                },
             },
         }
     }
 
-    pub fn write_data<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
+    pub(crate) fn write_data<S>(&self, store: &mut S)
+    where
+        S: WriteStore<StateSpace = RuntimeState>,
+    {
         let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
-        let value = self.state.to_bytes();
-        store.put(RuntimeState::Data, &key, &value);
+        let state_data = self.state.to_bytes();
+        store.put(Data, &key, &state_data);
     }
 
-    pub fn write_latest_ptr<S: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut S) {
+    pub(crate) fn write_latest_ptr<S>(&self, store: &mut S)
+    where
+        S: WriteStore<StateSpace = RuntimeState>,
+    {
         let key = self.resource_id.to_bytes();
-        let value = self.version.to_be_bytes();
-        store.put(RuntimeState::LatestPtr, &key, &value);
+        let version = self.version.to_be_bytes();
+        store.put(LatestPtr, &key, &version);
     }
 
-    pub(crate) fn write_rollback_ptr(
-        &self,
-        store: &mut impl WriteStore<StateSpace = RuntimeState>,
-        batch_index: u64,
-    ) {
+    pub(crate) fn write_rollback_ptr<S>(&self, store: &mut S, batch_index: u64)
+    where
+        S: WriteStore<StateSpace = RuntimeState>,
+    {
         let key = concat_bytes!(&batch_index.to_be_bytes(), &self.resource_id.to_bytes());
-        let value = self.version.to_be_bytes();
-        store.put(RuntimeState::RollbackPtr, &key, &value);
+        let version = self.version.to_be_bytes();
+        store.put(RollbackPtr, &key, &version);
     }
 }
 
