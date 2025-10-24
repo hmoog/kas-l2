@@ -21,8 +21,11 @@ pub struct Worker<
     parker: Parker,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction, P: TransactionProcessor<S, T>>
-    Worker<S, T, P>
+impl<S, T, P> Worker<S, T, P>
+where
+    S: Store<StateSpace = RuntimeState>,
+    T: Transaction,
+    P: TransactionProcessor<S, T>,
 {
     pub(crate) fn new(id: usize, processor: P) -> Self {
         Self {

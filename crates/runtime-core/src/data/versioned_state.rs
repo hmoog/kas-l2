@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use kas_l2_storage::{ReadStore, WriteStore, concat_bytes};
+use tap::Tap;
 
 use crate::{
     ResourceId, RuntimeState,
@@ -8,12 +11,24 @@ use crate::{
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<T: Transaction> {
-    pub resource_id: T::ResourceId,
-    pub version: u64,
-    pub state: State<T>,
+    resource_id: T::ResourceId,
+    version: u64,
+    state: State<T>,
 }
 
 impl<T: Transaction> VersionedState<T> {
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
+    pub fn state(&self) -> &State<T> {
+        &self.state
+    }
+
+    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<T> {
+        &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
+    }
+
     pub fn empty(id: T::ResourceId) -> Self {
         Self {
             resource_id: id,
@@ -22,7 +37,7 @@ impl<T: Transaction> VersionedState<T> {
         }
     }
 
-    pub fn from_store<S>(store: &S, id: T::ResourceId) -> Self
+    pub fn from_latest_data<S>(store: &S, id: T::ResourceId) -> Self
     where
         S: ReadStore<StateSpace = RuntimeState>,
     {

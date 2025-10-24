@@ -19,14 +19,12 @@ impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S
 
     #[inline]
     pub fn state(&self) -> &State<T> {
-        &self.versioned_state.state
+        self.versioned_state.state()
     }
 
     #[inline]
     pub fn state_mut(&mut self) -> &mut State<T> {
-        let versioned_state = Arc::make_mut(&mut self.versioned_state);
-        versioned_state.version += 1;
-        &mut versioned_state.state
+        self.versioned_state.state_mut()
     }
 
     pub(crate) fn new(access: &'a ResourceAccess<S, T>) -> Self {

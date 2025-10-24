@@ -33,12 +33,14 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
 
     #[inline(always)]
     pub fn read_state(&self) -> Arc<VersionedState<T>> {
-        self.read_state.load().expect("state unavailable")
+        self.read_state.load().expect("read state unavailable")
     }
 
     #[inline(always)]
     pub fn written_state(&self) -> Arc<VersionedState<T>> {
-        self.written_state.load().expect("state unavailable")
+        self.written_state
+            .load()
+            .expect("written state unavailable")
     }
 
     #[inline(always)]
@@ -88,11 +90,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }
     }
 
-    pub(crate) fn read_from_store<Store: ReadStore<StateSpace = RuntimeState>>(
-        &self,
-        store: &Store,
-    ) {
-        self.set_read_state(Arc::new(VersionedState::from_store(
+    pub(crate) fn read_from_store<R: ReadStore<StateSpace = RuntimeState>>(&self, store: &R) {
+        self.set_read_state(Arc::new(VersionedState::from_latest_data(
             store,
             self.metadata.id(),
         )));

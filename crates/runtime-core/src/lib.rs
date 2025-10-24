@@ -2,17 +2,17 @@ mod runtime;
 mod runtime_batch_processor;
 mod runtime_builder;
 
+pub(crate) mod data {
+    pub(crate) mod state;
+    pub(crate) mod state_diff;
+    pub(crate) mod versioned_state;
+}
+
 pub(crate) mod execution {
     pub(crate) mod executor;
     pub(crate) mod runtime_tx;
     pub(crate) mod worker;
     pub(crate) mod workers_api;
-}
-
-pub(crate) mod states {
-    pub(crate) mod state;
-    pub(crate) mod state_diff;
-    pub(crate) mod versioned_state;
 }
 
 pub(crate) mod storage {
@@ -47,16 +47,16 @@ pub(crate) mod utils {
 }
 
 pub use crate::{
+    data::{
+        state::State,
+        state_diff::{StateDiff, StateDiffRef},
+        versioned_state::VersionedState,
+    },
     execution::runtime_tx::RuntimeTx,
     resources::{access_handle::AccessHandle, access_type::AccessType},
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
     scheduling::batch::{Batch, BatchRef},
-    states::{
-        state::State,
-        state_diff::{StateDiff, StateDiffRef},
-        versioned_state::VersionedState,
-    },
     storage::runtime_state::RuntimeState,
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,

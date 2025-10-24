@@ -115,9 +115,9 @@ mod test_framework {
             let writer_count = self.1.len();
             let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
 
-            let versioned_state = VersionedState::<Tx>::from_store(store, self.0);
-            assert_eq!(versioned_state.version, writer_count as u64);
-            assert_eq!(versioned_state.state.data, writer_log);
+            let versioned_state = VersionedState::<Tx>::from_latest_data(store, self.0);
+            assert_eq!(versioned_state.version(), writer_count as u64);
+            assert_eq!(versioned_state.state().data, writer_log);
         }
     }
 }
