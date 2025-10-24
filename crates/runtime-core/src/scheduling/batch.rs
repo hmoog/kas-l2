@@ -78,13 +78,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
-                    RuntimeTx::new(
-                        storage,
-                        provider,
-                        &mut state_diffs,
-                        BatchRef(this.clone()),
-                        tx,
-                    )
+                    RuntimeTx::new(provider, &mut state_diffs, BatchRef(this.clone()), tx)
                 }),
                 state_diffs,
                 available_txs: Injector::new(),
@@ -125,18 +119,22 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn increase_pending_writes(&self) {
+    pub(crate) fn submit_write(&self, write: Write<S, Tx>) {
         self.pending_writes.fetch_add(1, Ordering::AcqRel);
+        self.storage.submit_write(write);
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
         if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
             self.was_persisted.open();
-            self.storage.submit_write(Write::Batch(self.clone()));
+            self.storage.submit_write(Write::PointerFlip(self.clone()));
         }
     }
 
-    pub(crate) fn write_latest_ptrs(&self, store: &mut impl WriteStore<StateSpace = RuntimeState>) {
+    pub(crate) fn write_pointer_flip<W>(&self, store: &mut W)
+    where
+        W: WriteStore<StateSpace = RuntimeState>,
+    {
         for state_diff in self.state_diffs() {
             state_diff.written_state().write_latest_ptr(store);
         }

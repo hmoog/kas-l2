@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
-use kas_l2_storage::{Storage, Store};
+use kas_l2_storage::Store;
 use tap::Tap;
 
 use crate::{
     AccessMetadata, BatchRef, Resource, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff,
     Transaction, VecExt,
-    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 pub struct ResourceProvider<S: Store<StateSpace = RuntimeState>, T: Transaction> {
@@ -22,7 +21,6 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceProvider<S, T>
 
     pub(crate) fn provide(
         &mut self,
-        storage: &Storage<S, Read<S, T>, Write<S, T>>,
         tx: &T,
         runtime_tx: RuntimeTxRef<S, T>,
         batch: &BatchRef<S, T>,
@@ -32,7 +30,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceProvider<S, T>
             self.resources
                 .entry(access.id())
                 .or_default()
-                .access(storage, access, &runtime_tx, batch)
+                .access(access, &runtime_tx, batch)
                 .tap(|access| {
                     if access.is_batch_head() {
                         state_diffs.push(access.state_diff());

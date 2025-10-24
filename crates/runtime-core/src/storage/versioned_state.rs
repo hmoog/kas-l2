@@ -15,9 +15,9 @@ pub struct VersionedState<T: Transaction> {
 }
 
 impl<T: Transaction> VersionedState<T> {
-    pub fn empty() -> Self {
+    pub fn empty(id: T::ResourceId) -> Self {
         Self {
-            resource_id: T::ResourceId::default(),
+            resource_id: id,
             version: 0,
             state: State::default(),
         }
@@ -29,7 +29,7 @@ impl<T: Transaction> VersionedState<T> {
     {
         let id_bytes: Vec<u8> = id.to_bytes();
         match store.get(LatestPtr, &id_bytes) {
-            None => Self::empty(),
+            None => Self::empty(id),
             Some(version) => match store.get(Data, &concat_bytes!(&version, &id_bytes)) {
                 None => panic!("missing data for resource_{:?}@v{:?}", id, version),
                 Some(data) => Self {

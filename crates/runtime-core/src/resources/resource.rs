@@ -1,9 +1,8 @@
-use kas_l2_storage::{Storage, Store};
+use kas_l2_storage::Store;
 use tap::Tap;
 
 use crate::{
     AccessMetadata, BatchRef, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff, Transaction,
-    storage::{read_cmd::Read, write_cmd::Write},
 };
 
 pub(crate) struct Resource<S: Store<StateSpace = RuntimeState>, T: Transaction> {
@@ -19,7 +18,6 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Default for Resource<S
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Resource<S, T> {
     pub(crate) fn access(
         &mut self,
-        storage: &Storage<S, Read<S, T>, Write<S, T>>,
         meta: &T::AccessMetadata,
         tx: &RuntimeTxRef<S, T>,
         batch: &BatchRef<S, T>,
@@ -29,10 +27,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Resource<S, T> {
                 assert!(prev_access.tx() != tx, "duplicate access to resource");
                 (prev_access.state_diff(), Some(prev_access))
             }
-            prev_access => (
-                StateDiff::new(storage, batch.clone(), meta.id()),
-                prev_access,
-            ),
+            prev_access => (StateDiff::new(batch.clone(), meta.id()), prev_access),
         };
 
         ResourceAccess::new(meta.clone(), tx.clone(), state_diff_ref, prev_access)
