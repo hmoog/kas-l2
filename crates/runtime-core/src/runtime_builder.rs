@@ -20,7 +20,7 @@ pub struct RuntimeBuilder<
     _marker: PhantomData<T>,
 }
 
-impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(Batch<S, T>)>
+impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(&Batch<S, T>)>
 where
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,

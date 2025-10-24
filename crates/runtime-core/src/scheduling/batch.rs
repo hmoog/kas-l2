@@ -13,7 +13,7 @@ use kas_l2_storage::{Storage, Store, WriteStore};
 use tap::Tap;
 
 use crate::{
-    ResourceProvider, RuntimeTx, StateDiff, Transaction, VecExt,
+    RuntimeTx, Scheduler, StateDiff, Transaction, VecExt,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
 
@@ -64,21 +64,24 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         self.was_processed.wait()
     }
 
-    pub(crate) fn new(
-        index: u64,
-        storage: &Storage<S, Read<S, Tx>, Write<S, Tx>>,
-        txs: Vec<Tx>,
-        provider: &mut ResourceProvider<S, Tx>,
-    ) -> Self {
+    pub fn wait_persisted(&self) -> impl Future<Output = ()> + '_ {
+        self.was_persisted.wait()
+    }
+
+    pub fn wait_committed(&self) -> impl Future<Output = ()> + '_ {
+        self.was_committed.wait()
+    }
+
+    pub(crate) fn new(scheduler: &mut Scheduler<S, Tx>, index: u64, txs: Vec<Tx>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
                 index,
-                storage: storage.clone(),
+                storage: scheduler.storage().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs.into_vec(|tx| {
-                    RuntimeTx::new(provider, &mut state_diffs, BatchRef(this.clone()), tx)
+                    RuntimeTx::new(scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
                 }),
                 state_diffs,
                 available_txs: Injector::new(),
@@ -90,7 +93,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         .tap(|this| {
             for tx in this.txs() {
                 for resource in tx.accessed_resources() {
-                    resource.init(storage);
+                    resource.init(scheduler.storage());
                 }
             }
         })

@@ -7,8 +7,8 @@ use kas_l2_macros::smart_pointer;
 use kas_l2_storage::Store;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, ResourceProvider, RuntimeState, StateDiff, Transaction,
-    TransactionProcessor, VecExt,
+    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, Transaction,
+    TransactionProcessor, VecExt, scheduling::scheduler::Scheduler,
 };
 
 #[smart_pointer(deref(tx))]
@@ -25,13 +25,14 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
     }
 
     pub(crate) fn new(
-        provider: &mut ResourceProvider<S, Tx>,
+        scheduler: &mut Scheduler<S, Tx>,
         state_diffs: &mut Vec<StateDiff<S, Tx>>,
         batch: BatchRef<S, Tx>,
         tx: Tx,
     ) -> Self {
         Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, Tx>>| {
-            let resources = provider.provide(&tx, RuntimeTxRef(this.clone()), &batch, state_diffs);
+            let resources =
+                scheduler.resources(&tx, RuntimeTxRef(this.clone()), &batch, state_diffs);
             RuntimeTxData {
                 pending_resources: AtomicU64::new(resources.len() as u64),
                 batch,

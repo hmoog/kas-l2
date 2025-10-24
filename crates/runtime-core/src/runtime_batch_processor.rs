@@ -52,7 +52,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> RuntimeBatchProcessor<
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
                             batch.wait_processed().await;
-                            batch_processor(batch);
+                            batch_processor(&batch);
+                            batch.wait_committed().await;
                         }
 
                         if Arc::strong_count(&queue) != 1 {

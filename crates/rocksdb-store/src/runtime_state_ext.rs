@@ -1,5 +1,5 @@
 use kas_l2_runtime_core::RuntimeState;
-use rocksdb::{ColumnFamilyDescriptor, Options};
+use rocksdb::ColumnFamilyDescriptor;
 
 use crate::config::{Config, DefaultConfig};
 
@@ -22,7 +22,6 @@ impl<C: Config> RuntimeStateExt<C> for RuntimeState {
         use RuntimeState::*;
         let cf_name = <RuntimeState as RuntimeStateExt<C>>::cf_name;
         vec![
-            ColumnFamilyDescriptor::new("default", Options::default()),
             ColumnFamilyDescriptor::new(cf_name(&Data), C::cf_data_opts()),
             ColumnFamilyDescriptor::new(cf_name(&LatestPtr), C::cf_latest_ptr_opts()),
             ColumnFamilyDescriptor::new(cf_name(&RollbackPtr), C::cf_rollback_ptr_opts()),

@@ -3,8 +3,7 @@ use kas_l2_storage::{ReadStore, WriteStore, concat_bytes};
 use crate::{
     ResourceId, RuntimeState,
     RuntimeState::{Data, LatestPtr, RollbackPtr},
-    Transaction,
-    storage::state::State,
+    State, Transaction,
 };
 
 #[derive(Debug, Eq, Hash, PartialEq)]

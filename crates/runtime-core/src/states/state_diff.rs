@@ -42,13 +42,12 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> StateDiff<S, T> {
 
     pub(crate) fn set_written_state(&self, state: Arc<VersionedState<T>>) {
         self.written_state.store(Some(state));
-
         if let Some(batch) = self.batch.upgrade() {
             batch.submit_write(Write::StateDiff(self.clone()));
         }
     }
 
-    pub(crate) fn write_to<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
+    pub(crate) fn write<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
         let Some(batch) = self.batch.upgrade() else {
             panic!("batch must be known at write time");
         };

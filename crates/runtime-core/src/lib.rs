@@ -9,12 +9,15 @@ pub(crate) mod execution {
     pub(crate) mod workers_api;
 }
 
-pub(crate) mod storage {
-    pub(crate) mod read_cmd;
-    pub(crate) mod runtime_state;
+pub(crate) mod states {
     pub(crate) mod state;
     pub(crate) mod state_diff;
     pub(crate) mod versioned_state;
+}
+
+pub(crate) mod storage {
+    pub(crate) mod read_cmd;
+    pub(crate) mod runtime_state;
     pub(crate) mod write_cmd;
 }
 
@@ -23,7 +26,6 @@ pub(crate) mod resources {
     pub(crate) mod access_type;
     pub(crate) mod resource;
     pub(crate) mod resource_access;
-    pub(crate) mod resource_provider;
 }
 
 pub(crate) mod scheduling {
@@ -50,12 +52,12 @@ pub use crate::{
     runtime::Runtime,
     runtime_builder::RuntimeBuilder,
     scheduling::batch::{Batch, BatchRef},
-    storage::{
-        runtime_state::RuntimeState,
+    states::{
         state::State,
         state_diff::{StateDiff, StateDiffRef},
         versioned_state::VersionedState,
     },
+    storage::runtime_state::RuntimeState,
     traits::{
         access_metadata::AccessMetadata, batch_processor::BatchProcessor, resource_id::ResourceId,
         transaction::Transaction, transaction_processor::TransactionProcessor,
@@ -65,9 +67,7 @@ pub(crate) use crate::{
     execution::{
         executor::Executor, runtime_tx::RuntimeTxRef, worker::Worker, workers_api::WorkersApi,
     },
-    resources::{
-        resource::Resource, resource_access::ResourceAccess, resource_provider::ResourceProvider,
-    },
+    resources::{resource::Resource, resource_access::ResourceAccess},
     runtime_batch_processor::RuntimeBatchProcessor,
     scheduling::{pending_batches::PendingBatches, scheduler::Scheduler},
     utils::vec_ext::VecExt,
