@@ -55,7 +55,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
     }
 
     pub(crate) fn decrease_pending_resources(self) {
-        if self.pending_resources.fetch_sub(1, Ordering::Relaxed) == 1 {
+        if self.pending_resources.fetch_sub(1, Ordering::Release) == 1 {
             if let Some(batch) = self.batch.upgrade() {
                 batch.push_available_tx(&self)
             }
