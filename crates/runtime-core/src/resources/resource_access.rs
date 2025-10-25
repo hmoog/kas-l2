@@ -8,8 +8,8 @@ use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{ReadStore, Storage, Store};
 
 use crate::{
-    AccessMetadata, AccessType, RuntimeTxRef, StateDiff, Transaction, VersionedState,
-    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    AccessMetadata, AccessType, Read, RuntimeTxRef, StateDiff, Transaction, VersionedState, Write,
+    storage::runtime_state::RuntimeState,
 };
 
 #[smart_pointer(deref(metadata))]
@@ -33,14 +33,12 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
 
     #[inline(always)]
     pub fn read_state(&self) -> Arc<VersionedState<T>> {
-        self.read_state.load().expect("read state unavailable")
+        self.read_state.load().expect("read state unknown")
     }
 
     #[inline(always)]
     pub fn written_state(&self) -> Arc<VersionedState<T>> {
-        self.written_state
-            .load()
-            .expect("written state unavailable")
+        self.written_state.load().expect("written state unknown")
     }
 
     #[inline(always)]
@@ -78,7 +76,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }))
     }
 
-    pub(crate) fn init(&self, storage: &Storage<S, Read<S, T>, Write<S, T>>) {
+    pub(crate) fn connect(&self, storage: &Storage<S, Read<S, T>, Write<S, T>>) {
         match self.prev.load() {
             Some(prev) => {
                 prev.next.store(Arc::downgrade(&self.0));
@@ -86,11 +84,11 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
                     self.set_read_state(written_state);
                 }
             }
-            None => storage.submit_read(Read::ResourceAccess(self.clone())),
+            None => storage.submit_read(Read::LatestData(self.clone())),
         }
     }
 
-    pub(crate) fn read_from_store<R: ReadStore<StateSpace = RuntimeState>>(&self, store: &R) {
+    pub(crate) fn read_latest_data<R: ReadStore<StateSpace = RuntimeState>>(&self, store: &R) {
         self.set_read_state(Arc::new(VersionedState::from_latest_data(
             store,
             self.metadata.id(),

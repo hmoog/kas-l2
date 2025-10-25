@@ -18,9 +18,8 @@ pub(crate) mod execution {
 }
 
 pub(crate) mod storage {
-    pub(crate) mod read_cmd;
+    pub(crate) mod cmd;
     pub(crate) mod runtime_state;
-    pub(crate) mod write_cmd;
 }
 
 pub(crate) mod resources {
@@ -68,5 +67,6 @@ pub(crate) use crate::{
     },
     resources::{resource::Resource, resource_access::ResourceAccess},
     scheduling::{batch_processor::BatchProcessor, batch_queue::BatchQueue, scheduler::Scheduler},
+    storage::cmd::{Read, Write},
     utils::VecExt,
 };

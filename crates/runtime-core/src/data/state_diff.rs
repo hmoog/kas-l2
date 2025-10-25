@@ -4,7 +4,7 @@ use kas_l2_atomic::AtomicOptionArc;
 use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{Store, WriteStore};
 
-use crate::{BatchRef, RuntimeState, Transaction, VersionedState, storage::write_cmd::Write};
+use crate::{BatchRef, RuntimeState, Transaction, VersionedState, storage::cmd::Write};
 
 #[smart_pointer]
 pub struct StateDiff<S: Store<StateSpace = RuntimeState>, T: Transaction> {

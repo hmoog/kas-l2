@@ -10,11 +10,10 @@ use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_atomic::AtomicAsyncLatch;
 use kas_l2_macros::smart_pointer;
 use kas_l2_storage::{Storage, Store, WriteStore};
-use tap::Tap;
 
 use crate::{
-    RuntimeTx, Scheduler, StateDiff, Transaction, VecExt,
-    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    Read, RuntimeTx, Scheduler, StateDiff, Transaction, VecExt, Write,
+    storage::runtime_state::RuntimeState,
 };
 
 #[smart_pointer]
@@ -64,19 +63,27 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         self.was_processed.wait()
     }
 
+    pub fn was_persisted(&self) -> bool {
+        self.was_persisted.is_open()
+    }
+
     pub fn wait_persisted(&self) -> impl Future<Output = ()> + '_ {
         self.was_persisted.wait()
+    }
+
+    pub fn was_committed(&self) -> bool {
+        self.was_committed.is_open()
     }
 
     pub fn wait_committed(&self) -> impl Future<Output = ()> + '_ {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(scheduler: &mut Scheduler<S, Tx>, index: u64, txs: Vec<Tx>) -> Self {
+    pub(crate) fn new(scheduler: &mut Scheduler<S, Tx>, txs: Vec<Tx>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
-                index,
+                index: scheduler.batch_index(),
                 storage: scheduler.storage().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
@@ -90,13 +97,14 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
                 was_committed: Default::default(),
             }
         }))
-        .tap(|this| {
-            for tx in this.txs() {
-                for resource in tx.accessed_resources() {
-                    resource.init(scheduler.storage());
-                }
+    }
+
+    pub(crate) fn connect(&self) {
+        for tx in self.txs() {
+            for resource in tx.accessed_resources() {
+                resource.connect(&self.storage);
             }
-        })
+        }
     }
 
     pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, Tx>) {
@@ -128,13 +136,17 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
+        // TODO: CHECK IF THERE CAN BE A RACE BETWEEN PENDING_TXS AND PENDING_WRITES
         if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
             self.was_persisted.open();
-            self.storage.submit_write(Write::PointerFlip(self.clone()));
         }
     }
 
-    pub(crate) fn write_pointer_flip<W>(&self, store: &mut W)
+    pub(crate) fn schedule_commit(&self) {
+        self.storage.submit_write(Write::CommitBatch(self.clone()));
+    }
+
+    pub(crate) fn commit<W>(&self, store: &mut W)
     where
         W: WriteStore<StateSpace = RuntimeState>,
     {
@@ -143,8 +155,8 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn mark_committed(self) {
-        // TODO: EVICT STUFF
+    pub(crate) fn commit_done(self) {
+        // TODO: EVICT STUFF?
         self.was_committed.open();
     }
 }

@@ -4,16 +4,15 @@ use kas_l2_storage::{Storage, Store};
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, Batch, BatchRef, Resource, StateDiff, Transaction, VecExt,
-    execution::runtime_tx::RuntimeTxRef,
-    resources::resource_access::ResourceAccess,
-    storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
+    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, VecExt, Write,
+    execution::runtime_tx::RuntimeTxRef, resources::resource_access::ResourceAccess,
+    storage::runtime_state::RuntimeState,
 };
 
 pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+    batch_index: u64,
     storage: Storage<S, Read<S, T>, Write<S, T>>,
     resources: HashMap<T::ResourceId, Resource<S, T>>,
-    batch_index: u64,
 }
 
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
@@ -25,13 +24,17 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
         }
     }
 
+    pub fn batch_index(&self) -> u64 {
+        self.batch_index
+    }
+
     pub fn storage(&self) -> &Storage<S, Read<S, T>, Write<S, T>> {
         &self.storage
     }
 
     pub fn schedule(&mut self, txs: Vec<T>) -> Batch<S, T> {
         self.batch_index += 1;
-        Batch::new(self, self.batch_index, txs)
+        Batch::new(self, txs).tap(Batch::connect)
     }
 
     pub(crate) fn resources(

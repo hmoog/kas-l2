@@ -42,7 +42,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
     fn start<F: BatchPostProcessor<S, T>>(
         queue: Arc<SegQueue<Batch<S, T>>>,
         notify: Arc<Notify>,
-        batch_processor: F,
+        post_processor: F,
     ) -> JoinHandle<()> {
         thread::spawn(move || {
             Builder::new_current_thread()
@@ -52,7 +52,9 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
                             batch.wait_processed().await;
-                            batch_processor(&batch);
+                            post_processor(&batch);
+                            batch.wait_persisted().await;
+                            batch.schedule_commit();
                             batch.wait_committed().await;
                         }
 

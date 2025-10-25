@@ -17,18 +17,6 @@ pub struct VersionedState<T: Transaction> {
 }
 
 impl<T: Transaction> VersionedState<T> {
-    pub fn version(&self) -> u64 {
-        self.version
-    }
-
-    pub fn state(&self) -> &State<T> {
-        &self.state
-    }
-
-    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<T> {
-        &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
-    }
-
     pub fn empty(id: T::ResourceId) -> Self {
         Self {
             resource_id: id,
@@ -53,6 +41,18 @@ impl<T: Transaction> VersionedState<T> {
                 },
             },
         }
+    }
+
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
+    pub fn state(&self) -> &State<T> {
+        &self.state
+    }
+
+    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<T> {
+        &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
     }
 
     pub(crate) fn write_data<S>(&self, store: &mut S)

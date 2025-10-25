@@ -55,7 +55,7 @@ impl<K: Store, W: WriteCmd<K::StateSpace>> WriteWorker<K, W> {
         while !self.is_shutdown() {
             if !batch_cmds.is_empty() && self.should_commit(batch_cmds.len(), created) {
                 self.store.commit(write_batch);
-                batch_cmds.drain(..).for_each(W::mark_committed);
+                batch_cmds.drain(..).for_each(W::done);
 
                 write_batch = self.store.write_batch();
                 created = Instant::now();
