@@ -125,19 +125,19 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
     }
 
     pub(crate) fn decrease_pending_txs(&self) {
-        if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
+        if self.pending_txs.fetch_sub(1, Ordering::Release) == 1 {
             self.was_processed.open();
         }
     }
 
     pub(crate) fn submit_write(&self, write: Write<S, Tx>) {
-        self.pending_writes.fetch_add(1, Ordering::AcqRel);
+        self.pending_writes.fetch_add(1, Ordering::Release);
         self.storage.submit_write(write);
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
         // TODO: CHECK IF THERE CAN BE A RACE BETWEEN PENDING_TXS AND PENDING_WRITES
-        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
+        if self.pending_writes.fetch_sub(1, Ordering::Release) == 1 && self.num_pending() == 0 {
             self.was_persisted.open();
         }
     }

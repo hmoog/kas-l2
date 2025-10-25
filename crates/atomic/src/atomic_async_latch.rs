@@ -23,7 +23,7 @@ impl AtomicAsyncLatch {
     /// Open the latch (transition from false → true).
     /// Wakes all current waiters. Idempotent.
     pub fn open(&self) -> bool {
-        if !self.ready.swap(true, Ordering::SeqCst) {
+        if !self.ready.swap(true, Ordering::Release) {
             self.notify.notify_waiters();
             true
         } else {
@@ -33,7 +33,7 @@ impl AtomicAsyncLatch {
 
     /// Returns whether the latch is already open.
     pub fn is_open(&self) -> bool {
-        self.ready.load(Ordering::SeqCst)
+        self.ready.load(Ordering::Acquire)
     }
 
     /// Wait until the latch is open.
@@ -41,7 +41,7 @@ impl AtomicAsyncLatch {
     pub async fn wait(&self) {
         let notified = self.notify.notified();
 
-        if self.ready.load(Ordering::SeqCst) {
+        if self.ready.load(Ordering::Acquire) {
             return;
         }
 
