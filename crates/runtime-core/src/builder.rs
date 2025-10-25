@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use kas_l2_storage::{StorageConfig, Store};
 
 use crate::{
-    Batch, BatchPostProcessor, Runtime, Transaction, TransactionProcessor,
+    Batch, Notarizer, Runtime, Transaction, TransactionProcessor,
     storage::runtime_state::RuntimeState,
 };
 
@@ -11,11 +11,11 @@ pub struct RuntimeBuilder<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<S, T>,
-    B: BatchPostProcessor<S, T>,
+    N: Notarizer<S, T>,
 > {
     pub(crate) execution_workers: usize,
     pub(crate) transaction_processor: Option<P>,
-    pub(crate) batch_processor: B,
+    pub(crate) notarizer: N,
     pub(crate) storage_config: StorageConfig<S>,
     _marker: PhantomData<T>,
 }
@@ -30,7 +30,7 @@ where
         RuntimeBuilder {
             execution_workers: num_cpus::get_physical(),
             transaction_processor: None,
-            batch_processor: move |_| {},
+            notarizer: move |_| {},
             storage_config: StorageConfig::default(),
             _marker: PhantomData,
         }
@@ -41,8 +41,8 @@ impl<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<S, T>,
-    B: BatchPostProcessor<S, T>,
-> RuntimeBuilder<T, S, P, B>
+    N: Notarizer<S, T>,
+> RuntimeBuilder<T, S, P, N>
 {
     /// Override the number of execution workers.
     pub fn with_execution_workers(mut self, workers: usize) -> Self {
@@ -57,14 +57,14 @@ impl<
     }
 
     /// Provide the batch processor callback.
-    pub fn with_batch_processor<BNew: BatchPostProcessor<S, T>>(
+    pub fn with_notarization<NewNotarizer: Notarizer<S, T>>(
         self,
-        f: BNew,
-    ) -> RuntimeBuilder<T, S, P, BNew> {
+        notarizer: NewNotarizer,
+    ) -> RuntimeBuilder<T, S, P, NewNotarizer> {
         RuntimeBuilder {
             execution_workers: self.execution_workers,
             transaction_processor: self.transaction_processor,
-            batch_processor: f,
+            notarizer,
             storage_config: self.storage_config,
             _marker: PhantomData,
         }
@@ -75,7 +75,6 @@ impl<
         self
     }
 
-    /// Consume the builder and produce a runtime.
     pub fn build(self) -> Runtime<S, T> {
         Runtime::new(self)
     }

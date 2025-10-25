@@ -7,16 +7,16 @@ use crossbeam_queue::SegQueue;
 use kas_l2_storage::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-use crate::{Batch, BatchPostProcessor, RuntimeState, Transaction};
+use crate::{Batch, Notarizer, RuntimeState, Transaction};
 
-pub(crate) struct BatchProcessor<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+pub(crate) struct NotarizationWorker<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     queue: Arc<SegQueue<Batch<S, T>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
-    pub(crate) fn new<B: BatchPostProcessor<S, T>>(batch_processor: B) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, T> {
+    pub(crate) fn new<B: Notarizer<S, T>>(batch_processor: B) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
         let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
@@ -39,10 +39,10 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start<F: BatchPostProcessor<S, T>>(
+    fn start<F: Notarizer<S, T>>(
         queue: Arc<SegQueue<Batch<S, T>>>,
         notify: Arc<Notify>,
-        post_processor: F,
+        notarizer: F,
     ) -> JoinHandle<()> {
         thread::spawn(move || {
             Builder::new_current_thread()
@@ -52,7 +52,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
                             batch.wait_processed().await;
-                            post_processor(&batch);
+                            notarizer(&batch);
                             batch.wait_persisted().await;
                             batch.schedule_commit();
                             batch.wait_committed().await;

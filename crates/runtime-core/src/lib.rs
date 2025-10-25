@@ -17,6 +17,11 @@ pub(crate) mod execution {
     pub(crate) mod workers_api;
 }
 
+pub(crate) mod notarization {
+    pub(crate) mod notarization_worker;
+    pub(crate) mod notarizer;
+}
+
 pub(crate) mod storage {
     pub(crate) mod cmd;
     pub(crate) mod runtime_state;
@@ -33,8 +38,6 @@ pub(crate) mod resources {
 
 pub(crate) mod scheduling {
     pub(crate) mod batch;
-    pub(crate) mod batch_post_processor;
-    pub(crate) mod batch_processor;
     pub(crate) mod batch_queue;
     pub(crate) mod scheduler;
 }
@@ -50,23 +53,22 @@ pub use crate::{
         runtime_tx::RuntimeTx, transaction::Transaction,
         transaction_processor::TransactionProcessor,
     },
+    notarization::notarizer::Notarizer,
     resources::{
         access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
         resource_id::ResourceId,
     },
     runtime::Runtime,
-    scheduling::{
-        batch::{Batch, BatchRef},
-        batch_post_processor::BatchPostProcessor,
-    },
+    scheduling::batch::{Batch, BatchRef},
     storage::runtime_state::RuntimeState,
 };
 pub(crate) use crate::{
     execution::{
         executor::Executor, runtime_tx::RuntimeTxRef, worker::Worker, workers_api::WorkersApi,
     },
+    notarization::notarization_worker::NotarizationWorker,
     resources::{resource::Resource, resource_access::ResourceAccess},
-    scheduling::{batch_processor::BatchProcessor, batch_queue::BatchQueue, scheduler::Scheduler},
+    scheduling::{batch_queue::BatchQueue, scheduler::Scheduler},
     storage::cmd::{Read, Write},
     utils::VecExt,
 };

@@ -18,7 +18,7 @@ pub fn test_runtime() {
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
             .with_transaction_processor(Tx::process)
-            .with_batch_processor(|batch: &Batch<RocksDbStore, Tx>| {
+            .with_notarization(|batch: &Batch<RocksDbStore, Tx>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
                     batch.txs().len(),
