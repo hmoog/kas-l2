@@ -2,7 +2,7 @@ use kas_l2_storage::{Storage, Store};
 use tap::Tap;
 
 use crate::{
-    Batch, BatchProcessor, Executor, RuntimeBatchProcessor, RuntimeBuilder, Scheduler, Transaction,
+    Batch, BatchPostProcessor, BatchProcessor, Executor, RuntimeBuilder, Scheduler, Transaction,
     TransactionProcessor,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
 };
@@ -11,7 +11,7 @@ pub struct Runtime<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     storage: Storage<S, Read<S, T>, Write<S, T>>,
     scheduler: Scheduler<S, T>,
     executor: Executor<S, T>,
-    batch_processor: RuntimeBatchProcessor<S, T>,
+    batch_processor: BatchProcessor<S, T>,
 }
 
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
@@ -28,7 +28,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
         self.storage.shutdown();
     }
 
-    pub(crate) fn new<P: TransactionProcessor<S, T>, B: BatchProcessor<S, T>>(
+    pub(crate) fn new<P: TransactionProcessor<S, T>, B: BatchPostProcessor<S, T>>(
         builder: RuntimeBuilder<T, S, P, B>,
     ) -> Self {
         let storage = Storage::new(builder.storage_config);
@@ -39,7 +39,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
         Self {
             scheduler: Scheduler::new(storage.clone()),
             executor: Executor::new(builder.execution_workers, transaction_processor),
-            batch_processor: RuntimeBatchProcessor::new(builder.batch_processor),
+            batch_processor: BatchProcessor::new(builder.batch_processor),
             storage,
         }
     }

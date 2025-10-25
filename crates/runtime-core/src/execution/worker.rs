@@ -6,7 +6,7 @@ use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_storage::Store;
 
 use crate::{
-    Batch, PendingBatches, RuntimeState, RuntimeTx, Transaction, TransactionProcessor, WorkersApi,
+    Batch, BatchQueue, RuntimeState, RuntimeTx, Transaction, TransactionProcessor, WorkersApi,
 };
 
 pub struct Worker<
@@ -54,7 +54,7 @@ where
     }
 
     fn run(self, workers_api: WorkersApi<S, T>) {
-        let mut pending_batches = PendingBatches::new(self.inbox);
+        let mut pending_batches = BatchQueue::new(self.inbox);
 
         while !workers_api.is_shutdown() {
             match self

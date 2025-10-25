@@ -7,12 +7,12 @@ use kas_l2_storage::Store;
 
 use crate::{Batch, RuntimeState, RuntimeTx, Transaction};
 
-pub struct PendingBatches<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+pub struct BatchQueue<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     queue: LinkedList<linked_list::Adapter<Batch<S, T>>>,
     new_batches: Arc<ArrayQueue<Batch<S, T>>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> PendingBatches<S, T> {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchQueue<S, T> {
     pub fn new(new_batches: Arc<ArrayQueue<Batch<S, T>>>) -> Self {
         Self {
             queue: LinkedList::new(linked_list::Adapter::new()),

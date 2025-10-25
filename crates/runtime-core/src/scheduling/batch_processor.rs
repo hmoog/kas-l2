@@ -7,16 +7,16 @@ use crossbeam_queue::SegQueue;
 use kas_l2_storage::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-use crate::{Batch, BatchProcessor, RuntimeState, Transaction};
+use crate::{Batch, BatchPostProcessor, RuntimeState, Transaction};
 
-pub(crate) struct RuntimeBatchProcessor<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+pub(crate) struct BatchProcessor<S: Store<StateSpace = RuntimeState>, T: Transaction> {
     queue: Arc<SegQueue<Batch<S, T>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> RuntimeBatchProcessor<S, T> {
-    pub(crate) fn new<B: BatchProcessor<S, T>>(batch_processor: B) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchProcessor<S, T> {
+    pub(crate) fn new<B: BatchPostProcessor<S, T>>(batch_processor: B) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
         let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
@@ -39,7 +39,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> RuntimeBatchProcessor<
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start<F: BatchProcessor<S, T>>(
+    fn start<F: BatchPostProcessor<S, T>>(
         queue: Arc<SegQueue<Batch<S, T>>>,
         notify: Arc<Notify>,
         batch_processor: F,

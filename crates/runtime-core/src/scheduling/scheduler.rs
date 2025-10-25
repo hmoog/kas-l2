@@ -4,11 +4,10 @@ use kas_l2_storage::{Storage, Store};
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, Batch, BatchRef, Resource, StateDiff, Transaction,
+    AccessMetadata, Batch, BatchRef, Resource, StateDiff, Transaction, VecExt,
     execution::runtime_tx::RuntimeTxRef,
     resources::resource_access::ResourceAccess,
     storage::{read_cmd::Read, runtime_state::RuntimeState, write_cmd::Write},
-    utils::vec_ext::VecExt,
 };
 
 pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use kas_l2_storage::{StorageConfig, Store};
 
 use crate::{
-    Batch, BatchProcessor, Runtime, Transaction, TransactionProcessor,
+    Batch, BatchPostProcessor, Runtime, Transaction, TransactionProcessor,
     storage::runtime_state::RuntimeState,
 };
 
@@ -11,7 +11,7 @@ pub struct RuntimeBuilder<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<S, T>,
-    B: BatchProcessor<S, T>,
+    B: BatchPostProcessor<S, T>,
 > {
     pub(crate) execution_workers: usize,
     pub(crate) transaction_processor: Option<P>,
@@ -41,7 +41,7 @@ impl<
     T: Transaction,
     S: Store<StateSpace = RuntimeState>,
     P: TransactionProcessor<S, T>,
-    B: BatchProcessor<S, T>,
+    B: BatchPostProcessor<S, T>,
 > RuntimeBuilder<T, S, P, B>
 {
     /// Override the number of execution workers.
@@ -57,7 +57,7 @@ impl<
     }
 
     /// Provide the batch processor callback.
-    pub fn with_batch_processor<BNew: BatchProcessor<S, T>>(
+    pub fn with_batch_processor<BNew: BatchPostProcessor<S, T>>(
         self,
         f: BNew,
     ) -> RuntimeBuilder<T, S, P, BNew> {
