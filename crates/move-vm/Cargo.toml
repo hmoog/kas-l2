@@ -1,0 +1,17 @@
+[package]
+name = "kas-l2-move-vm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+move-core-types = { git = "https://github.com/MystenLabs/sui.git", package = "move-core-types", rev = "0d4ab7d" }
+move-vm-runtime = { git = "https://github.com/MystenLabs/sui.git", package = "move-vm-runtime", rev = "0d4ab7d" }
+move-vm-types = { git = "https://github.com/MystenLabs/sui.git", package = "move-vm-types", rev = "0d4ab7d" }
+move-compiler = { git = "https://github.com/MystenLabs/sui.git", package = "move-compiler", rev = "0d4ab7d" }
+kas-l2-runtime-core = { path = "../runtime-core" }
+kas-l2-rocksdb-store = { path = "../rocksdb-store" }
+kas-l2-storage = { path = "../storage" }
+tempfile = "3.23.0"
+bcs = "0.1.6"
+borsh = "1.5.7"
+indexmap = "2.11.0"

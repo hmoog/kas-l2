@@ -1,5 +1,5 @@
 [workspace]
 resolver = "3"
-members = ["tools/cargo-kas", "crates/runtime", "crates/atomic", "crates/runtime-core", "crates/macros", "crates/storage", "crates/rocksdb-store"]
-default-members = ["crates/runtime", "crates/atomic", "crates/runtime-core", "crates/macros", "crates/storage", "crates/rocksdb-store"]
+members = ["tools/cargo-kas", "crates/runtime", "crates/atomic", "crates/runtime-core", "crates/macros", "crates/storage", "crates/rocksdb-store", "crates/move-vm"]
+default-members = ["crates/runtime", "crates/atomic", "crates/runtime-core", "crates/macros", "crates/storage", "crates/rocksdb-store", "crates/move-vm"]
 exclude = ["examples/hello-world", "old/runtime", "old/vm"]
