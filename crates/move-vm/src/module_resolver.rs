@@ -1,11 +1,8 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    fs,
-};
 use indexmap::IndexMap;
-use move_compiler::Compiler;
-use move_core_types::{identifier::IdentStr, language_storage::ModuleId, resolver, resolver::{LinkageResolver}};
-use tempfile::TempDir;
+use kas_l2_move_utils::Compiler;
+use move_core_types::{
+    identifier::IdentStr, language_storage::ModuleId, resolver, resolver::LinkageResolver,
+};
 
 pub struct ModuleResolver {
     objects: IndexMap<ModuleId, Vec<u8>>,
@@ -27,34 +24,12 @@ impl ModuleResolver {
     }
 
     pub fn from_sources(sources: &[&str]) -> Self {
-        let dir = TempDir::new().unwrap();
-        let mut temp_files = Vec::with_capacity(sources.len());
-        for (i, src) in sources.iter().enumerate() {
-            let virtual_source_path = dir.path().join(i.to_string()).to_string_lossy().to_string();
-            fs::write(&virtual_source_path, src).expect("failed to write source file");
-            temp_files.push(virtual_source_path);
+        Self {
+            objects: Compiler::compile_sources(sources, &[])
+                .into_iter()
+                .map(|u| (u.module_id().1, u.into_compiled_unit().serialize()))
+                .collect(),
         }
-
-        let compiled_units =
-            match Compiler::from_files::<String, String>(None, temp_files, vec![], BTreeMap::new())
-                .build()
-            {
-                Ok((_, result)) => match result {
-                    Ok((units, _)) => units,
-                    Err(diagnostics) => panic!("Compilation failed: {:?}", diagnostics),
-                },
-                Err(err) => panic!("Compilation failed: {}", err),
-            };
-
-        let mut objects = IndexMap::new();
-        for compiled_units in compiled_units {
-            objects.insert(
-                compiled_units.module_id().1,
-                compiled_units.into_compiled_unit().serialize(),
-            );
-        }
-
-        Self { objects }
     }
 }
 

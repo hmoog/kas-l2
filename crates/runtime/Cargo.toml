@@ -7,4 +7,6 @@ edition = "2021"
 kas-l2-runtime-core = { path = "../runtime-core" }
 kas-l2-rocksdb-store = { path = "../rocksdb-store" }
 kas-l2-storage = { path = "../storage" }
+kas-l2-move-vm = { path = "../move-vm" }
+move-core-types = { git = "https://github.com/MystenLabs/sui.git", package = "move-core-types", rev = "0d4ab7d" }
 tempfile = "3.23.0"

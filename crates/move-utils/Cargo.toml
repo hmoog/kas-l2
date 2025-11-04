@@ -1,0 +1,8 @@
+[package]
+name = "kas-l2-move-utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+move-compiler = { git = "https://github.com/MystenLabs/sui.git", package = "move-compiler", rev = "0d4ab7d" }
+tempfile = "3.23.0"

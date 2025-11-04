@@ -1,9 +1,13 @@
-use std::fmt::{Debug};
-use std::hash::{Hash};
-use std::io::{Read, Write};
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::ModuleId;
+use std::{
+    fmt::Debug,
+    hash::Hash,
+    io::{Read, Write},
+};
+
+use move_core_types::{
+    account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
+};
+
 use crate::object_id::ObjectId::Data;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
@@ -43,11 +47,12 @@ impl borsh::de::BorshDeserialize for ObjectId {
                 reader.read_exact(&mut address_bytes)?;
                 let address = AccountAddress::new(address_bytes);
                 let name_str = String::deserialize_reader(reader)?;
-                let name = Identifier::new(name_str)
-                    .map_err(|e| std::io::Error::new(
+                let name = Identifier::new(name_str).map_err(|e| {
+                    std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
-                        format!("Invalid identifier: {}", e)
-                    ))?;
+                        format!("Invalid identifier: {}", e),
+                    )
+                })?;
                 Ok(ObjectId::Module(ModuleId::new(address, name)))
             }
             1 => {
@@ -59,8 +64,8 @@ impl borsh::de::BorshDeserialize for ObjectId {
             }
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                format!("Invalid ObjectId discriminant: {}", discriminant)
-            ))
+                format!("Invalid ObjectId discriminant: {}", discriminant),
+            )),
         }
     }
 }

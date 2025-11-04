@@ -1,6 +1,6 @@
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_core_types::runtime_value::{MoveValue};
+use move_core_types::{
+    account_address::AccountAddress, identifier::Identifier, runtime_value::MoveValue,
+};
 use move_vm_types::loaded_data::runtime_types::Type;
 
 pub enum Instruction {

@@ -1073,15 +1073,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-move-utils"
+version = "0.1.0"
+dependencies = [
+ "move-compiler",
+ "tempfile",
+]
+
+[[package]]
 name = "kas-l2-move-vm"
 version = "0.1.0"
 dependencies = [
  "bcs",
  "borsh",
  "indexmap 2.11.0",
+ "kas-l2-move-utils",
  "kas-l2-rocksdb-store",
  "kas-l2-runtime-core",
- "kas-l2-storage",
+ "move-binary-format",
  "move-compiler",
  "move-core-types",
  "move-vm-runtime",
@@ -1104,9 +1113,11 @@ dependencies = [
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
+ "kas-l2-move-vm",
  "kas-l2-rocksdb-store",
  "kas-l2-runtime-core",
  "kas-l2-storage",
+ "move-core-types",
  "tempfile",
 ]
 

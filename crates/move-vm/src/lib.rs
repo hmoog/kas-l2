@@ -1,9 +1,16 @@
+mod instruction;
 mod module_resolver;
-mod vm;
+mod object_access;
 mod object_id;
 mod transaction;
-mod object_access;
-mod instruction;
+mod vm;
+
+pub use instruction::*;
+pub use module_resolver::*;
+pub use object_access::*;
+pub use object_id::*;
+pub use transaction::*;
+pub use vm::*;
 
 #[cfg(test)]
 mod test {
@@ -13,20 +20,13 @@ mod test {
         language_storage::ModuleId,
         runtime_value::{MoveStruct, MoveValue},
     };
-    use move_vm_runtime::{move_vm::MoveVM};
+    use move_vm_runtime::move_vm::MoveVM;
     use move_vm_types::gas::UnmeteredGasMeter;
 
-    use crate::{
-        module_resolver::ModuleResolver,
-    };
-    use crate::vm::VM;
+    use crate::module_resolver::ModuleResolver;
 
     #[test]
     pub fn test_move_vm() {
-        let vm = VM::new();
-
-        vm.process_transaction()
-
         let object_store = ModuleResolver::from_sources(&[
             r#"
             module 0x1::A {
@@ -57,9 +57,12 @@ mod test {
             &ModuleId::new(AccountAddress::ONE, Identifier::new("B").unwrap()),
             &Identifier::new("g").unwrap(),
             Vec::new(),
-            vec![bcs::to_bytes(&MoveStruct::new(vec![
-                MoveValue::U64(42), // Only field: value
-            ])).unwrap()],
+            vec![
+                bcs::to_bytes(&MoveStruct::new(vec![
+                    MoveValue::U64(42), // Only field: value
+                ]))
+                .unwrap(),
+            ],
             &mut UnmeteredGasMeter,
         );
 
@@ -67,7 +70,7 @@ mod test {
 
         assert!(res.is_ok(), "MoveVM execution failed: {:?}", res);
 
-        let (result , _store) = session.finish();
+        let (result, _store) = session.finish();
 
         match result {
             Ok(change_set) => {
