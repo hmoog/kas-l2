@@ -17,6 +17,10 @@ impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S
         self.access.metadata()
     }
 
+    pub fn version(&self) -> u64 {
+        self.versioned_state.version()
+    }
+
     #[inline]
     pub fn state(&self) -> &State<T> {
         self.versioned_state.state()
@@ -25,6 +29,11 @@ impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S
     #[inline]
     pub fn state_mut(&mut self) -> &mut State<T> {
         self.versioned_state.state_mut()
+    }
+
+    #[inline]
+    pub fn is_new(&self) -> bool {
+        self.versioned_state.version() == 0
     }
 
     pub(crate) fn new(access: &'a ResourceAccess<S, T>) -> Self {

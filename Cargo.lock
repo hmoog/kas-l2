@@ -1113,6 +1113,7 @@ dependencies = [
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
+ "kas-l2-move-utils",
  "kas-l2-move-vm",
  "kas-l2-rocksdb-store",
  "kas-l2-runtime-core",

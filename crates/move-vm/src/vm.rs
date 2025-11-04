@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use kas_l2_rocksdb_store::RocksDbStore;
@@ -32,14 +33,18 @@ impl VM {
         &self,
         tx: &Transaction,
         resources: &mut [AccessHandle<RocksDbStore, Transaction>],
-    ) -> Result<(), ()> {
+    ) -> Result<(), VMError> {
         let mut modules = ModuleResolver::new();
         let mut loaded_data = vec![];
+        let mut resources_by_id = HashMap::new();
         for resource in resources {
             match resource.access_metadata().id() {
                 ObjectId::Data(_) => loaded_data.push(resource.state().data.clone()),
                 ObjectId::Module(module_id) => {
-                    modules.add_module(module_id, resource.state().data.clone())
+                    if !resource.is_new() {
+                        modules.add_module(module_id.clone(), resource.state().data.clone())
+                    }
+                    resources_by_id.insert(module_id, resource);
                 }
             }
         }
@@ -60,10 +65,22 @@ impl VM {
                     })
                     .collect();
 
-                self.call_method(module_id, function_name, ty_args.clone(), args).expect("method call failed");
+                let res = self.call_method(module_id, function_name, ty_args.clone(), args)?;
+                res.mutable_reference_outputs;
             }
             Instruction::PublishModules { modules, sender } => {
-                self.publish_modules(modules.clone(), sender.clone()).expect("module publish failed");
+                for (module_id, op) in self.publish_modules(modules.clone(), sender.clone())? {
+                    let Some(resource) = resources_by_id.get_mut(&module_id) else {
+                        panic!("no resource found for published module {:?}", module_id);
+                    };
+
+                    match op {
+                        Op::New(data) | Op::Modify(data) => {
+                            resource.state_mut().data = data;
+                        }
+                        Op::Delete => panic!("published module cannot be deleted"),
+                    }
+                }
             }
         }
 
@@ -98,9 +115,7 @@ impl VM {
         sender: AccountAddress,
     ) -> Result<Vec<(ModuleId, Op<Vec<u8>>)>, VMError> {
         let mut session = self.move_vm.new_session(ModuleResolver::new());
-
         session.publish_module_bundle(modules_bytes, sender, &mut UnmeteredGasMeter)?;
-
         Ok(session.finish().0?.into_modules().collect())
     }
 }
