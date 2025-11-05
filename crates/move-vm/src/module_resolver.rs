@@ -9,18 +9,20 @@ pub struct ModuleResolver {
 }
 
 impl ModuleResolver {
-    pub fn new() -> ModuleResolver {
-        ModuleResolver {
-            objects: IndexMap::new(),
-        }
-    }
-
     pub fn add_module(&mut self, module_id: ModuleId, module_bytes: Vec<u8>) {
         self.objects.insert(module_id, module_bytes);
     }
 
     pub fn id(&self, index: usize) -> ModuleId {
         self.objects.get_index(index).unwrap().0.clone()
+    }
+}
+
+impl Default for ModuleResolver {
+    fn default() -> Self {
+        Self {
+            objects: IndexMap::new(),
+        }
     }
 }
 

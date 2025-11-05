@@ -11,7 +11,7 @@ mod object_access;
 mod object_id;
 mod transaction;
 mod vm;
-mod transaction_context;
+mod execution_context;
 
 pub use instructions::instruction::*;
 pub use module_resolver::*;

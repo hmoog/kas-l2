@@ -1,12 +1,11 @@
 extern crate core;
 
 use std::{str::FromStr, sync::Arc, thread::sleep, time::Duration};
-
 use kas_l2_move_utils::CompiledModules;
 use kas_l2_move_vm::{Instruction, ObjectAccess::Write, ObjectId, Transaction, VM};
 use kas_l2_rocksdb_store::RocksDbStore;
 use kas_l2_runtime_core::{Batch, RuntimeBuilder};
-use kas_l2_storage::StorageConfig;
+use kas_l2_storage::{StorageConfig};
 use move_core_types::{account_address::AccountAddress};
 use tempfile::TempDir;
 use kas_l2_move_vm::instructions::PublishModules;
@@ -30,13 +29,11 @@ pub fn test_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let store = RocksDbStore::open(temp_dir.path());
-        let move_vm = Arc::new(VM::new());
+        let move_vm = Arc::new(VM::default());
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_transaction_processor(move |tx, resource_handles| {
-                move_vm.process_transaction(tx, resource_handles)
-            })
+            .with_transaction_processor(move |tx, handles| move_vm.process_transaction(tx, handles))
             .with_notarization(|batch: &Batch<RocksDbStore, Transaction>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
