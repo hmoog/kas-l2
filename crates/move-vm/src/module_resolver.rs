@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use kas_l2_move_utils::Compiler;
+use kas_l2_move_utils::CompiledModules;
 use move_core_types::{
     identifier::IdentStr, language_storage::ModuleId, resolver, resolver::LinkageResolver,
 };
@@ -15,20 +15,20 @@ impl ModuleResolver {
         }
     }
 
-    pub fn module_id(&self, index: usize) -> &ModuleId {
-        self.objects.get_index(index).unwrap().0
-    }
-
     pub fn add_module(&mut self, module_id: ModuleId, module_bytes: Vec<u8>) {
         self.objects.insert(module_id, module_bytes);
     }
 
-    pub fn from_sources(sources: &[&str]) -> Self {
+    pub fn id(&self, index: usize) -> ModuleId {
+        self.objects.get_index(index).unwrap().0.clone()
+    }
+}
+
+impl From<CompiledModules> for ModuleResolver {
+    fn from(modules: CompiledModules) -> Self {
+        let serialized_modules = modules.into_iter().map(|(id, m)| (id, m.serialize()));
         Self {
-            objects: Compiler::compile_sources(sources, &[])
-                .into_iter()
-                .map(|u| (u.module_id().1, u.into_compiled_unit().serialize()))
-                .collect(),
+            objects: IndexMap::from_iter(serialized_modules),
         }
     }
 }

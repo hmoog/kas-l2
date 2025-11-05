@@ -1076,7 +1076,9 @@ dependencies = [
 name = "kas-l2-move-utils"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "move-compiler",
+ "move-core-types",
  "tempfile",
 ]
 
@@ -1084,6 +1086,7 @@ dependencies = [
 name = "kas-l2-move-vm"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bcs",
  "borsh",
  "indexmap 2.11.0",
@@ -1113,6 +1116,7 @@ dependencies = [
 name = "kas-l2-runtime"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "kas-l2-move-utils",
  "kas-l2-move-vm",
  "kas-l2-rocksdb-store",

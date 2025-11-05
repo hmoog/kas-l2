@@ -1,4 +1,4 @@
-use crate::{instruction::Instruction, object_access::ObjectAccess, object_id::ObjectId};
+use crate::{Instruction, object_access::ObjectAccess, object_id::ObjectId};
 
 pub struct Transaction {
     pub accessed_resources: Vec<ObjectAccess>,

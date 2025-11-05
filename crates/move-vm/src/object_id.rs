@@ -2,18 +2,27 @@ use std::{
     fmt::Debug,
     hash::Hash,
     io::{Read, Write},
+    str::FromStr,
 };
 
 use move_core_types::{
     account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
 };
 
-use crate::object_id::ObjectId::Data;
-
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum ObjectId {
     Module(ModuleId),
     Data(AccountAddress),
+}
+
+impl FromStr for ObjectId {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match ModuleId::from_str(s) {
+            Ok(module_id) => Ok(ObjectId::Module(module_id)),
+            Err(_) => Ok(ObjectId::Data(AccountAddress::from_str(s)?)),
+        }
+    }
 }
 
 impl borsh::ser::BorshSerialize for ObjectId {
@@ -72,6 +81,6 @@ impl borsh::de::BorshDeserialize for ObjectId {
 
 impl Default for ObjectId {
     fn default() -> Self {
-        Data(AccountAddress::ZERO)
+        ObjectId::Data(AccountAddress::ZERO)
     }
 }

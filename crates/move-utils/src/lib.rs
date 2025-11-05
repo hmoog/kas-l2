@@ -1,3 +1,3 @@
-mod compiler;
+mod compiled_modules;
 
-pub use compiler::Compiler;
+pub use compiled_modules::CompiledModules;
