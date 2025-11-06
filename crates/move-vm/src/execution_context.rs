@@ -46,7 +46,7 @@ impl<'a, 'v, 'r> ExecutionContext<'a, 'v, 'r> {
         }
     }
 
-    pub fn serialized_args(&mut self, args: &[MethodCallArg]) -> Vec<Vec<u8>> {
+    pub fn prepare_args(&mut self, args: &[MethodCallArg]) -> Vec<Vec<u8>> {
         self.last_args = Vec::with_capacity(args.len());
         args.iter()
             .map(|arg| match arg {

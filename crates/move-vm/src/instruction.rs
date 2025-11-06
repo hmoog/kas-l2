@@ -33,7 +33,7 @@ impl Instruction {
                 ty_args,
                 args,
             } => {
-                let args = ctx.serialized_args(args);
+                let args = ctx.prepare_args(args);
                 let execution_results = ctx.session.execute_function_bypass_visibility(
                     &ctx.modules().id(*module_ref),
                     function_name,
