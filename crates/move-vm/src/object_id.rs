@@ -1,16 +1,10 @@
-use std::{
-    fmt::Debug,
-    hash::Hash,
-    io::{Read, Write},
-    str::FromStr,
-};
+use std::{fmt::Debug, hash::Hash, str::FromStr};
 
-use move_core_types::{
-    account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
-};
+use move_core_types::{account_address::AccountAddress, language_storage::ModuleId};
 
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug, Default)]
 pub enum ObjectId {
+    #[default]
     Empty,
     Module(ModuleId),
     Data(AccountAddress),
@@ -26,67 +20,71 @@ impl FromStr for ObjectId {
     }
 }
 
-impl borsh::ser::BorshSerialize for ObjectId {
-    fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        match self {
-            ObjectId::Empty => {
-                // Write discriminant for Data variant
-                0u8.serialize(writer)
-            }
-            ObjectId::Module(module_id) => {
-                // Write discriminant for Module variant
-                1u8.serialize(writer)?;
-                // Serialize the address component
-                module_id.address().serialize(writer)?;
-                // Serialize the name component
-                module_id.name().as_str().serialize(writer)
-            }
-            ObjectId::Data(address) => {
-                // Write discriminant for Data variant
-                2u8.serialize(writer)?;
-                address.serialize(writer)
+mod foreign_traits {
+    use std::io::{Read, Write};
+
+    use move_core_types::{
+        account_address::AccountAddress, identifier::Identifier, language_storage::ModuleId,
+    };
+
+    use crate::ObjectId;
+
+    impl borsh::ser::BorshSerialize for ObjectId {
+        fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+            match self {
+                ObjectId::Empty => {
+                    // Write discriminant for Data variant
+                    0u8.serialize(writer)
+                }
+                ObjectId::Module(module_id) => {
+                    // Write discriminant for Module variant
+                    1u8.serialize(writer)?;
+                    // Serialize the address component
+                    module_id.address().serialize(writer)?;
+                    // Serialize the name component
+                    module_id.name().as_str().serialize(writer)
+                }
+                ObjectId::Data(address) => {
+                    // Write discriminant for Data variant
+                    2u8.serialize(writer)?;
+                    address.serialize(writer)
+                }
             }
         }
     }
-}
 
-impl borsh::de::BorshDeserialize for ObjectId {
-    fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
-        // Read the discriminant byte
-        let discriminant = u8::deserialize_reader(reader)?;
+    impl borsh::de::BorshDeserialize for ObjectId {
+        fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
+            // Read the discriminant byte
+            let discriminant = u8::deserialize_reader(reader)?;
 
-        match discriminant {
-            0 => Ok(ObjectId::Empty),
-            1 => {
-                let mut address_bytes = [0u8; AccountAddress::LENGTH];
-                reader.read_exact(&mut address_bytes)?;
-                let address = AccountAddress::new(address_bytes);
-                let name_str = String::deserialize_reader(reader)?;
-                let name = Identifier::new(name_str).map_err(|e| {
-                    std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        format!("Invalid identifier: {}", e),
-                    )
-                })?;
-                Ok(ObjectId::Module(ModuleId::new(address, name)))
+            match discriminant {
+                0 => Ok(ObjectId::Empty),
+                1 => {
+                    let mut address_bytes = [0u8; AccountAddress::LENGTH];
+                    reader.read_exact(&mut address_bytes)?;
+                    let address = AccountAddress::new(address_bytes);
+                    let name_str = String::deserialize_reader(reader)?;
+                    let name = Identifier::new(name_str).map_err(|e| {
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            format!("Invalid identifier: {}", e),
+                        )
+                    })?;
+                    Ok(ObjectId::Module(ModuleId::new(address, name)))
+                }
+                2 => {
+                    // Data variant: deserialize address
+                    let mut address_bytes = [0u8; AccountAddress::LENGTH];
+                    reader.read_exact(&mut address_bytes)?;
+                    let address = AccountAddress::new(address_bytes);
+                    Ok(ObjectId::Data(address))
+                }
+                _ => Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("Invalid ObjectId discriminant: {}", discriminant),
+                )),
             }
-            2 => {
-                // Data variant: deserialize address
-                let mut address_bytes = [0u8; AccountAddress::LENGTH];
-                reader.read_exact(&mut address_bytes)?;
-                let address = AccountAddress::new(address_bytes);
-                Ok(ObjectId::Data(address))
-            }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("Invalid ObjectId discriminant: {}", discriminant),
-            )),
         }
-    }
-}
-
-impl Default for ObjectId {
-    fn default() -> Self {
-        ObjectId::Data(AccountAddress::ZERO)
     }
 }

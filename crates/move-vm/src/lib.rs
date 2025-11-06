@@ -1,14 +1,15 @@
+pub use instruction::{Instruction, MethodCallArg};
+pub(crate) use modules::Modules;
+pub use object_access::ObjectAccess;
+pub use object_id::ObjectId;
+pub use transaction::Transaction;
+pub use vm::VM;
+
 mod execution_context;
 mod instruction;
-mod module_resolver;
+mod modules;
 mod object_access;
 mod object_id;
 mod transaction;
+mod type_alias;
 mod vm;
-
-pub use instruction::*;
-pub use module_resolver::*;
-pub use object_access::*;
-pub use object_id::*;
-pub use transaction::*;
-pub use vm::*;

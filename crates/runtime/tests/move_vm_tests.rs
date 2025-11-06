@@ -24,7 +24,7 @@ pub fn test_runtime() -> Result<(), anyhow::Error> {
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
             .with_transaction_processor(move |tx, res| {
-                vm.process_transaction(tx, res).map_err(|err| {
+                vm.process(tx, res).map_err(|err| {
                     eprintln!("tx execution failed: {:?}", err);
                     err
                 })

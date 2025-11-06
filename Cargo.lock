@@ -1094,11 +1094,9 @@ dependencies = [
  "kas-l2-rocksdb-store",
  "kas-l2-runtime-core",
  "move-binary-format",
- "move-compiler",
  "move-core-types",
  "move-vm-runtime",
  "move-vm-types",
- "tempfile",
 ]
 
 [[package]]

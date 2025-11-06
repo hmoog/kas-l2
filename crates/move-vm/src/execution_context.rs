@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use kas_l2_rocksdb_store::RocksDbStore;
-use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType};
+use kas_l2_runtime_core::{AccessMetadata, AccessType};
 use move_binary_format::errors::VMResult;
 use move_core_types::{effects::Op, runtime_value::MoveTypeLayout};
 use move_vm_runtime::{
@@ -9,23 +8,20 @@ use move_vm_runtime::{
     session::{SerializedReturnValues, Session},
 };
 
-use crate::{MethodCallArg, ModuleResolver, ObjectId, Transaction};
+use crate::{MethodCallArg, Modules, ObjectId, type_alias::AccessHandle};
 
-pub struct ExecutionContext<'a, 'v, 'res> {
-    pub resources: &'res mut [AccessHandle<'a, RocksDbStore, Transaction>],
+pub struct ExecutionContext<'a, 'v, 'r> {
+    pub resources: &'r mut [AccessHandle<'a>],
     pub input_objects: Vec<ObjectId>,
     pub mutations: HashMap<ObjectId, Op<Vec<u8>>>,
     pub last_args: Vec<ObjectId>,
     pub return_stack: Vec<Vec<(Vec<u8>, MoveTypeLayout)>>,
-    pub session: Session<'a, 'v, ModuleResolver>,
+    pub session: Session<'a, 'v, Modules>,
 }
 
-impl<'elem, 'vm, 'res> ExecutionContext<'elem, 'vm, 'res> {
-    pub fn new(
-        vm: &'vm MoveVM,
-        resources: &'res mut [AccessHandle<'elem, RocksDbStore, Transaction>],
-    ) -> Self {
-        let mut modules = ModuleResolver::default();
+impl<'a, 'v, 'r> ExecutionContext<'a, 'v, 'r> {
+    pub fn new(vm: &'v MoveVM, resources: &'r mut [AccessHandle<'a>]) -> Self {
+        let mut modules = Modules::default();
         let mut input_objects = Vec::with_capacity(resources.len());
 
         for resource in resources.iter() {
@@ -33,7 +29,7 @@ impl<'elem, 'vm, 'res> ExecutionContext<'elem, 'vm, 'res> {
 
             if let ObjectId::Module(module_id) = &object_id {
                 if !resource.is_new() {
-                    modules.add_module(module_id.clone(), resource.state().data.clone())
+                    modules.add(module_id.clone(), resource.state().data.clone())
                 }
             }
 
@@ -69,7 +65,7 @@ impl<'elem, 'vm, 'res> ExecutionContext<'elem, 'vm, 'res> {
     pub fn ingest_execution_results(&mut self, execution_result: SerializedReturnValues) {
         self.return_stack.push(execution_result.return_values);
 
-        // map mutable reference outputs to mutations
+        // map mutable reference changes to mutations
         for (index, bytes, _) in execution_result.mutable_reference_outputs {
             let object_id = self.last_args.get(index as usize).unwrap();
             match object_id {
@@ -87,19 +83,17 @@ impl<'elem, 'vm, 'res> ExecutionContext<'elem, 'vm, 'res> {
         }
     }
 
-    pub fn mutate(&mut self, object_id: ObjectId, op: Op<Vec<u8>>) {
-        self.mutations.insert(object_id, op);
-    }
-
-    pub fn modules(&self) -> &ModuleResolver {
+    pub fn modules(&self) -> &Modules {
         self.session.get_resolver()
     }
 
     pub fn finalize(mut self) -> VMResult<()> {
-        for (module_id, op) in self.session.finish().0?.into_modules().collect::<Vec<_>>() {
+        // collect module mutations
+        for (module_id, op) in self.session.finish().0?.into_modules() {
             self.mutations.insert(ObjectId::Module(module_id), op);
         }
 
+        // apply mutations back to resources
         for resource in self.resources.iter_mut() {
             if resource.access_metadata().access_type() == AccessType::Write {
                 if let Some(op) = self.mutations.remove(&resource.access_metadata().id()) {
@@ -115,6 +109,7 @@ impl<'elem, 'vm, 'res> ExecutionContext<'elem, 'vm, 'res> {
             }
         }
 
+        // ensure there are no pending mutations
         if !self.mutations.is_empty() {
             panic!("There are unprocessed mutations: {:?}", self.mutations);
         }

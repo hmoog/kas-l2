@@ -1,15 +1,19 @@
-use crate::{Instruction, object_access::ObjectAccess, object_id::ObjectId};
+use crate::{Instruction, object_access::ObjectAccess};
 
 pub struct Transaction {
     pub accessed_resources: Vec<ObjectAccess>,
     pub instruction: Instruction,
 }
 
-impl kas_l2_runtime_core::Transaction for Transaction {
-    type ResourceId = ObjectId;
-    type AccessMetadata = ObjectAccess;
+mod foreign_traits {
+    use crate::{ObjectAccess, ObjectId, Transaction};
 
-    fn accessed_resources(&self) -> &[Self::AccessMetadata] {
-        &self.accessed_resources
+    impl kas_l2_runtime_core::Transaction for Transaction {
+        type ResourceId = ObjectId;
+        type AccessMetadata = ObjectAccess;
+
+        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+            &self.accessed_resources
+        }
     }
 }
