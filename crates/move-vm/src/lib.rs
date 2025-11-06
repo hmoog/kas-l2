@@ -1,19 +1,12 @@
-pub mod instructions {
-    pub(crate) mod function_call;
-    pub(crate) mod instruction;
-    pub(crate) mod publish_modules;
-
-    pub use publish_modules::PublishModules;
-}
-
+mod execution_context;
+mod instruction;
 mod module_resolver;
 mod object_access;
 mod object_id;
 mod transaction;
 mod vm;
-mod execution_context;
 
-pub use instructions::instruction::*;
+pub use instruction::*;
 pub use module_resolver::*;
 pub use object_access::*;
 pub use object_id::*;

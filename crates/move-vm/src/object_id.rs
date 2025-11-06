@@ -11,6 +11,7 @@ use move_core_types::{
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum ObjectId {
+    Empty,
     Module(ModuleId),
     Data(AccountAddress),
 }
@@ -28,9 +29,13 @@ impl FromStr for ObjectId {
 impl borsh::ser::BorshSerialize for ObjectId {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
+            ObjectId::Empty => {
+                // Write discriminant for Data variant
+                0u8.serialize(writer)
+            }
             ObjectId::Module(module_id) => {
                 // Write discriminant for Module variant
-                0u8.serialize(writer)?;
+                1u8.serialize(writer)?;
                 // Serialize the address component
                 module_id.address().serialize(writer)?;
                 // Serialize the name component
@@ -38,7 +43,7 @@ impl borsh::ser::BorshSerialize for ObjectId {
             }
             ObjectId::Data(address) => {
                 // Write discriminant for Data variant
-                1u8.serialize(writer)?;
+                2u8.serialize(writer)?;
                 address.serialize(writer)
             }
         }
@@ -51,7 +56,8 @@ impl borsh::de::BorshDeserialize for ObjectId {
         let discriminant = u8::deserialize_reader(reader)?;
 
         match discriminant {
-            0 => {
+            0 => Ok(ObjectId::Empty),
+            1 => {
                 let mut address_bytes = [0u8; AccountAddress::LENGTH];
                 reader.read_exact(&mut address_bytes)?;
                 let address = AccountAddress::new(address_bytes);
@@ -64,7 +70,7 @@ impl borsh::de::BorshDeserialize for ObjectId {
                 })?;
                 Ok(ObjectId::Module(ModuleId::new(address, name)))
             }
-            1 => {
+            2 => {
                 // Data variant: deserialize address
                 let mut address_bytes = [0u8; AccountAddress::LENGTH];
                 reader.read_exact(&mut address_bytes)?;
