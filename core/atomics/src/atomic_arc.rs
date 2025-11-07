@@ -9,9 +9,7 @@ pub struct AtomicArc<T> {
 
 impl<T> AtomicArc<T> {
     pub fn new(value: Arc<T>) -> Self {
-        Self {
-            ptr: AtomicPtr::new(Arc::into_raw(value) as *mut T),
-        }
+        Self { ptr: AtomicPtr::new(Arc::into_raw(value) as *mut T) }
     }
 
     pub fn store(&self, value: Arc<T>) {

@@ -20,11 +20,7 @@ impl WorkerHandle {
         is_parked: Arc<CachePadded<AtomicBool>>,
         join_handle: JoinHandle<()>,
     ) -> Self {
-        Self {
-            unparker,
-            is_parked,
-            join_handle: AtomicCell::new(Some(join_handle)),
-        }
+        Self { unparker, is_parked, join_handle: AtomicCell::new(Some(join_handle)) }
     }
 
     #[inline]

@@ -17,11 +17,7 @@ pub struct WriteBatch<C: Config = DefaultConfig> {
 
 impl<C: Config> WriteBatch<C> {
     pub(crate) fn new(db: Arc<DB>) -> Self {
-        Self {
-            db,
-            inner: rocksdb::WriteBatch::default(),
-            _marker: PhantomData,
-        }
+        Self { db, inner: rocksdb::WriteBatch::default(), _marker: PhantomData }
     }
 }
 

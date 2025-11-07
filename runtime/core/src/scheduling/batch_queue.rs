@@ -14,10 +14,7 @@ pub struct BatchQueue<S: Store<StateSpace = RuntimeState>, T: Transaction> {
 
 impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchQueue<S, T> {
     pub fn new(new_batches: Arc<ArrayQueue<Batch<S, T>>>) -> Self {
-        Self {
-            queue: LinkedList::new(linked_list::Adapter::new()),
-            new_batches,
-        }
+        Self { queue: LinkedList::new(linked_list::Adapter::new()), new_batches }
     }
 
     pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, T>>) -> Option<RuntimeTx<S, T>> {
@@ -46,8 +43,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchQueue<S, T> {
     fn try_pull_new_batches(&mut self) -> bool {
         let mut pulled = false;
         while let Some(batch) = self.new_batches.pop() {
-            self.queue
-                .push_back(Box::new(linked_list::Element::new(batch)));
+            self.queue.push_back(Box::new(linked_list::Element::new(batch)));
             pulled = true;
         }
         pulled
@@ -66,10 +62,7 @@ mod linked_list {
 
     impl<T> Element<T> {
         pub fn new(inner: T) -> Self {
-            Self {
-                link: LinkedListLink::new(),
-                inner,
-            }
+            Self { link: LinkedListLink::new(), inner }
         }
     }
 

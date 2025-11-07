@@ -89,10 +89,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
     }
 
     pub(crate) fn read_latest_data<R: ReadStore<StateSpace = RuntimeState>>(&self, store: &R) {
-        self.set_read_state(Arc::new(VersionedState::from_latest_data(
-            store,
-            self.metadata.id(),
-        )));
+        self.set_read_state(Arc::new(VersionedState::from_latest_data(store, self.metadata.id())));
     }
 
     pub(crate) fn tx(&self) -> &RuntimeTxRef<S, T> {

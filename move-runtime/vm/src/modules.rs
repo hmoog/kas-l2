@@ -20,9 +20,7 @@ impl Modules {
 impl From<CompiledModules> for Modules {
     fn from(modules: CompiledModules) -> Self {
         let serialized_modules = modules.into_iter().map(|(id, m)| (id, m.serialize()));
-        Self {
-            modules: IndexMap::from_iter(serialized_modules),
-        }
+        Self { modules: IndexMap::from_iter(serialized_modules) }
     }
 }
 
@@ -57,11 +55,7 @@ mod foreign_traits {
         type Error = String;
 
         fn get_module(&self, id: &ModuleId) -> Result<Option<Vec<u8>>, Self::Error> {
-            self.modules
-                .get(id)
-                .cloned()
-                .ok_or("".to_string())
-                .map(Some)
+            self.modules.get(id).cloned().ok_or("".to_string()).map(Some)
         }
     }
 }

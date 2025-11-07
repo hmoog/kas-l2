@@ -21,11 +21,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, 
         let notify = Arc::new(Notify::new());
         let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
 
-        Self {
-            queue,
-            notify,
-            handle,
-        }
+        Self { queue, notify, handle }
     }
 
     pub(crate) fn push(&self, batch: Batch<S, T>) {
@@ -45,10 +41,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, 
         notarizer: F,
     ) -> JoinHandle<()> {
         thread::spawn(move || {
-            Builder::new_current_thread()
-                .build()
-                .expect("failed to build Tokio runtime")
-                .block_on(async move {
+            Builder::new_current_thread().build().expect("failed to build tokio runtime").block_on(
+                async move {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
                             batch.wait_processed().await;
@@ -62,7 +56,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, 
                             notify.notified().await
                         }
                     }
-                })
+                },
+            )
         })
     }
 }

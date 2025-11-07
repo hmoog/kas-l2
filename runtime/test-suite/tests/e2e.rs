@@ -68,10 +68,7 @@ mod test_framework {
         pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
             for resource in resources {
                 if resource.access_metadata().access_type() == AccessType::Write {
-                    resource
-                        .state_mut()
-                        .data
-                        .extend_from_slice(&self.0.to_be_bytes());
+                    resource.state_mut().data.extend_from_slice(&self.0.to_be_bytes());
                 }
             }
             Ok::<(), ()>(())

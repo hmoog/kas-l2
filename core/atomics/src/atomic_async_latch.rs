@@ -14,10 +14,7 @@ pub struct AtomicAsyncLatch {
 impl AtomicAsyncLatch {
     /// Create a new latch in the "closed" state.
     pub fn new() -> Self {
-        Self {
-            ready: AtomicBool::new(false),
-            notify: Notify::new(),
-        }
+        Self { ready: AtomicBool::new(false), notify: Notify::new() }
     }
 
     /// Open the latch (transition from false → true).

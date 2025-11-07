@@ -1062,7 +1062,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-move-runtime"
+name = "kas-l2-move-runtime-test-suite"
 version = "0.1.0"
 dependencies = [
  "anyhow",

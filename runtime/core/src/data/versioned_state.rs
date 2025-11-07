@@ -18,11 +18,7 @@ pub struct VersionedState<T: Transaction> {
 
 impl<T: Transaction> VersionedState<T> {
     pub fn empty(id: T::ResourceId) -> Self {
-        Self {
-            resource_id: id,
-            version: 0,
-            state: State::default(),
-        }
+        Self { resource_id: id, version: 0, state: State::default() }
     }
 
     pub fn from_latest_data<S>(store: &S, id: T::ResourceId) -> Self

@@ -11,16 +11,11 @@ pub struct AtomicEnum<T: Into<u8> + TryFrom<u8>> {
 
 impl<T: Into<u8> + TryFrom<u8>> AtomicEnum<T> {
     pub fn new(value: T) -> Self {
-        Self {
-            inner: AtomicU8::new(value.into()),
-            _marker: PhantomData,
-        }
+        Self { inner: AtomicU8::new(value.into()), _marker: PhantomData }
     }
 
     pub fn load(&self) -> T {
-        T::try_from(self.inner.load(Ordering::Acquire))
-            .ok()
-            .unwrap()
+        T::try_from(self.inner.load(Ordering::Acquire)).ok().unwrap()
     }
 
     pub fn store(&self, value: T) {
@@ -28,31 +23,19 @@ impl<T: Into<u8> + TryFrom<u8>> AtomicEnum<T> {
     }
 
     pub fn swap(&self, value: T) -> T {
-        T::try_from(self.inner.swap(value.into(), Ordering::AcqRel))
-            .ok()
-            .unwrap()
+        T::try_from(self.inner.swap(value.into(), Ordering::AcqRel)).ok().unwrap()
     }
 
     pub fn compare_exchange(&self, current: T, new: T) -> Result<T, T> {
         self.inner
-            .compare_exchange(
-                current.into(),
-                new.into(),
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            )
+            .compare_exchange(current.into(), new.into(), Ordering::AcqRel, Ordering::Acquire)
             .map(|v| T::try_from(v).ok().unwrap())
             .map_err(|v| T::try_from(v).ok().unwrap())
     }
 
     pub fn compare_exchange_weak(&self, current: T, new: T) -> Result<T, T> {
         self.inner
-            .compare_exchange_weak(
-                current.into(),
-                new.into(),
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            )
+            .compare_exchange_weak(current.into(), new.into(), Ordering::AcqRel, Ordering::Acquire)
             .map(|v| T::try_from(v).ok().unwrap())
             .map_err(|v| T::try_from(v).ok().unwrap())
     }

@@ -7,16 +7,8 @@ use move_vm_types::{gas::UnmeteredGasMeter, loaded_data::runtime_types::Type};
 use crate::execution_context::ExecutionContext;
 
 pub enum Instruction {
-    PublishModules {
-        modules: Vec<Vec<u8>>,
-        sender: AccountAddress,
-    },
-    MethodCall {
-        module_ref: usize,
-        function_name: Identifier,
-        ty_args: Vec<Type>,
-        args: Vec<MethodCallArg>,
-    },
+    PublishModules { modules: Vec<Vec<u8>>, sender: AccountAddress },
+    MethodCall { module: usize, fn_name: Identifier, ty_args: Vec<Type>, args: Vec<MethodCallArg> },
 }
 
 impl Instruction {
@@ -27,16 +19,12 @@ impl Instruction {
                 *sender,
                 &mut UnmeteredGasMeter,
             )?,
-            Instruction::MethodCall {
-                module_ref,
-                function_name,
-                ty_args,
-                args,
-            } => {
+
+            Instruction::MethodCall { module, fn_name, ty_args, args } => {
                 let args = ctx.prepare_args(args);
                 let execution_results = ctx.session.execute_function_bypass_visibility(
-                    &ctx.modules().id(*module_ref),
-                    function_name,
+                    &ctx.modules().id(*module),
+                    fn_name,
                     ty_args.clone(),
                     args,
                     &mut UnmeteredGasMeter,

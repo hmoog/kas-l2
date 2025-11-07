@@ -24,10 +24,7 @@ impl Parse for Arg {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let key: Ident = input.parse()?; // expect `deref`
         if key != "deref" {
-            return Err(syn::Error::new(
-                key.span(),
-                "unknown argument; expected `deref`",
-            ));
+            return Err(syn::Error::new(key.span(), "unknown argument; expected `deref`"));
         }
         if input.peek(Token![=]) {
             let _: Token![=] = input.parse()?;
@@ -39,10 +36,7 @@ impl Parse for Arg {
             let field: Ident = content.parse()?;
             Ok(Arg::DerefParen(field))
         } else {
-            Err(syn::Error::new(
-                key.span(),
-                "expected `=` field_name or `(field_name)`",
-            ))
+            Err(syn::Error::new(key.span(), "expected `=` field_name or `(field_name)`"))
         }
     }
 }
@@ -97,16 +91,15 @@ pub fn expand_smart_pointer(orig: ItemStruct, args: Args) -> Result<proc_macro2:
     let vis_data: syn::Visibility = parse_quote!(pub);
 
     let data_deref_impl = if let Some(field_ident) = args.deref_field {
-        let field = fields_named
-            .named
-            .iter()
-            .find(|f| f.ident.as_ref() == Some(&field_ident))
-            .ok_or_else(|| {
-                syn::Error::new(
-                    field_ident.span(),
-                    format!("`deref` field `{}` not found on struct", field_ident),
-                )
-            })?;
+        let field =
+            fields_named.named.iter().find(|f| f.ident.as_ref() == Some(&field_ident)).ok_or_else(
+                || {
+                    syn::Error::new(
+                        field_ident.span(),
+                        format!("`deref` field `{}` not found on struct", field_ident),
+                    )
+                },
+            )?;
         let ty = &field.ty;
         Some(quote! {
             impl #impl_generics ::core::ops::Deref for #data_ident #ty_generics #where_clause_impl {

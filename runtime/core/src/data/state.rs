@@ -18,12 +18,7 @@ impl<T: Transaction> State<T> {
 
 impl<T: Transaction> Default for State<T> {
     fn default() -> Self {
-        Self {
-            owner: T::ResourceId::default(),
-            data: Vec::new(),
-            balance: 0,
-            executable: false,
-        }
+        Self { owner: T::ResourceId::default(), data: Vec::new(), balance: 0, executable: false }
     }
 }
 

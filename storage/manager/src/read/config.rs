@@ -30,9 +30,6 @@ impl ReadConfig {
 
 impl Default for ReadConfig {
     fn default() -> Self {
-        Self {
-            max_readers: 8,
-            buffer_depth_per_reader: 128,
-        }
+        Self { max_readers: 8, buffer_depth_per_reader: 128 }
     }
 }

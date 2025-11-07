@@ -32,9 +32,6 @@ impl WriteConfig {
 
 impl Default for WriteConfig {
     fn default() -> Self {
-        Self {
-            max_batch_size: 1000,
-            max_batch_duration: Duration::from_millis(10),
-        }
+        Self { max_batch_size: 1000, max_batch_duration: Duration::from_millis(10) }
     }
 }

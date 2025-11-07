@@ -16,7 +16,7 @@ use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use tempfile::TempDir;
 
 #[test]
-pub fn test_runtime() -> Result<(), anyhow::Error> {
+pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let store = RocksDbStore::open(temp_dir.path());
@@ -50,8 +50,8 @@ pub fn test_runtime() -> Result<(), anyhow::Error> {
             Transaction {
                 accessed_resources: vec![Read(ObjectId::from_str("0x1::Test")?)],
                 instruction: Instruction::MethodCall {
-                    module_ref: 0,
-                    function_name: Identifier::from_str("get_value")?,
+                    module: 0,
+                    fn_name: Identifier::from_str("get_value")?,
                     ty_args: vec![],
                     args: vec![],
                 },

@@ -85,11 +85,6 @@ impl<
         let transaction_processor =
             transaction_processor.expect("Processor must be provided before calling build()");
 
-        Runtime::from_parts(
-            execution_workers,
-            transaction_processor,
-            notarizer,
-            storage_config,
-        )
+        Runtime::from_parts(execution_workers, transaction_processor, notarizer, storage_config)
     }
 }

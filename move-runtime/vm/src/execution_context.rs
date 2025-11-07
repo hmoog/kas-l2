@@ -73,8 +73,7 @@ impl<'a, 'v, 'r> ExecutionContext<'a, 'v, 'r> {
                     panic!("module objects cannot be mutated by functions");
                 }
                 ObjectId::Data(address) => {
-                    self.mutations
-                        .insert(ObjectId::Data(*address), Op::Modify(bytes));
+                    self.mutations.insert(ObjectId::Data(*address), Op::Modify(bytes));
                 }
                 _ => {
                     // ignore other object types for mutation purposes
