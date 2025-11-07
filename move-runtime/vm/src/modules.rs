@@ -18,7 +18,8 @@ impl Modules {
 
 mod foreign_traits {
     use move_core_types::{
-        identifier::IdentStr, language_storage::ModuleId, resolver, resolver::LinkageResolver,
+        account_address::AccountAddress, identifier::IdentStr, language_storage::ModuleId,
+        resolver, resolver::LinkageResolver,
     };
 
     use crate::Modules;
@@ -26,8 +27,8 @@ mod foreign_traits {
     impl LinkageResolver for Modules {
         type Error = String;
 
-        fn link_context(&self) -> move_core_types::account_address::AccountAddress {
-            move_core_types::account_address::AccountAddress::ZERO
+        fn link_context(&self) -> AccountAddress {
+            AccountAddress::ZERO
         }
 
         fn relocate(&self, module_id: &ModuleId) -> Result<ModuleId, Self::Error> {
