@@ -21,7 +21,6 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let store = RocksDbStore::open(temp_dir.path());
-        let vm = VM::default();
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
@@ -32,7 +31,7 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
                     batch.state_diffs().len()
                 );
             })
-            .with_vm(vm)
+            .with_vm(VM::default())
             .build();
 
         runtime.process(vec![
