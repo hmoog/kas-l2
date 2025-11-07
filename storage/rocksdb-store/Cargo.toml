@@ -1,0 +1,11 @@
+[package]
+name = "kas-l2-storage-rocksdb-store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocksdb = { version = "0.24.0", default-features = false, features = ["lz4", "zstd", "snappy", "zlib", "bzip2", "jemalloc", "mt_static"] }
+kas-l2-storage-manager = { path = "../manager" }
+kas-l2-runtime = { path = "../../runtime" }
+num_cpus = "1.17.0"
+tap = "1.0.1"

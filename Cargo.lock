@@ -284,18 +284,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-kas"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "glob",
- "serde",
- "serde_json",
- "which",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -599,12 +587,6 @@ source = "git+https://github.com/MystenLabs/sui.git?rev=0d4ab7d#0d4ab7ddca858730
 dependencies = [
  "serde_yaml",
 ]
-
-[[package]]
-name = "env_home"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7f84e12ccf0a7ddc17a6c41c93326024c42920d7ee630d04950e6926645c0fe"
 
 [[package]]
 name = "equivalent"
@@ -1057,14 +1039,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-atomic"
+name = "kas-l2-core-atomics"
 version = "0.1.0"
 dependencies = [
  "tokio",
 ]
 
 [[package]]
-name = "kas-l2-macros"
+name = "kas-l2-core-macros"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -1073,7 +1055,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-move-utils"
+name = "kas-l2-move-runtime"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "kas-l2-move-runtime-utils",
+ "kas-l2-move-runtime-vm",
+ "kas-l2-runtime",
+ "kas-l2-storage-manager",
+ "kas-l2-storage-rocksdb-store",
+ "move-core-types",
+ "tempfile",
+]
+
+[[package]]
+name = "kas-l2-move-runtime-utils"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1083,16 +1079,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-move-vm"
+name = "kas-l2-move-runtime-vm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "bcs",
  "borsh",
  "indexmap 2.11.0",
- "kas-l2-move-utils",
- "kas-l2-rocksdb-store",
- "kas-l2-runtime-core",
+ "kas-l2-move-runtime-utils",
+ "kas-l2-runtime",
+ "kas-l2-storage-rocksdb-store",
  "move-binary-format",
  "move-core-types",
  "move-vm-runtime",
@@ -1100,32 +1096,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-rocksdb-store"
-version = "0.1.0"
-dependencies = [
- "kas-l2-runtime-core",
- "kas-l2-storage",
- "num_cpus",
- "rocksdb",
- "tap",
-]
-
-[[package]]
 name = "kas-l2-runtime"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "kas-l2-move-utils",
- "kas-l2-move-vm",
- "kas-l2-rocksdb-store",
- "kas-l2-runtime-core",
- "kas-l2-storage",
- "move-core-types",
- "tempfile",
-]
-
-[[package]]
-name = "kas-l2-runtime-core"
 version = "0.1.0"
 dependencies = [
  "borsh",
@@ -1134,21 +1105,32 @@ dependencies = [
  "crossbeam-utils",
  "fastrand",
  "intrusive-collections",
- "kas-l2-atomic",
- "kas-l2-macros",
- "kas-l2-storage",
+ "kas-l2-core-atomics",
+ "kas-l2-core-macros",
+ "kas-l2-storage-manager",
  "num_cpus",
  "tap",
  "tokio",
 ]
 
 [[package]]
-name = "kas-l2-storage"
+name = "kas-l2-storage-manager"
 version = "0.1.0"
 dependencies = [
  "crossbeam-queue",
  "crossbeam-utils",
- "kas-l2-macros",
+ "kas-l2-core-macros",
+]
+
+[[package]]
+name = "kas-l2-storage-rocksdb-store"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime",
+ "kas-l2-storage-manager",
+ "num_cpus",
+ "rocksdb",
+ "tap",
 ]
 
 [[package]]
@@ -2814,17 +2796,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "which"
-version = "8.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3fabb953106c3c8eea8306e4393700d7657561cb43122571b172bbfb7c7ba1d"
-dependencies = [
- "env_home",
- "rustix",
- "winsafe",
-]
-
-[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3075,12 +3046,6 @@ checksum = "21a0236b59786fed61e2a80582dd500fe61f18b5dca67a4a067d0bc9039339cf"
 dependencies = [
  "memchr",
 ]
-
-[[package]]
-name = "winsafe"
-version = "0.0.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
 name = "wit-bindgen-rt"

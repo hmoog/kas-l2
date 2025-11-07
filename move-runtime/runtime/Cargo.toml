@@ -1,0 +1,14 @@
+[package]
+name = "kas-l2-move-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-runtime = { path = "../../runtime" }
+kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+kas-l2-storage-manager = { path = "../../storage/manager" }
+kas-l2-move-runtime-vm = { path = "../vm" }
+move-core-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+kas-l2-move-runtime-utils = { path = "../utils" }
+tempfile = "3.23.0"
+anyhow = "1.0.99"
