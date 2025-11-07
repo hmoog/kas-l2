@@ -3,12 +3,11 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
 
-use crate::test_framework::{Access, AssertWrittenState, Tx};
+use crate::test_framework::{Access, AssertWrittenState, TestVm, Tx};
 
 #[test]
 pub fn test_runtime() {
@@ -18,14 +17,11 @@ pub fn test_runtime() {
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_transaction_processor(Tx::process)
-            .with_notarization(|batch: &Batch<RocksDbStore, Tx>| {
+            .with_vm(TestVm::with_notarizer(|batch_index, tx_count, diff_count| {
                 eprintln!(
-                    ">> Processed batch with {} transactions and {} state changes",
-                    batch.txs().len(),
-                    batch.state_diffs().len()
+                    ">> Processed batch #{batch_index} with {tx_count} transactions and {diff_count} state changes"
                 );
-            })
+            }))
             .build();
 
         runtime.process(vec![
@@ -56,8 +52,11 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
+    use std::sync::Arc;
+
     use kas_l2_runtime_core::{
-        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VersionedState,
+        AccessHandle, AccessMetadata, AccessType, Batch, RuntimeState, Transaction, VersionedState,
+        Vm,
     };
     use kas_l2_storage_manager::ReadStore;
     use kas_l2_storage_rocksdb_store::RocksDbStore;
@@ -65,7 +64,10 @@ mod test_framework {
     pub struct Tx(pub usize, pub Vec<Access>);
 
     impl Tx {
-        pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
+        pub fn process(
+            &self,
+            resources: &mut [AccessHandle<RocksDbStore, TestVm>],
+        ) -> Result<(), ()> {
             for resource in resources {
                 if resource.access_metadata().access_type() == AccessType::Write {
                     resource.state_mut().data.extend_from_slice(&self.0.to_be_bytes());
@@ -75,11 +77,8 @@ mod test_framework {
         }
     }
 
-    impl Transaction for Tx {
-        type ResourceId = usize;
-        type AccessMetadata = Access;
-
-        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+    impl Transaction<TestVm> for Tx {
+        fn accessed_resources(&self) -> &[Access] {
             &self.1
         }
     }
@@ -106,6 +105,48 @@ mod test_framework {
         }
     }
 
+    #[derive(Clone)]
+    pub struct TestVm {
+        notarizer: Arc<dyn Fn(u64, usize, usize) + Send + Sync>,
+    }
+
+    impl TestVm {
+        pub fn with_notarizer<F>(callback: F) -> Self
+        where
+            F: Fn(u64, usize, usize) + Send + Sync + 'static,
+        {
+            Self { notarizer: Arc::new(callback) }
+        }
+    }
+
+    impl Default for TestVm {
+        fn default() -> Self {
+            Self::with_notarizer(|_, _, _| {})
+        }
+    }
+
+    impl Vm for TestVm {
+        type ResourceId = usize;
+        type AccessMetadata = Access;
+        type Transaction = Tx;
+        type ProcessError = ();
+
+        fn process<S: kas_l2_storage_manager::Store<StateSpace = RuntimeState>>(
+            &self,
+            tx: &Self::Transaction,
+            resources: &mut [AccessHandle<S, Self>],
+        ) -> Result<(), Self::ProcessError> {
+            tx.process(resources)
+        }
+
+        fn notarize<S: kas_l2_storage_manager::Store<StateSpace = RuntimeState>>(
+            &self,
+            batch: &Batch<S, Self>,
+        ) {
+            (self.notarizer)(batch.index(), batch.txs().len(), batch.state_diffs().len());
+        }
+    }
+
     pub struct AssertWrittenState(pub usize, pub Vec<usize>);
 
     impl AssertWrittenState {
@@ -113,7 +154,7 @@ mod test_framework {
             let writer_count = self.1.len();
             let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
 
-            let versioned_state = VersionedState::<Tx>::from_latest_data(store, self.0);
+            let versioned_state = VersionedState::<TestVm>::from_latest_data(store, self.0);
             assert_eq!(versioned_state.version(), writer_count as u64);
             assert_eq!(versioned_state.state().data, writer_log);
         }

@@ -2,19 +2,20 @@ use kas_l2_storage_manager::{StorageConfig, StorageManager, Store};
 use tap::Tap;
 
 use crate::{
-    Batch, Executor, NotarizationWorker, Notarizer, Read, Scheduler, Transaction,
-    TransactionProcessor, Write, storage::runtime_state::RuntimeState,
+    Batch, Executor, NotarizationWorker, Read, Scheduler, Vm, Write,
+    storage::runtime_state::RuntimeState,
 };
 
-pub struct Runtime<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    storage: StorageManager<S, Read<S, T>, Write<S, T>>,
-    scheduler: Scheduler<S, T>,
-    executor: Executor<S, T>,
-    notarization: NotarizationWorker<S, T>,
+pub struct Runtime<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    storage: StorageManager<S, Read<S, VM>, Write<S, VM>>,
+    scheduler: Scheduler<S, VM>,
+    executor: Executor<S, VM>,
+    notarization: NotarizationWorker<S, VM>,
+    vm: VM,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
-    pub fn process(&mut self, transactions: Vec<T>) -> Batch<S, T> {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> Runtime<S, VM> {
+    pub fn process(&mut self, transactions: Vec<VM::Transaction>) -> Batch<S, VM> {
         self.scheduler.schedule(transactions).tap(|batch| {
             self.executor.execute(batch.clone());
             self.notarization.push(batch.clone());
@@ -27,19 +28,11 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
         self.storage.shutdown();
     }
 
-    pub fn from_parts<P: TransactionProcessor<S, T>, B: Notarizer<S, T>>(
-        execution_workers: usize,
-        transaction_processor: P,
-        notarizer: B,
-        storage_config: StorageConfig<S>,
-    ) -> Self {
+    pub fn from_parts(execution_workers: usize, vm: VM, storage_config: StorageConfig<S>) -> Self {
         let storage = StorageManager::new(storage_config);
+        let executor = Executor::new(execution_workers, vm.clone());
+        let notarization = NotarizationWorker::new(vm.clone());
 
-        Self {
-            scheduler: Scheduler::new(storage.clone()),
-            executor: Executor::new(execution_workers, transaction_processor),
-            notarization: NotarizationWorker::new(notarizer),
-            storage,
-        }
+        Self { scheduler: Scheduler::new(storage.clone()), executor, notarization, storage, vm }
     }
 }

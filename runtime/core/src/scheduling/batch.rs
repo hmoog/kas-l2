@@ -12,17 +12,16 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::{StorageManager, Store, WriteStore};
 
 use crate::{
-    Read, RuntimeTx, Scheduler, StateDiff, Transaction, VecExt, Write,
-    storage::runtime_state::RuntimeState,
+    Read, RuntimeTx, Scheduler, StateDiff, VecExt, Vm, Write, storage::runtime_state::RuntimeState,
 };
 
 #[smart_pointer]
-pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
+pub struct Batch<S: Store<StateSpace = RuntimeState>, VM: Vm> {
     index: u64,
-    storage: StorageManager<S, Read<S, Tx>, Write<S, Tx>>,
-    txs: Vec<RuntimeTx<S, Tx>>,
-    state_diffs: Vec<StateDiff<S, Tx>>,
-    available_txs: Injector<RuntimeTx<S, Tx>>,
+    storage: StorageManager<S, Read<S, VM>, Write<S, VM>>,
+    txs: Vec<RuntimeTx<S, VM>>,
+    state_diffs: Vec<StateDiff<S, VM>>,
+    available_txs: Injector<RuntimeTx<S, VM>>,
     pending_txs: AtomicU64,
     pending_writes: AtomicI64,
     was_processed: AtomicAsyncLatch,
@@ -30,16 +29,16 @@ pub struct Batch<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
     was_committed: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> Batch<S, VM> {
     pub fn index(&self) -> u64 {
         self.index
     }
 
-    pub fn txs(&self) -> &[RuntimeTx<S, Tx>] {
+    pub fn txs(&self) -> &[RuntimeTx<S, VM>] {
         &self.txs
     }
 
-    pub fn state_diffs(&self) -> &[StateDiff<S, Tx>] {
+    pub fn state_diffs(&self) -> &[StateDiff<S, VM>] {
         &self.state_diffs
     }
 
@@ -79,7 +78,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(scheduler: &mut Scheduler<S, Tx>, txs: Vec<Tx>) -> Self {
+    pub(crate) fn new(scheduler: &mut Scheduler<S, VM>, txs: Vec<VM::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
@@ -107,14 +106,14 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, Tx>) {
+    pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, VM>) {
         self.available_txs.push(tx.clone());
     }
 
     pub(crate) fn steal_available_txs(
         &self,
-        worker: &Worker<RuntimeTx<S, Tx>>,
-    ) -> Option<RuntimeTx<S, Tx>> {
+        worker: &Worker<RuntimeTx<S, VM>>,
+    ) -> Option<RuntimeTx<S, VM>> {
         loop {
             match self.available_txs.steal_batch_and_pop(worker) {
                 Steal::Success(task) => return Some(task),
@@ -130,7 +129,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Batch<S, Tx> {
         }
     }
 
-    pub(crate) fn submit_write(&self, write: Write<S, Tx>) {
+    pub(crate) fn submit_write(&self, write: Write<S, VM>) {
         self.pending_writes.fetch_add(1, Ordering::AcqRel);
         self.storage.submit_write(write);
     }

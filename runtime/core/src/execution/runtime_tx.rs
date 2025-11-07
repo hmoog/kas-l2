@@ -7,30 +7,30 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::Store;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, Transaction,
-    TransactionProcessor, VecExt, scheduling::scheduler::Scheduler,
+    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, VecExt, Vm,
+    scheduling::scheduler::Scheduler,
 };
 
 #[smart_pointer(deref(tx))]
-pub struct RuntimeTx<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
-    batch: BatchRef<S, Tx>,
-    resources: Vec<ResourceAccess<S, Tx>>,
+pub struct RuntimeTx<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    batch: BatchRef<S, VM>,
+    resources: Vec<ResourceAccess<S, VM>>,
     pending_resources: AtomicU64,
-    tx: Tx,
+    tx: VM::Transaction,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
-    pub fn accessed_resources(&self) -> &[ResourceAccess<S, Tx>] {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> RuntimeTx<S, VM> {
+    pub fn accessed_resources(&self) -> &[ResourceAccess<S, VM>] {
         &self.resources
     }
 
     pub(crate) fn new(
-        scheduler: &mut Scheduler<S, Tx>,
-        state_diffs: &mut Vec<StateDiff<S, Tx>>,
-        batch: BatchRef<S, Tx>,
-        tx: Tx,
+        scheduler: &mut Scheduler<S, VM>,
+        state_diffs: &mut Vec<StateDiff<S, VM>>,
+        batch: BatchRef<S, VM>,
+        tx: VM::Transaction,
     ) -> Self {
-        Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, Tx>>| {
+        Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, VM>>| {
             let resources =
                 scheduler.resources(&tx, RuntimeTxRef(this.clone()), &batch, state_diffs);
             RuntimeTxData {
@@ -42,10 +42,10 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
         }))
     }
 
-    pub(crate) fn execute<TxProc: TransactionProcessor<S, Tx>>(&self, processor: &TxProc) {
+    pub(crate) fn execute(&self, vm: &VM) {
         if let Some(batch) = self.batch.upgrade() {
             let mut handles = self.resources.as_vec(AccessHandle::new);
-            match processor(&self.tx, &mut handles) {
+            match vm.process(&self.tx, &mut handles) {
                 Ok(()) => handles.into_iter().for_each(AccessHandle::commit_changes),
                 Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
             }
@@ -67,8 +67,8 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> RuntimeTxRef<S, T> {
-    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, T>) -> bool {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> RuntimeTxRef<S, VM> {
+    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, VM>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }

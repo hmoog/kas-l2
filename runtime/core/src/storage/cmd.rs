@@ -1,15 +1,15 @@
 use kas_l2_storage_manager::{ReadCmd, ReadStore, Store, WriteCmd, WriteStore};
 
 use crate::{
-    Batch, StateDiff, Transaction, resources::resource_access::ResourceAccess,
+    Batch, StateDiff, Vm, resources::resource_access::ResourceAccess,
     storage::runtime_state::RuntimeState,
 };
 
-pub enum Read<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
-    LatestData(ResourceAccess<S, Tx>),
+pub enum Read<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    LatestData(ResourceAccess<S, VM>),
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> ReadCmd<RuntimeState> for Read<S, Tx> {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> ReadCmd<RuntimeState> for Read<S, VM> {
     fn exec<RS: ReadStore<StateSpace = RuntimeState>>(&self, store: &RS) {
         match self {
             Read::LatestData(resource_access) => resource_access.read_latest_data(store),
@@ -17,12 +17,12 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> ReadCmd<RuntimeState>
     }
 }
 
-pub enum Write<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    StateDiff(StateDiff<S, T>),
-    CommitBatch(Batch<S, T>),
+pub enum Write<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    StateDiff(StateDiff<S, VM>),
+    CommitBatch(Batch<S, VM>),
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> WriteCmd<RuntimeState> for Write<S, Tx> {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> WriteCmd<RuntimeState> for Write<S, VM> {
     fn exec<WS: WriteStore<StateSpace = RuntimeState>>(&self, store: &mut WS) {
         match self {
             Write::StateDiff(state_diff) => state_diff.write(store),

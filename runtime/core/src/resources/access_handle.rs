@@ -2,18 +2,16 @@ use std::sync::Arc;
 
 use kas_l2_storage_manager::Store;
 
-use crate::{
-    AccessMetadata, AccessType, ResourceAccess, RuntimeState, State, Transaction, VersionedState,
-};
+use crate::{AccessType, ResourceAccess, RuntimeState, State, VersionedState, Vm};
 
-pub struct AccessHandle<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    versioned_state: Arc<VersionedState<T>>,
-    access: &'a ResourceAccess<S, T>,
+pub struct AccessHandle<'a, S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    versioned_state: Arc<VersionedState<VM>>,
+    access: &'a ResourceAccess<S, VM>,
 }
 
-impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S, T> {
+impl<'a, S: Store<StateSpace = RuntimeState>, VM: Vm> AccessHandle<'a, S, VM> {
     #[inline]
-    pub fn access_metadata(&self) -> &T::AccessMetadata {
+    pub fn access_metadata(&self) -> &VM::AccessMetadata {
         self.access.metadata()
     }
 
@@ -22,12 +20,12 @@ impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S
     }
 
     #[inline]
-    pub fn state(&self) -> &State<T> {
+    pub fn state(&self) -> &State<VM> {
         self.versioned_state.state()
     }
 
     #[inline]
-    pub fn state_mut(&mut self) -> &mut State<T> {
+    pub fn state_mut(&mut self) -> &mut State<VM> {
         self.versioned_state.state_mut()
     }
 
@@ -36,7 +34,7 @@ impl<'a, S: Store<StateSpace = RuntimeState>, T: Transaction> AccessHandle<'a, S
         self.versioned_state.version() == 0
     }
 
-    pub(crate) fn new(access: &'a ResourceAccess<S, T>) -> Self {
+    pub(crate) fn new(access: &'a ResourceAccess<S, VM>) -> Self {
         Self { versioned_state: access.read_state(), access }
     }
 

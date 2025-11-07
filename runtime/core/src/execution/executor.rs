@@ -2,20 +2,20 @@ use std::thread::JoinHandle;
 
 use kas_l2_storage_manager::Store;
 
-use crate::{Batch, RuntimeState, Transaction, TransactionProcessor, WorkersApi};
+use crate::{Batch, RuntimeState, Vm, WorkersApi};
 
-pub struct Executor<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
-    workers: WorkersApi<S, Tx>,
+pub struct Executor<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    workers: WorkersApi<S, VM>,
     handles: Vec<JoinHandle<()>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> Executor<S, Tx> {
-    pub fn new<P: TransactionProcessor<S, Tx>>(worker_count: usize, processor: P) -> Self {
-        let (workers, handles) = WorkersApi::new_with_workers(worker_count, processor);
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> Executor<S, VM> {
+    pub fn new(worker_count: usize, vm: VM) -> Self {
+        let (workers, handles) = WorkersApi::new_with_workers(worker_count, vm);
         Self { workers, handles }
     }
 
-    pub fn execute(&self, batch: Batch<S, Tx>) {
+    pub fn execute(&self, batch: Batch<S, VM>) {
         self.workers.push_batch(batch);
     }
 

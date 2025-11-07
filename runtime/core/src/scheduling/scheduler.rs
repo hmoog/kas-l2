@@ -4,19 +4,19 @@ use kas_l2_storage_manager::{StorageManager, Store};
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, VecExt, Write,
+    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, VecExt, Vm, Write,
     execution::runtime_tx::RuntimeTxRef, resources::resource_access::ResourceAccess,
     storage::runtime_state::RuntimeState,
 };
 
-pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+pub struct Scheduler<S: Store<StateSpace = RuntimeState>, VM: Vm> {
     batch_index: u64,
-    storage: StorageManager<S, Read<S, T>, Write<S, T>>,
-    resources: HashMap<T::ResourceId, Resource<S, T>>,
+    storage: StorageManager<S, Read<S, VM>, Write<S, VM>>,
+    resources: HashMap<VM::ResourceId, Resource<S, VM>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
-    pub fn new(storage: StorageManager<S, Read<S, T>, Write<S, T>>) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> Scheduler<S, VM> {
+    pub fn new(storage: StorageManager<S, Read<S, VM>, Write<S, VM>>) -> Self {
         Self { storage, resources: HashMap::new(), batch_index: 0 }
     }
 
@@ -24,22 +24,22 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
         self.batch_index
     }
 
-    pub fn storage(&self) -> &StorageManager<S, Read<S, T>, Write<S, T>> {
+    pub fn storage(&self) -> &StorageManager<S, Read<S, VM>, Write<S, VM>> {
         &self.storage
     }
 
-    pub fn schedule(&mut self, txs: Vec<T>) -> Batch<S, T> {
+    pub fn schedule(&mut self, txs: Vec<VM::Transaction>) -> Batch<S, VM> {
         self.batch_index += 1;
         Batch::new(self, txs).tap(Batch::connect)
     }
 
     pub(crate) fn resources(
         &mut self,
-        tx: &T,
-        runtime_tx: RuntimeTxRef<S, T>,
-        batch: &BatchRef<S, T>,
-        state_diffs: &mut Vec<StateDiff<S, T>>,
-    ) -> Vec<ResourceAccess<S, T>> {
+        tx: &VM::Transaction,
+        runtime_tx: RuntimeTxRef<S, VM>,
+        batch: &BatchRef<S, VM>,
+        state_diffs: &mut Vec<StateDiff<S, VM>>,
+    ) -> Vec<ResourceAccess<S, VM>> {
         tx.accessed_resources().iter().into_vec(|access| {
             self.resources.entry(access.id()).or_default().access(access, &runtime_tx, batch).tap(
                 |access| {

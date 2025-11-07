@@ -11,5 +11,4 @@ mod modules;
 mod object_access;
 mod object_id;
 mod transaction;
-mod type_alias;
 mod vm;

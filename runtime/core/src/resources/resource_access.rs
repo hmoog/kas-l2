@@ -8,36 +8,36 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::{ReadStore, StorageManager, Store};
 
 use crate::{
-    AccessMetadata, AccessType, Read, RuntimeTxRef, StateDiff, Transaction, VersionedState, Write,
+    AccessMetadata, AccessType, Read, RuntimeTxRef, StateDiff, VersionedState, Vm, Write,
     storage::runtime_state::RuntimeState,
 };
 
 #[smart_pointer(deref(metadata))]
-pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    metadata: T::AccessMetadata,
+pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, VM: Vm> {
+    metadata: VM::AccessMetadata,
     is_batch_head: AtomicBool,
     is_batch_tail: AtomicBool,
-    tx: RuntimeTxRef<S, T>,
-    state_diff: StateDiff<S, T>,
-    read_state: AtomicOptionArc<VersionedState<T>>,
-    written_state: AtomicOptionArc<VersionedState<T>>,
+    tx: RuntimeTxRef<S, VM>,
+    state_diff: StateDiff<S, VM>,
+    read_state: AtomicOptionArc<VersionedState<VM>>,
+    written_state: AtomicOptionArc<VersionedState<VM>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
+impl<S: Store<StateSpace = RuntimeState>, VM: Vm> ResourceAccess<S, VM> {
     #[inline(always)]
-    pub fn metadata(&self) -> &T::AccessMetadata {
+    pub fn metadata(&self) -> &VM::AccessMetadata {
         &self.metadata
     }
 
     #[inline(always)]
-    pub fn read_state(&self) -> Arc<VersionedState<T>> {
+    pub fn read_state(&self) -> Arc<VersionedState<VM>> {
         self.read_state.load().expect("read state unknown")
     }
 
     #[inline(always)]
-    pub fn written_state(&self) -> Arc<VersionedState<T>> {
+    pub fn written_state(&self) -> Arc<VersionedState<VM>> {
         self.written_state.load().expect("written state unknown")
     }
 
@@ -52,9 +52,9 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
     }
 
     pub(crate) fn new(
-        metadata: T::AccessMetadata,
-        tx: RuntimeTxRef<S, T>,
-        state_diff: StateDiff<S, T>,
+        metadata: VM::AccessMetadata,
+        tx: RuntimeTxRef<S, VM>,
+        state_diff: StateDiff<S, VM>,
         prev: Option<Self>,
     ) -> Self {
         Self(Arc::new(ResourceAccessData {
@@ -76,7 +76,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }))
     }
 
-    pub(crate) fn connect(&self, storage: &StorageManager<S, Read<S, T>, Write<S, T>>) {
+    pub(crate) fn connect(&self, storage: &StorageManager<S, Read<S, VM>, Write<S, VM>>) {
         match self.prev.load() {
             Some(prev) => {
                 prev.next.store(Arc::downgrade(&self.0));
@@ -92,15 +92,15 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         self.set_read_state(Arc::new(VersionedState::from_latest_data(store, self.metadata.id())));
     }
 
-    pub(crate) fn tx(&self) -> &RuntimeTxRef<S, T> {
+    pub(crate) fn tx(&self) -> &RuntimeTxRef<S, VM> {
         &self.tx
     }
 
-    pub(crate) fn state_diff(&self) -> StateDiff<S, T> {
+    pub(crate) fn state_diff(&self) -> StateDiff<S, VM> {
         self.state_diff.clone()
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<T>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<VM>>) {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
@@ -118,7 +118,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> ResourceAccess<S, T> {
         }
     }
 
-    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<T>>) {
+    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<VM>>) {
         if self.written_state.publish(state.clone()) {
             if self.is_batch_tail() {
                 self.state_diff.set_written_state(state.clone());

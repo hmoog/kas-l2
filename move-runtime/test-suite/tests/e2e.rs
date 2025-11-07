@@ -1,6 +1,6 @@
 extern crate core;
 
-use std::{str::FromStr, sync::Arc, thread::sleep, time::Duration};
+use std::{str::FromStr, thread::sleep, time::Duration};
 
 use kas_l2_move_runtime_test_suite::{SerializePreCompiledProgramInfoExt, compile_source_code};
 use kas_l2_move_runtime_vm::{
@@ -9,7 +9,6 @@ use kas_l2_move_runtime_vm::{
     ObjectId, Transaction, VM,
 };
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use move_compiler::PreCompiledProgramInfo;
@@ -21,23 +20,15 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let store = RocksDbStore::open(temp_dir.path());
-        let vm = Arc::new(VM::default());
+        let vm = VM::default().with_notarizer(|batch_index, tx_count, diff_count| {
+            eprintln!(
+                ">> Processed batch #{batch_index} with {tx_count} transactions and {diff_count} state changes"
+            );
+        });
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_transaction_processor(move |tx, res| {
-                vm.process(tx, res).map_err(|err| {
-                    eprintln!("tx execution failed: {:?}", err);
-                    err
-                })
-            })
-            .with_notarization(|batch: &Batch<RocksDbStore, Transaction>| {
-                eprintln!(
-                    ">> Processed batch with {} transactions and {} state changes",
-                    batch.txs().len(),
-                    batch.state_diffs().len()
-                );
-            })
+            .with_vm(vm)
             .build();
 
         runtime.process(vec![
