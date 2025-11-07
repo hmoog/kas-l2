@@ -1132,6 +1132,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-runtime-test-suite"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-builder",
+ "kas-l2-runtime-core",
+ "kas-l2-storage-manager",
+ "kas-l2-storage-rocksdb-store",
+ "tempfile",
+]
+
+[[package]]
 name = "kas-l2-storage-manager"
 version = "0.1.0"
 dependencies = [

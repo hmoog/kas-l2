@@ -1,0 +1,11 @@
+[package]
+name = "kas-l2-runtime-test-suite"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-runtime-core = { path = "../core" }
+kas-l2-runtime-builder = { path = "../builder" }
+kas-l2-storage-manager = { path = "../../storage/manager" }
+kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+tempfile = "3.23.0"
