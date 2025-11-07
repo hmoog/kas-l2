@@ -8,6 +8,7 @@ move-core-types = { git = "https://github.com/MystenLabs/sui.git", package = "mo
 move-binary-format = { git = "https://github.com/MystenLabs/sui.git", package = "move-binary-format", rev = "0d4ab7d" }
 move-vm-runtime = { git = "https://github.com/MystenLabs/sui.git", package = "move-vm-runtime", rev = "0d4ab7d" }
 move-vm-types = { git = "https://github.com/MystenLabs/sui.git", package = "move-vm-types", rev = "0d4ab7d" }
+move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", package = "move-stdlib-natives", rev = "0d4ab7d" }
 kas-l2-runtime = { path = "../../runtime" }
 kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
 kas-l2-move-runtime-utils = { path = "../utils" }
