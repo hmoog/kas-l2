@@ -18,7 +18,7 @@ pub fn test_runtime() {
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_transaction_processor(Tx::process)
+            .with_vm(TestVM)
             .with_notarization(|batch: &Batch<RocksDbStore, TestVM>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
@@ -59,32 +59,32 @@ mod test_framework {
     use kas_l2_runtime_core::{
         AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VM, VersionedState,
     };
-    use kas_l2_storage_manager::ReadStore;
-    use kas_l2_storage_rocksdb_store::RocksDbStore;
+    use kas_l2_storage_manager::{ReadStore, Store};
 
+    #[derive(Clone)]
     pub struct TestVM;
 
     impl VM for TestVM {
         type Transaction = Tx;
         type ResourceId = usize;
         type AccessMetadata = Access;
-    }
+        type Error = ();
 
-    pub struct Tx(pub usize, pub Vec<Access>);
-
-    impl Tx {
-        pub fn process(
+        fn process_transaction<S: Store<StateSpace = RuntimeState>>(
             &self,
-            resources: &mut [AccessHandle<RocksDbStore, TestVM>],
-        ) -> Result<(), ()> {
+            tx: &Self::Transaction,
+            resources: &mut [AccessHandle<S, Self>],
+        ) -> Result<(), Self::Error> {
             for resource in resources {
                 if resource.access_metadata().access_type() == AccessType::Write {
-                    resource.state_mut().data.extend_from_slice(&self.0.to_be_bytes());
+                    resource.state_mut().data.extend_from_slice(&tx.0.to_be_bytes());
                 }
             }
             Ok::<(), ()>(())
         }
     }
+
+    pub struct Tx(pub usize, pub Vec<Access>);
 
     impl Transaction<TestVM> for Tx {
         fn accessed_resources(&self) -> &[<TestVM as VM>::AccessMetadata] {

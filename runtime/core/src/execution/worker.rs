@@ -5,28 +5,27 @@ use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_storage_manager::Store;
 
-use crate::{Batch, BatchQueue, RuntimeState, RuntimeTx, TransactionProcessor, WorkersApi, vm::VM};
+use crate::{Batch, BatchQueue, RuntimeState, RuntimeTx, WorkersApi, vm::VM};
 
-pub struct Worker<S: Store<StateSpace = RuntimeState>, V: VM, P: TransactionProcessor<S, V>> {
+pub struct Worker<S: Store<StateSpace = RuntimeState>, V: VM> {
     id: usize,
     local_queue: WorkerQueue<RuntimeTx<S, V>>,
     inbox: Arc<ArrayQueue<Batch<S, V>>>,
-    processor: P,
+    vm: V,
     parker: Parker,
 }
 
-impl<S, V, P> Worker<S, V, P>
+impl<S, V> Worker<S, V>
 where
     S: Store<StateSpace = RuntimeState>,
     V: VM,
-    P: TransactionProcessor<S, V>,
 {
-    pub(crate) fn new(id: usize, processor: P) -> Self {
+    pub(crate) fn new(id: usize, vm: V) -> Self {
         Self {
             id,
             local_queue: WorkerQueue::new_fifo(),
             inbox: Arc::new(ArrayQueue::new(1024)),
-            processor,
+            vm,
             parker: Parker::new(),
         }
     }
@@ -57,7 +56,7 @@ where
                 .or_else(|| pending_batches.steal(&self.local_queue))
                 .or_else(|| workers_api.steal_from_other_workers(self.id))
             {
-                Some(task) => task.execute(&self.processor),
+                Some(task) => task.execute(&self.vm),
                 None => self.parker.park_timeout(Duration::from_millis(100)),
             }
         }

@@ -1,64 +1,48 @@
-use std::marker::PhantomData;
-
-use kas_l2_runtime_core::{Batch, Notarizer, Runtime, RuntimeState, TransactionProcessor, VM};
+use kas_l2_runtime_core::{Batch, Notarizer, Runtime, RuntimeState, VM};
 use kas_l2_storage_manager::{StorageConfig, Store};
 
-pub struct RuntimeBuilder<
-    S: Store<StateSpace = RuntimeState>,
-    V: VM,
-    P: TransactionProcessor<S, V>,
-    N: Notarizer<S, V>,
-> {
+pub struct RuntimeBuilder<S: Store<StateSpace = RuntimeState>, V: VM, N: Notarizer<S, V>> {
     pub(crate) execution_workers: usize,
-    pub(crate) transaction_processor: Option<P>,
+    pub(crate) vm: Option<V>,
     pub(crate) notarizer: N,
     pub(crate) storage_config: StorageConfig<S>,
-    _marker: PhantomData<V>,
 }
 
-impl<S, V, P> Default for RuntimeBuilder<S, V, P, fn(&Batch<S, V>)>
+impl<S, V> Default for RuntimeBuilder<S, V, fn(&Batch<S, V>)>
 where
     S: Store<StateSpace = RuntimeState>,
     V: VM,
-    P: TransactionProcessor<S, V>,
 {
     fn default() -> Self {
         RuntimeBuilder {
             execution_workers: num_cpus::get_physical(),
-            transaction_processor: None,
+            vm: None,
             notarizer: move |_| {},
             storage_config: StorageConfig::default(),
-            _marker: PhantomData,
         }
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM, P: TransactionProcessor<S, V>, N: Notarizer<S, V>>
-    RuntimeBuilder<S, V, P, N>
-{
-    /// Override the number of execution workers.
+impl<S: Store<StateSpace = RuntimeState>, V: VM, N: Notarizer<S, V>> RuntimeBuilder<S, V, N> {
     pub fn with_execution_workers(mut self, workers: usize) -> Self {
         self.execution_workers = workers;
         self
     }
 
-    /// Provide the transaction processor callback.
-    pub fn with_transaction_processor(mut self, f: P) -> Self {
-        self.transaction_processor = Some(f);
+    pub fn with_vm(mut self, f: V) -> Self {
+        self.vm = Some(f);
         self
     }
 
-    /// Provide the batch processor callback.
     pub fn with_notarization<NewNotarizer: Notarizer<S, V>>(
         self,
         notarizer: NewNotarizer,
-    ) -> RuntimeBuilder<S, V, P, NewNotarizer> {
+    ) -> RuntimeBuilder<S, V, NewNotarizer> {
         RuntimeBuilder {
             execution_workers: self.execution_workers,
-            transaction_processor: self.transaction_processor,
+            vm: self.vm,
             notarizer,
             storage_config: self.storage_config,
-            _marker: PhantomData,
         }
     }
 
@@ -68,17 +52,10 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM, P: TransactionProcessor<S, V>, 
     }
 
     pub fn build(self) -> Runtime<S, V> {
-        let RuntimeBuilder {
-            execution_workers,
-            transaction_processor,
-            notarizer,
-            storage_config,
-            _marker: _,
-        } = self;
+        let RuntimeBuilder { execution_workers, vm, notarizer, storage_config } = self;
 
-        let transaction_processor =
-            transaction_processor.expect("Processor must be provided before calling build()");
+        let vm = vm.expect("VM must be provided before calling build()");
 
-        Runtime::from_parts(execution_workers, transaction_processor, notarizer, storage_config)
+        Runtime::from_parts(execution_workers, vm, notarizer, storage_config)
     }
 }

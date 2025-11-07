@@ -10,6 +10,7 @@ move-vm-runtime = { git = "https://github.com/MystenLabs/sui.git", package = "mo
 move-vm-types = { git = "https://github.com/MystenLabs/sui.git", package = "move-vm-types", rev = "0d4ab7d" }
 move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", package = "move-stdlib-natives", rev = "0d4ab7d" }
 kas-l2-runtime-core = { path = "../../runtime/core" }
+kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
 bcs = "0.1.6"
 borsh = "1.5.7"

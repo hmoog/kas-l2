@@ -1,3 +1,5 @@
+use kas_l2_runtime_core::RuntimeState;
+use kas_l2_storage_manager::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::{
     account_address::AccountAddress, identifier::Identifier, runtime_value::MoveValue,
@@ -12,7 +14,10 @@ pub enum Instruction {
 }
 
 impl Instruction {
-    pub fn execute(&self, mut ctx: ExecutionContext) -> VMResult<()> {
+    pub fn execute<S: Store<StateSpace = RuntimeState>>(
+        &self,
+        mut ctx: ExecutionContext<S>,
+    ) -> VMResult<()> {
         match self {
             Instruction::PublishModules { modules, sender } => ctx.session.publish_module_bundle(
                 modules.clone(),

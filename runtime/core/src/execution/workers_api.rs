@@ -8,7 +8,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::Store;
 use tap::Tap;
 
-use crate::{Batch, RuntimeState, RuntimeTx, TransactionProcessor, VecExt, Worker, vm::VM};
+use crate::{Batch, RuntimeState, RuntimeTx, VecExt, Worker, vm::VM};
 
 #[smart_pointer]
 pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, V: VM> {
@@ -20,10 +20,7 @@ pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, V: VM> {
 }
 
 impl<S: Store<StateSpace = RuntimeState>, V: VM> WorkersApi<S, V> {
-    pub fn new_with_workers<TxProc: TransactionProcessor<S, V>>(
-        worker_count: usize,
-        processor: TxProc,
-    ) -> (Self, Vec<JoinHandle<()>>) {
+    pub fn new_with_workers(worker_count: usize, vm: V) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
             worker_count,
             stealers: Vec::with_capacity(worker_count),
@@ -32,8 +29,8 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> WorkersApi<S, V> {
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        let workers: Vec<Worker<S, V, TxProc>> = (0..worker_count).into_vec(|id| {
-            Worker::new(id, processor.clone()).tap(|w| {
+        let workers: Vec<Worker<S, V>> = (0..worker_count).into_vec(|id| {
+            Worker::new(id, vm.clone()).tap(|w| {
                 data.inboxes.push(w.inbox());
                 data.stealers.push(w.stealer());
                 data.unparkers.push(w.unparker());

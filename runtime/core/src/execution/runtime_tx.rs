@@ -7,7 +7,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::Store;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, TransactionProcessor, VecExt,
+    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, VecExt,
     scheduling::scheduler::Scheduler, vm::VM,
 };
 
@@ -42,10 +42,10 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTx<S, V> {
         }))
     }
 
-    pub(crate) fn execute<TxProc: TransactionProcessor<S, V>>(&self, processor: &TxProc) {
+    pub(crate) fn execute(&self, vm: &V) {
         if let Some(batch) = self.batch.upgrade() {
             let mut handles = self.resources.as_vec(AccessHandle::new);
-            match processor(&self.tx, &mut handles) {
+            match vm.process_transaction(&self.tx, &mut handles) {
                 Ok(()) => handles.into_iter().for_each(AccessHandle::commit_changes),
                 Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
             }

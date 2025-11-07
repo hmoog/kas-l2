@@ -12,7 +12,6 @@ pub(crate) mod execution {
     pub(crate) mod executor;
     pub(crate) mod runtime_tx;
     pub(crate) mod transaction;
-    pub(crate) mod transaction_processor;
     pub(crate) mod worker;
     pub(crate) mod workers_api;
 }
@@ -48,10 +47,7 @@ pub use crate::{
         state_diff::{StateDiff, StateDiffRef},
         versioned_state::VersionedState,
     },
-    execution::{
-        runtime_tx::RuntimeTx, transaction::Transaction,
-        transaction_processor::TransactionProcessor,
-    },
+    execution::{runtime_tx::RuntimeTx, transaction::Transaction},
     notarization::notarizer::Notarizer,
     resources::{
         access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,

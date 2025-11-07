@@ -21,16 +21,10 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let store = RocksDbStore::open(temp_dir.path());
-        let vm = Arc::new(VM::default());
+        let vm = VM::default();
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_transaction_processor(move |tx, res| {
-                vm.process(tx, res).map_err(|err| {
-                    eprintln!("tx execution failed: {:?}", err);
-                    err
-                })
-            })
             .with_notarization(|batch: &Batch<RocksDbStore, VM>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
@@ -38,6 +32,7 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
                     batch.state_diffs().len()
                 );
             })
+            .with_vm(vm)
             .build();
 
         runtime.process(vec![

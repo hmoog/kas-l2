@@ -1087,6 +1087,7 @@ dependencies = [
  "borsh",
  "indexmap 2.11.0",
  "kas-l2-runtime-core",
+ "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-binary-format",
  "move-core-types",
