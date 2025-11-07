@@ -55,8 +55,7 @@ mod test_framework {
     use std::sync::Arc;
 
     use kas_l2_runtime_core::{
-        AccessHandle, AccessMetadata, AccessType, Batch, RuntimeState, Transaction, VersionedState,
-        Vm,
+        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VersionedState, Vm,
     };
     use kas_l2_storage_manager::ReadStore;
     use kas_l2_storage_rocksdb_store::RocksDbStore;
@@ -130,6 +129,7 @@ mod test_framework {
         type AccessMetadata = Access;
         type Transaction = Tx;
         type ProcessError = ();
+        type Notarizer = Arc<dyn Fn(u64, usize, usize) + Send + Sync>;
 
         fn process<S: kas_l2_storage_manager::Store<StateSpace = RuntimeState>>(
             &self,
@@ -139,11 +139,8 @@ mod test_framework {
             tx.process(resources)
         }
 
-        fn notarize<S: kas_l2_storage_manager::Store<StateSpace = RuntimeState>>(
-            &self,
-            batch: &Batch<S, Self>,
-        ) {
-            (self.notarizer)(batch.index(), batch.txs().len(), batch.state_diffs().len());
+        fn notarizer(&self) -> &Self::Notarizer {
+            &self.notarizer
         }
     }
 

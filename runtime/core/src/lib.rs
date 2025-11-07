@@ -46,7 +46,11 @@ pub use crate::{
         state_diff::{StateDiff, StateDiffRef},
         versioned_state::VersionedState,
     },
-    execution::{runtime_tx::RuntimeTx, transaction::Transaction, vm::Vm},
+    execution::{
+        runtime_tx::RuntimeTx,
+        transaction::Transaction,
+        vm::{Notarizer, Vm},
+    },
     resources::{
         access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
         resource_id::ResourceId,

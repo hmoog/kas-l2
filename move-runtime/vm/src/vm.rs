@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_core::{Batch, RuntimeState, Vm};
+use kas_l2_runtime_core::{RuntimeState, Vm};
 use kas_l2_storage_manager::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::account_address::AccountAddress;
@@ -52,6 +52,7 @@ impl Vm for VM {
     type AccessMetadata = ObjectAccess;
     type Transaction = Transaction;
     type ProcessError = move_binary_format::errors::VMError;
+    type Notarizer = Arc<dyn Fn(u64, usize, usize) + Send + Sync>;
 
     fn process<S: Store<StateSpace = RuntimeState>>(
         &self,
@@ -61,7 +62,7 @@ impl Vm for VM {
         tx.instruction.execute(ExecutionContext::new(self.vm.as_ref(), resources))
     }
 
-    fn notarize<S: Store<StateSpace = RuntimeState>>(&self, batch: &Batch<S, Self>) {
-        (self.notarizer)(batch.index(), batch.txs().len(), batch.state_diffs().len());
+    fn notarizer(&self) -> &Self::Notarizer {
+        &self.notarizer
     }
 }
