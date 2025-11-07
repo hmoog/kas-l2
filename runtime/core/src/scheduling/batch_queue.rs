@@ -5,19 +5,19 @@ use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 use kas_l2_storage_manager::Store;
 
-use crate::{Batch, RuntimeState, RuntimeTx, Transaction};
+use crate::{Batch, RuntimeState, RuntimeTx, vm::VM};
 
-pub struct BatchQueue<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    queue: LinkedList<linked_list::Adapter<Batch<S, T>>>,
-    new_batches: Arc<ArrayQueue<Batch<S, T>>>,
+pub struct BatchQueue<S: Store<StateSpace = RuntimeState>, V: VM> {
+    queue: LinkedList<linked_list::Adapter<Batch<S, V>>>,
+    new_batches: Arc<ArrayQueue<Batch<S, V>>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> BatchQueue<S, T> {
-    pub fn new(new_batches: Arc<ArrayQueue<Batch<S, T>>>) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> BatchQueue<S, V> {
+    pub fn new(new_batches: Arc<ArrayQueue<Batch<S, V>>>) -> Self {
         Self { queue: LinkedList::new(linked_list::Adapter::new()), new_batches }
     }
 
-    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, T>>) -> Option<RuntimeTx<S, T>> {
+    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
         loop {
             let mut queue_element = self.queue.cursor_mut();
             queue_element.move_next();

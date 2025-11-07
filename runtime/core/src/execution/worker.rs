@@ -5,27 +5,21 @@ use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_storage_manager::Store;
 
-use crate::{
-    Batch, BatchQueue, RuntimeState, RuntimeTx, Transaction, TransactionProcessor, WorkersApi,
-};
+use crate::{Batch, BatchQueue, RuntimeState, RuntimeTx, TransactionProcessor, WorkersApi, vm::VM};
 
-pub struct Worker<
-    S: Store<StateSpace = RuntimeState>,
-    T: Transaction,
-    P: TransactionProcessor<S, T>,
-> {
+pub struct Worker<S: Store<StateSpace = RuntimeState>, V: VM, P: TransactionProcessor<S, V>> {
     id: usize,
-    local_queue: WorkerQueue<RuntimeTx<S, T>>,
-    inbox: Arc<ArrayQueue<Batch<S, T>>>,
+    local_queue: WorkerQueue<RuntimeTx<S, V>>,
+    inbox: Arc<ArrayQueue<Batch<S, V>>>,
     processor: P,
     parker: Parker,
 }
 
-impl<S, T, P> Worker<S, T, P>
+impl<S, V, P> Worker<S, V, P>
 where
     S: Store<StateSpace = RuntimeState>,
-    T: Transaction,
-    P: TransactionProcessor<S, T>,
+    V: VM,
+    P: TransactionProcessor<S, V>,
 {
     pub(crate) fn new(id: usize, processor: P) -> Self {
         Self {
@@ -37,11 +31,11 @@ where
         }
     }
 
-    pub(crate) fn start(self, workers_api: WorkersApi<S, T>) -> JoinHandle<()> {
+    pub(crate) fn start(self, workers_api: WorkersApi<S, V>) -> JoinHandle<()> {
         thread::spawn(move || self.run(workers_api))
     }
 
-    pub(crate) fn stealer(&self) -> Stealer<RuntimeTx<S, T>> {
+    pub(crate) fn stealer(&self) -> Stealer<RuntimeTx<S, V>> {
         self.local_queue.stealer()
     }
 
@@ -49,11 +43,11 @@ where
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Batch<S, T>>> {
+    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Batch<S, V>>> {
         self.inbox.clone()
     }
 
-    fn run(self, workers_api: WorkersApi<S, T>) {
+    fn run(self, workers_api: WorkersApi<S, V>) {
         let mut pending_batches = BatchQueue::new(self.inbox);
 
         while !workers_api.is_shutdown() {

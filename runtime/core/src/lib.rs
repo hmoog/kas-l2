@@ -1,5 +1,6 @@
 mod runtime;
 pub(crate) mod utils;
+mod vm;
 
 pub(crate) mod data {
     pub(crate) mod state;
@@ -59,6 +60,7 @@ pub use crate::{
     runtime::Runtime,
     scheduling::batch::{Batch, BatchRef},
     storage::runtime_state::RuntimeState,
+    vm::VM,
 };
 pub(crate) use crate::{
     execution::{

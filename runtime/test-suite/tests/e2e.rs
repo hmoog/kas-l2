@@ -8,7 +8,7 @@ use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
 
-use crate::test_framework::{Access, AssertWrittenState, Tx};
+use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
 
 #[test]
 pub fn test_runtime() {
@@ -19,7 +19,7 @@ pub fn test_runtime() {
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
             .with_transaction_processor(Tx::process)
-            .with_notarization(|batch: &Batch<RocksDbStore, Tx>| {
+            .with_notarization(|batch: &Batch<RocksDbStore, TestVM>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
                     batch.txs().len(),
@@ -57,15 +57,26 @@ pub fn test_runtime() {
 
 mod test_framework {
     use kas_l2_runtime_core::{
-        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VersionedState,
+        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VM, VersionedState,
     };
     use kas_l2_storage_manager::ReadStore;
     use kas_l2_storage_rocksdb_store::RocksDbStore;
 
+    pub struct TestVM;
+
+    impl VM for TestVM {
+        type Transaction = Tx;
+        type ResourceId = usize;
+        type AccessMetadata = Access;
+    }
+
     pub struct Tx(pub usize, pub Vec<Access>);
 
     impl Tx {
-        pub fn process(&self, resources: &mut [AccessHandle<RocksDbStore, Tx>]) -> Result<(), ()> {
+        pub fn process(
+            &self,
+            resources: &mut [AccessHandle<RocksDbStore, TestVM>],
+        ) -> Result<(), ()> {
             for resource in resources {
                 if resource.access_metadata().access_type() == AccessType::Write {
                     resource.state_mut().data.extend_from_slice(&self.0.to_be_bytes());
@@ -75,11 +86,8 @@ mod test_framework {
         }
     }
 
-    impl Transaction for Tx {
-        type ResourceId = usize;
-        type AccessMetadata = Access;
-
-        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+    impl Transaction<TestVM> for Tx {
+        fn accessed_resources(&self) -> &[<TestVM as VM>::AccessMetadata] {
             &self.1
         }
     }
@@ -113,7 +121,7 @@ mod test_framework {
             let writer_count = self.1.len();
             let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
 
-            let versioned_state = VersionedState::<Tx>::from_latest_data(store, self.0);
+            let versioned_state = VersionedState::<TestVM>::from_latest_data(store, self.0);
             assert_eq!(versioned_state.version(), writer_count as u64);
             assert_eq!(versioned_state.state().data, writer_log);
         }

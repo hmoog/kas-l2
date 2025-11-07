@@ -7,16 +7,16 @@ use crossbeam_queue::SegQueue;
 use kas_l2_storage_manager::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-use crate::{Batch, Notarizer, RuntimeState, Transaction};
+use crate::{Batch, Notarizer, RuntimeState, vm::VM};
 
-pub(crate) struct NotarizationWorker<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    queue: Arc<SegQueue<Batch<S, T>>>,
+pub(crate) struct NotarizationWorker<S: Store<StateSpace = RuntimeState>, V: VM> {
+    queue: Arc<SegQueue<Batch<S, V>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, T> {
-    pub(crate) fn new<B: Notarizer<S, T>>(batch_processor: B) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> NotarizationWorker<S, V> {
+    pub(crate) fn new<B: Notarizer<S, V>>(batch_processor: B) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
         let handle = Self::start(queue.clone(), notify.clone(), batch_processor);
@@ -24,7 +24,7 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, 
         Self { queue, notify, handle }
     }
 
-    pub(crate) fn push(&self, batch: Batch<S, T>) {
+    pub(crate) fn push(&self, batch: Batch<S, V>) {
         self.queue.push(batch);
         self.notify.notify_one();
     }
@@ -35,8 +35,8 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> NotarizationWorker<S, 
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start<F: Notarizer<S, T>>(
-        queue: Arc<SegQueue<Batch<S, T>>>,
+    fn start<F: Notarizer<S, V>>(
+        queue: Arc<SegQueue<Batch<S, V>>>,
         notify: Arc<Notify>,
         notarizer: F,
     ) -> JoinHandle<()> {

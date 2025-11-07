@@ -6,13 +6,10 @@ pub struct Transaction {
 }
 
 mod foreign_traits {
-    use crate::{ObjectAccess, ObjectId, Transaction};
+    use crate::{Transaction, VM};
 
-    impl kas_l2_runtime_core::Transaction for Transaction {
-        type ResourceId = ObjectId;
-        type AccessMetadata = ObjectAccess;
-
-        fn accessed_resources(&self) -> &[Self::AccessMetadata] {
+    impl kas_l2_runtime_core::Transaction<VM> for Transaction {
+        fn accessed_resources(&self) -> &[<VM as kas_l2_runtime_core::VM>::AccessMetadata] {
             &self.accessed_resources
         }
     }
