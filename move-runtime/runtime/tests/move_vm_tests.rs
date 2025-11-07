@@ -8,7 +8,8 @@ use kas_l2_move_runtime_vm::{
     ObjectAccess::{Read, Write},
     ObjectId, Transaction, VM,
 };
-use kas_l2_runtime::{Batch, RuntimeBuilder};
+use kas_l2_runtime_builder::RuntimeBuilder;
+use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};

@@ -1,4 +1,4 @@
-use kas_l2_runtime::RuntimeState;
+use kas_l2_runtime_core::RuntimeState;
 use rocksdb::ColumnFamilyDescriptor;
 
 use crate::config::{Config, DefaultConfig};

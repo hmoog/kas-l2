@@ -8,7 +8,7 @@ pub struct Transaction {
 mod foreign_traits {
     use crate::{ObjectAccess, ObjectId, Transaction};
 
-    impl kas_l2_runtime::Transaction for Transaction {
+    impl kas_l2_runtime_core::Transaction for Transaction {
         type ResourceId = ObjectId;
         type AccessMetadata = ObjectAccess;
 

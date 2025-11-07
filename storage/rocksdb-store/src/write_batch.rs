@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, sync::Arc};
 
-use kas_l2_runtime::RuntimeState;
+use kas_l2_runtime_core::RuntimeState;
 use kas_l2_storage_manager::WriteStore;
 use rocksdb::DB;
 

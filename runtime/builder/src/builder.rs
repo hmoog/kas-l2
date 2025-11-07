@@ -1,11 +1,9 @@
 use std::marker::PhantomData;
 
-use kas_l2_storage_manager::{StorageConfig, Store};
-
-use crate::{
-    Batch, Notarizer, Runtime, Transaction, TransactionProcessor,
-    storage::runtime_state::RuntimeState,
+use kas_l2_runtime_core::{
+    Batch, Notarizer, Runtime, RuntimeState, Transaction, TransactionProcessor,
 };
+use kas_l2_storage_manager::{StorageConfig, Store};
 
 pub struct RuntimeBuilder<
     T: Transaction,
@@ -76,6 +74,22 @@ impl<
     }
 
     pub fn build(self) -> Runtime<S, T> {
-        Runtime::new(self)
+        let RuntimeBuilder {
+            execution_workers,
+            transaction_processor,
+            notarizer,
+            storage_config,
+            _marker: _,
+        } = self;
+
+        let transaction_processor =
+            transaction_processor.expect("Processor must be provided before calling build()");
+
+        Runtime::from_parts(
+            execution_workers,
+            transaction_processor,
+            notarizer,
+            storage_config,
+        )
     }
 }
