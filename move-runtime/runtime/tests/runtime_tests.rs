@@ -2,7 +2,8 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
-use kas_l2_runtime::{Batch, RuntimeBuilder};
+use kas_l2_runtime_builder::RuntimeBuilder;
+use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
@@ -55,7 +56,7 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime::{
+    use kas_l2_runtime_core::{
         AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VersionedState,
     };
     use kas_l2_storage_manager::ReadStore;

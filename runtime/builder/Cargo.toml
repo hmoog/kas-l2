@@ -1,0 +1,9 @@
+[package]
+name = "kas-l2-runtime-builder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-runtime-core = { path = "../core" }
+kas-l2-storage-manager = { path = "../../storage/manager" }
+num_cpus = "1.17.0"

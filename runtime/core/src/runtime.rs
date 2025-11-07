@@ -1,8 +1,8 @@
-use kas_l2_storage_manager::{StorageManager, Store};
+use kas_l2_storage_manager::{StorageConfig, StorageManager, Store};
 use tap::Tap;
 
 use crate::{
-    Batch, Executor, NotarizationWorker, Notarizer, Read, RuntimeBuilder, Scheduler, Transaction,
+    Batch, Executor, NotarizationWorker, Notarizer, Read, Scheduler, Transaction,
     TransactionProcessor, Write, storage::runtime_state::RuntimeState,
 };
 
@@ -27,18 +27,18 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Runtime<S, T> {
         self.storage.shutdown();
     }
 
-    pub(crate) fn new<P: TransactionProcessor<S, T>, B: Notarizer<S, T>>(
-        builder: RuntimeBuilder<T, S, P, B>,
+    pub fn from_parts<P: TransactionProcessor<S, T>, B: Notarizer<S, T>>(
+        execution_workers: usize,
+        transaction_processor: P,
+        notarizer: B,
+        storage_config: StorageConfig<S>,
     ) -> Self {
-        let storage = StorageManager::new(builder.storage_config);
-        let transaction_processor = builder
-            .transaction_processor
-            .expect("Processor must be provided before calling build()");
+        let storage = StorageManager::new(storage_config);
 
         Self {
             scheduler: Scheduler::new(storage.clone()),
-            executor: Executor::new(builder.execution_workers, transaction_processor),
-            notarization: NotarizationWorker::new(builder.notarizer),
+            executor: Executor::new(execution_workers, transaction_processor),
+            notarization: NotarizationWorker::new(notarizer),
             storage,
         }
     }

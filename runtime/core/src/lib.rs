@@ -1,4 +1,3 @@
-mod builder;
 mod runtime;
 pub(crate) mod utils;
 
@@ -43,7 +42,6 @@ pub(crate) mod scheduling {
 }
 
 pub use crate::{
-    builder::RuntimeBuilder,
     data::{
         state::State,
         state_diff::{StateDiff, StateDiffRef},

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime::{AccessMetadata, AccessType};
+use kas_l2_runtime_core::{AccessMetadata, AccessType};
 use move_binary_format::errors::VMResult;
 use move_core_types::{effects::Op, runtime_value::MoveTypeLayout};
 use move_vm_runtime::{

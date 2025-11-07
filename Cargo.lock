@@ -1068,7 +1068,8 @@ dependencies = [
  "anyhow",
  "kas-l2-move-runtime-utils",
  "kas-l2-move-runtime-vm",
- "kas-l2-runtime",
+ "kas-l2-runtime-builder",
+ "kas-l2-runtime-core",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-core-types",
@@ -1094,7 +1095,7 @@ dependencies = [
  "borsh",
  "indexmap 2.11.0",
  "kas-l2-move-runtime-utils",
- "kas-l2-runtime",
+ "kas-l2-runtime-core",
  "kas-l2-storage-rocksdb-store",
  "move-binary-format",
  "move-core-types",
@@ -1104,7 +1105,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-runtime"
+name = "kas-l2-runtime-builder"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-core",
+ "kas-l2-storage-manager",
+ "num_cpus",
+]
+
+[[package]]
+name = "kas-l2-runtime-core"
 version = "0.1.0"
 dependencies = [
  "borsh",
@@ -1134,7 +1144,7 @@ dependencies = [
 name = "kas-l2-storage-rocksdb-store"
 version = "0.1.0"
 dependencies = [
- "kas-l2-runtime",
+ "kas-l2-runtime-core",
  "kas-l2-storage-manager",
  "num_cpus",
  "rocksdb",
