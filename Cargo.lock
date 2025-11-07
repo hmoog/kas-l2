@@ -1066,24 +1066,16 @@ name = "kas-l2-move-runtime-test-suite"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "kas-l2-move-runtime-utils",
  "kas-l2-move-runtime-vm",
  "kas-l2-runtime-builder",
  "kas-l2-runtime-core",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
- "move-core-types",
- "tempfile",
-]
-
-[[package]]
-name = "kas-l2-move-runtime-utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
  "move-compiler",
  "move-core-types",
+ "move-symbol-pool",
  "tempfile",
+ "vfs",
 ]
 
 [[package]]
@@ -1094,7 +1086,6 @@ dependencies = [
  "bcs",
  "borsh",
  "indexmap 2.11.0",
- "kas-l2-move-runtime-utils",
  "kas-l2-runtime-core",
  "kas-l2-storage-rocksdb-store",
  "move-binary-format",

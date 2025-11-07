@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{str::FromStr, sync::Arc, thread::sleep, time::Duration};
 
-use kas_l2_move_runtime_utils::CompiledModules;
+use kas_l2_move_runtime_test_suite::{SerializePreCompiledProgramInfoExt, compile_source_code};
 use kas_l2_move_runtime_vm::{
     Instruction,
     ObjectAccess::{Read, Write},
@@ -12,6 +12,7 @@ use kas_l2_runtime_builder::RuntimeBuilder;
 use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
+use move_compiler::PreCompiledProgramInfo;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use tempfile::TempDir;
 
@@ -76,26 +77,23 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     }
 }
 
-fn test_modules() -> CompiledModules {
-    CompiledModules::from_sources(
-        &[r#"
-            module 0x1::Test {
-                // Define a resource type that we can pass around
-                public struct Obj has key { value: u64 }
+fn test_modules() -> Arc<PreCompiledProgramInfo> {
+    compile_source_code(&[r#"
+        module 0x1::Test {
+            // Define a resource type that we can pass around
+            public struct Obj has key { value: u64 }
 
-                public fun new_obj(): Obj {
-                    Obj { value: 0 }
-                }
-
-                public fun f(o: &mut Obj) {
-                    o.value = o.value + 1;
-                }
-
-                public fun get_value(): u64 {
-                    7
-                }
+            public fun new_obj(): Obj {
+                Obj { value: 0 }
             }
-            "#],
-        &[],
-    )
+
+            public fun f(o: &mut Obj) {
+                o.value = o.value + 1;
+            }
+
+            public fun get_value(): u64 {
+                7
+            }
+        }
+    "#])
 }

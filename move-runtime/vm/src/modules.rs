@@ -1,5 +1,4 @@
 use indexmap::IndexMap;
-use kas_l2_move_runtime_utils::CompiledModules;
 use move_core_types::language_storage::ModuleId;
 
 #[derive(Default)]
@@ -14,13 +13,6 @@ impl Modules {
 
     pub fn id(&self, index: usize) -> ModuleId {
         self.modules.get_index(index).unwrap().0.clone()
-    }
-}
-
-impl From<CompiledModules> for Modules {
-    fn from(modules: CompiledModules) -> Self {
-        let serialized_modules = modules.into_iter().map(|(id, m)| (id, m.serialize()));
-        Self { modules: IndexMap::from_iter(serialized_modules) }
     }
 }
 
