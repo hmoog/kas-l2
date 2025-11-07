@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_core::RuntimeState;
+use kas_l2_runtime_core::{Batch, RuntimeState};
+use kas_l2_storage_manager::Store;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
@@ -48,5 +49,13 @@ impl kas_l2_runtime_core::VM for VM {
         resources: &mut [kas_l2_runtime_core::AccessHandle<S, VM>],
     ) -> VMResult<()> {
         tx.instruction.execute(ExecutionContext::new(&self.0, resources))
+    }
+
+    fn notarize_batch<S: Store<StateSpace = RuntimeState>>(&self, batch: &Batch<S, Self>) {
+        eprintln!(
+            ">> Processed batch with {} transactions and {} state changes",
+            batch.txs().len(),
+            batch.state_diffs().len()
+        );
     }
 }

@@ -9,9 +9,8 @@ use kas_l2_move_runtime_vm::{
     ObjectId, Transaction, VM,
 };
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
-use kas_l2_storage_rocksdb_store::RocksDbStore;
+use kas_l2_storage_rocksdb_store::{DefaultConfig, RocksDbStore};
 use move_compiler::PreCompiledProgramInfo;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use tempfile::TempDir;
@@ -20,17 +19,10 @@ use tempfile::TempDir;
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
-        let store = RocksDbStore::open(temp_dir.path());
+        let store: RocksDbStore<DefaultConfig> = RocksDbStore::open(temp_dir.path());
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_notarization(|batch: &Batch<RocksDbStore, VM>| {
-                eprintln!(
-                    ">> Processed batch with {} transactions and {} state changes",
-                    batch.txs().len(),
-                    batch.state_diffs().len()
-                );
-            })
             .with_vm(VM::default())
             .build();
 
