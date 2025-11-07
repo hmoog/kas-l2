@@ -6,22 +6,23 @@ use tap::Tap;
 use crate::{
     ResourceId, RuntimeState,
     RuntimeState::{Data, LatestPtr, RollbackPtr},
-    State, Transaction,
+    State,
+    vm::VM,
 };
 
 #[derive(Debug, Eq, Hash, PartialEq)]
-pub struct VersionedState<T: Transaction> {
-    resource_id: T::ResourceId,
+pub struct VersionedState<V: VM> {
+    resource_id: V::ResourceId,
     version: u64,
-    state: State<T>,
+    state: State<V>,
 }
 
-impl<T: Transaction> VersionedState<T> {
-    pub fn empty(id: T::ResourceId) -> Self {
+impl<V: VM> VersionedState<V> {
+    pub fn empty(id: V::ResourceId) -> Self {
         Self { resource_id: id, version: 0, state: State::default() }
     }
 
-    pub fn from_latest_data<S>(store: &S, id: T::ResourceId) -> Self
+    pub fn from_latest_data<S>(store: &S, id: V::ResourceId) -> Self
     where
         S: ReadStore<StateSpace = RuntimeState>,
     {
@@ -43,11 +44,11 @@ impl<T: Transaction> VersionedState<T> {
         self.version
     }
 
-    pub fn state(&self) -> &State<T> {
+    pub fn state(&self) -> &State<V> {
         &self.state
     }
 
-    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<T> {
+    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<V> {
         &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
     }
 
@@ -79,7 +80,7 @@ impl<T: Transaction> VersionedState<T> {
     }
 }
 
-impl<T: Transaction> Clone for VersionedState<T> {
+impl<V: VM> Clone for VersionedState<V> {
     fn clone(&self) -> Self {
         Self {
             resource_id: self.resource_id.clone(),

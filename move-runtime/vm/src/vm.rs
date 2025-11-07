@@ -3,7 +3,8 @@ use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
 
 use crate::{
-    execution_context::ExecutionContext, transaction::Transaction, type_alias::AccessHandle,
+    ObjectAccess, ObjectId, execution_context::ExecutionContext, transaction::Transaction,
+    type_alias::AccessHandle,
 };
 
 pub struct VM(MoveVM);
@@ -29,4 +30,10 @@ impl Default for VM {
     fn default() -> Self {
         Self::new()
     }
+}
+
+impl kas_l2_runtime_core::VM for VM {
+    type Transaction = Transaction;
+    type ResourceId = ObjectId;
+    type AccessMetadata = ObjectAccess;
 }

@@ -7,30 +7,30 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::Store;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, Transaction,
-    TransactionProcessor, VecExt, scheduling::scheduler::Scheduler,
+    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff, TransactionProcessor, VecExt,
+    scheduling::scheduler::Scheduler, vm::VM,
 };
 
 #[smart_pointer(deref(tx))]
-pub struct RuntimeTx<S: Store<StateSpace = RuntimeState>, Tx: Transaction> {
-    batch: BatchRef<S, Tx>,
-    resources: Vec<ResourceAccess<S, Tx>>,
+pub struct RuntimeTx<S: Store<StateSpace = RuntimeState>, V: VM> {
+    batch: BatchRef<S, V>,
+    resources: Vec<ResourceAccess<S, V>>,
     pending_resources: AtomicU64,
-    tx: Tx,
+    tx: V::Transaction,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
-    pub fn accessed_resources(&self) -> &[ResourceAccess<S, Tx>] {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTx<S, V> {
+    pub fn accessed_resources(&self) -> &[ResourceAccess<S, V>] {
         &self.resources
     }
 
     pub(crate) fn new(
-        scheduler: &mut Scheduler<S, Tx>,
-        state_diffs: &mut Vec<StateDiff<S, Tx>>,
-        batch: BatchRef<S, Tx>,
-        tx: Tx,
+        scheduler: &mut Scheduler<S, V>,
+        state_diffs: &mut Vec<StateDiff<S, V>>,
+        batch: BatchRef<S, V>,
+        tx: V::Transaction,
     ) -> Self {
-        Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, Tx>>| {
+        Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, V>>| {
             let resources =
                 scheduler.resources(&tx, RuntimeTxRef(this.clone()), &batch, state_diffs);
             RuntimeTxData {
@@ -42,7 +42,7 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
         }))
     }
 
-    pub(crate) fn execute<TxProc: TransactionProcessor<S, Tx>>(&self, processor: &TxProc) {
+    pub(crate) fn execute<TxProc: TransactionProcessor<S, V>>(&self, processor: &TxProc) {
         if let Some(batch) = self.batch.upgrade() {
             let mut handles = self.resources.as_vec(AccessHandle::new);
             match processor(&self.tx, &mut handles) {
@@ -62,13 +62,13 @@ impl<S: Store<StateSpace = RuntimeState>, Tx: Transaction> RuntimeTx<S, Tx> {
         }
     }
 
-    pub(crate) fn batch(&self) -> &BatchRef<S, Tx> {
+    pub(crate) fn batch(&self) -> &BatchRef<S, V> {
         &self.batch
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> RuntimeTxRef<S, T> {
-    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, T>) -> bool {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTxRef<S, V> {
+    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, V>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }

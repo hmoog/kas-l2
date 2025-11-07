@@ -1,28 +1,28 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::Transaction;
+use crate::vm::VM;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
-pub struct State<T: Transaction> {
-    pub owner: T::ResourceId,
+pub struct State<V: VM> {
+    pub owner: V::ResourceId,
     pub data: Vec<u8>,
     pub balance: u64,
     pub executable: bool,
 }
 
-impl<T: Transaction> State<T> {
+impl<V: VM> State<V> {
     pub fn to_bytes(&self) -> Vec<u8> {
         borsh::to_vec(&self).expect("failed to serialize State")
     }
 }
 
-impl<T: Transaction> Default for State<T> {
+impl<V: VM> Default for State<V> {
     fn default() -> Self {
-        Self { owner: T::ResourceId::default(), data: Vec::new(), balance: 0, executable: false }
+        Self { owner: V::ResourceId::default(), data: Vec::new(), balance: 0, executable: false }
     }
 }
 
-impl<T: Transaction> Clone for State<T> {
+impl<V: VM> Clone for State<V> {
     fn clone(&self) -> Self {
         Self {
             owner: self.owner.clone(),

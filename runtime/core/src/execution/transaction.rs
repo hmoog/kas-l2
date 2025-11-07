@@ -1,8 +1,5 @@
-use crate::{AccessMetadata, ResourceId};
+use crate::vm::VM;
 
-pub trait Transaction: Send + Sync + 'static {
-    type ResourceId: ResourceId;
-    type AccessMetadata: AccessMetadata<Self::ResourceId>;
-
-    fn accessed_resources(&self) -> &[Self::AccessMetadata];
+pub trait Transaction<V: VM>: Send + Sync + 'static {
+    fn accessed_resources(&self) -> &[V::AccessMetadata];
 }

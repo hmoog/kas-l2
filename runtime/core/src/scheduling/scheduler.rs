@@ -6,17 +6,17 @@ use tap::Tap;
 use crate::{
     AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, VecExt, Write,
     execution::runtime_tx::RuntimeTxRef, resources::resource_access::ResourceAccess,
-    storage::runtime_state::RuntimeState,
+    storage::runtime_state::RuntimeState, vm::VM,
 };
 
-pub struct Scheduler<S: Store<StateSpace = RuntimeState>, T: Transaction> {
+pub struct Scheduler<S: Store<StateSpace = RuntimeState>, V: VM> {
     batch_index: u64,
-    storage: StorageManager<S, Read<S, T>, Write<S, T>>,
-    resources: HashMap<T::ResourceId, Resource<S, T>>,
+    storage: StorageManager<S, Read<S, V>, Write<S, V>>,
+    resources: HashMap<V::ResourceId, Resource<S, V>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
-    pub fn new(storage: StorageManager<S, Read<S, T>, Write<S, T>>) -> Self {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> Scheduler<S, V> {
+    pub fn new(storage: StorageManager<S, Read<S, V>, Write<S, V>>) -> Self {
         Self { storage, resources: HashMap::new(), batch_index: 0 }
     }
 
@@ -24,22 +24,22 @@ impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Scheduler<S, T> {
         self.batch_index
     }
 
-    pub fn storage(&self) -> &StorageManager<S, Read<S, T>, Write<S, T>> {
+    pub fn storage(&self) -> &StorageManager<S, Read<S, V>, Write<S, V>> {
         &self.storage
     }
 
-    pub fn schedule(&mut self, txs: Vec<T>) -> Batch<S, T> {
+    pub fn schedule(&mut self, txs: Vec<V::Transaction>) -> Batch<S, V> {
         self.batch_index += 1;
         Batch::new(self, txs).tap(Batch::connect)
     }
 
     pub(crate) fn resources(
         &mut self,
-        tx: &T,
-        runtime_tx: RuntimeTxRef<S, T>,
-        batch: &BatchRef<S, T>,
-        state_diffs: &mut Vec<StateDiff<S, T>>,
-    ) -> Vec<ResourceAccess<S, T>> {
+        tx: &V::Transaction,
+        runtime_tx: RuntimeTxRef<S, V>,
+        batch: &BatchRef<S, V>,
+        state_diffs: &mut Vec<StateDiff<S, V>>,
+    ) -> Vec<ResourceAccess<S, V>> {
         tx.accessed_resources().iter().into_vec(|access| {
             self.resources.entry(access.id()).or_default().access(access, &runtime_tx, batch).tap(
                 |access| {

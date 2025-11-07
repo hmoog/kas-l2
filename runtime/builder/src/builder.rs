@@ -1,28 +1,26 @@
 use std::marker::PhantomData;
 
-use kas_l2_runtime_core::{
-    Batch, Notarizer, Runtime, RuntimeState, Transaction, TransactionProcessor,
-};
+use kas_l2_runtime_core::{Batch, Notarizer, Runtime, RuntimeState, TransactionProcessor, VM};
 use kas_l2_storage_manager::{StorageConfig, Store};
 
 pub struct RuntimeBuilder<
-    T: Transaction,
     S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<S, T>,
-    N: Notarizer<S, T>,
+    V: VM,
+    P: TransactionProcessor<S, V>,
+    N: Notarizer<S, V>,
 > {
     pub(crate) execution_workers: usize,
     pub(crate) transaction_processor: Option<P>,
     pub(crate) notarizer: N,
     pub(crate) storage_config: StorageConfig<S>,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<V>,
 }
 
-impl<T, S, P> Default for RuntimeBuilder<T, S, P, fn(&Batch<S, T>)>
+impl<S, V, P> Default for RuntimeBuilder<S, V, P, fn(&Batch<S, V>)>
 where
-    T: Transaction,
     S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<S, T>,
+    V: VM,
+    P: TransactionProcessor<S, V>,
 {
     fn default() -> Self {
         RuntimeBuilder {
@@ -35,12 +33,8 @@ where
     }
 }
 
-impl<
-    T: Transaction,
-    S: Store<StateSpace = RuntimeState>,
-    P: TransactionProcessor<S, T>,
-    N: Notarizer<S, T>,
-> RuntimeBuilder<T, S, P, N>
+impl<S: Store<StateSpace = RuntimeState>, V: VM, P: TransactionProcessor<S, V>, N: Notarizer<S, V>>
+    RuntimeBuilder<S, V, P, N>
 {
     /// Override the number of execution workers.
     pub fn with_execution_workers(mut self, workers: usize) -> Self {
@@ -55,10 +49,10 @@ impl<
     }
 
     /// Provide the batch processor callback.
-    pub fn with_notarization<NewNotarizer: Notarizer<S, T>>(
+    pub fn with_notarization<NewNotarizer: Notarizer<S, V>>(
         self,
         notarizer: NewNotarizer,
-    ) -> RuntimeBuilder<T, S, P, NewNotarizer> {
+    ) -> RuntimeBuilder<S, V, P, NewNotarizer> {
         RuntimeBuilder {
             execution_workers: self.execution_workers,
             transaction_processor: self.transaction_processor,
@@ -73,7 +67,7 @@ impl<
         self
     }
 
-    pub fn build(self) -> Runtime<S, T> {
+    pub fn build(self) -> Runtime<S, V> {
         let RuntimeBuilder {
             execution_workers,
             transaction_processor,

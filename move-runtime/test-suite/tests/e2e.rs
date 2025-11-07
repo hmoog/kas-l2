@@ -31,7 +31,7 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
                     err
                 })
             })
-            .with_notarization(|batch: &Batch<RocksDbStore, Transaction>| {
+            .with_notarization(|batch: &Batch<RocksDbStore, VM>| {
                 eprintln!(
                     ">> Processed batch with {} transactions and {} state changes",
                     batch.txs().len(),

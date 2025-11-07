@@ -2,26 +2,26 @@ use kas_l2_storage_manager::Store;
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, BatchRef, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff, Transaction,
+    AccessMetadata, BatchRef, ResourceAccess, RuntimeState, RuntimeTxRef, StateDiff, vm::VM,
 };
 
-pub(crate) struct Resource<S: Store<StateSpace = RuntimeState>, T: Transaction> {
-    last_access: Option<ResourceAccess<S, T>>,
+pub(crate) struct Resource<S: Store<StateSpace = RuntimeState>, V: VM> {
+    last_access: Option<ResourceAccess<S, V>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Default for Resource<S, T> {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> Default for Resource<S, V> {
     fn default() -> Self {
         Self { last_access: None }
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, T: Transaction> Resource<S, T> {
+impl<S: Store<StateSpace = RuntimeState>, V: VM> Resource<S, V> {
     pub(crate) fn access(
         &mut self,
-        meta: &T::AccessMetadata,
-        tx: &RuntimeTxRef<S, T>,
-        batch: &BatchRef<S, T>,
-    ) -> ResourceAccess<S, T> {
+        meta: &V::AccessMetadata,
+        tx: &RuntimeTxRef<S, V>,
+        batch: &BatchRef<S, V>,
+    ) -> ResourceAccess<S, V> {
         let (state_diff_ref, prev_access) = match self.last_access.take() {
             Some(prev_access) if prev_access.tx().belongs_to_batch(batch) => {
                 assert!(prev_access.tx() != tx, "duplicate access to resource");
