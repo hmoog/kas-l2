@@ -18,7 +18,6 @@ pub(crate) mod execution {
 
 pub(crate) mod notarization {
     pub(crate) mod notarization_worker;
-    pub(crate) mod notarizer;
 }
 
 pub(crate) mod storage {
@@ -48,7 +47,6 @@ pub use crate::{
         versioned_state::VersionedState,
     },
     execution::{runtime_tx::RuntimeTx, transaction::Transaction},
-    notarization::notarizer::Notarizer,
     resources::{
         access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
         resource_id::ResourceId,

@@ -2,7 +2,7 @@ use kas_l2_storage_manager::{StorageConfig, StorageManager, Store};
 use tap::Tap;
 
 use crate::{
-    Batch, Executor, NotarizationWorker, Notarizer, Read, Scheduler, Write,
+    Batch, Executor, NotarizationWorker, Read, Scheduler, Write,
     storage::runtime_state::RuntimeState, vm::VM,
 };
 
@@ -27,18 +27,13 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> Runtime<S, V> {
         self.storage.shutdown();
     }
 
-    pub fn from_parts<B: Notarizer<S, V>>(
-        execution_workers: usize,
-        vm: V,
-        notarizer: B,
-        storage_config: StorageConfig<S>,
-    ) -> Self {
+    pub fn from_parts(execution_workers: usize, vm: V, storage_config: StorageConfig<S>) -> Self {
         let storage = StorageManager::new(storage_config);
 
         Self {
             scheduler: Scheduler::new(storage.clone()),
-            executor: Executor::new(execution_workers, vm),
-            notarization: NotarizationWorker::new(notarizer),
+            executor: Executor::new(execution_workers, vm.clone()),
+            notarization: NotarizationWorker::new(vm),
             storage,
         }
     }

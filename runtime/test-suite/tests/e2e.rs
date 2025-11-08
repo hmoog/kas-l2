@@ -3,7 +3,6 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_runtime_core::Batch;
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
@@ -14,18 +13,11 @@ use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
 pub fn test_runtime() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
-        let store = RocksDbStore::open(temp_dir.path());
+        let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
 
         let mut runtime = RuntimeBuilder::default()
             .with_storage_config(StorageConfig::default().with_store(store.clone()))
             .with_vm(TestVM)
-            .with_notarization(|batch: &Batch<RocksDbStore, TestVM>| {
-                eprintln!(
-                    ">> Processed batch with {} transactions and {} state changes",
-                    batch.txs().len(),
-                    batch.state_diffs().len()
-                );
-            })
             .build();
 
         runtime.process(vec![
@@ -57,7 +49,8 @@ pub fn test_runtime() {
 
 mod test_framework {
     use kas_l2_runtime_core::{
-        AccessHandle, AccessMetadata, AccessType, RuntimeState, Transaction, VM, VersionedState,
+        AccessHandle, AccessMetadata, AccessType, Batch, RuntimeState, Transaction, VM,
+        VersionedState,
     };
     use kas_l2_storage_manager::{ReadStore, Store};
 
@@ -81,6 +74,14 @@ mod test_framework {
                 }
             }
             Ok::<(), ()>(())
+        }
+
+        fn notarize_batch<S: Store<StateSpace = RuntimeState>>(&self, batch: &Batch<S, Self>) {
+            eprintln!(
+                ">> Processed batch with {} transactions and {} state changes",
+                batch.txs().len(),
+                batch.state_diffs().len()
+            );
         }
     }
 
