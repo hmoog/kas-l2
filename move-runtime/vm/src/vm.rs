@@ -7,7 +7,8 @@ use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
 
 use crate::{
-    ObjectAccess, ObjectId, execution_context::ExecutionContext, transaction::Transaction,
+    ObjectAccess, ObjectId, execution_context::ExecutionContext, ownership::Ownership,
+    transaction::Transaction,
 };
 
 pub struct VM(Arc<MoveVM>);
@@ -40,6 +41,7 @@ impl Clone for VM {
 impl kas_l2_runtime_core::VM for VM {
     type Transaction = Transaction;
     type ResourceId = ObjectId;
+    type Ownership = Ownership;
     type AccessMetadata = ObjectAccess;
     type Error = VMError;
 

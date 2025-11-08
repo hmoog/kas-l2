@@ -4,7 +4,7 @@ use crate::vm::VM;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
 pub struct State<V: VM> {
-    pub owner: V::ResourceId,
+    pub owner: V::Ownership,
     pub data: Vec<u8>,
     pub balance: u64,
     pub executable: bool,
@@ -18,7 +18,7 @@ impl<V: VM> State<V> {
 
 impl<V: VM> Default for State<V> {
     fn default() -> Self {
-        Self { owner: V::ResourceId::default(), data: Vec::new(), balance: 0, executable: false }
+        Self { owner: V::Ownership::default(), data: Vec::new(), balance: 0, executable: false }
     }
 }
 

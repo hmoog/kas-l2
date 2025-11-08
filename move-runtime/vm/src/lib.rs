@@ -10,5 +10,6 @@ mod instruction;
 mod modules;
 mod object_access;
 mod object_id;
+mod ownership;
 mod transaction;
 mod vm;

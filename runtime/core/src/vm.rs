@@ -1,10 +1,14 @@
 use kas_l2_storage_manager::Store;
 
-use crate::{AccessHandle, AccessMetadata, Batch, ResourceId, RuntimeState, Transaction};
+use crate::{
+    AccessHandle, AccessMetadata, Batch, ResourceId, RuntimeState, Transaction,
+    data::ownership::Ownership,
+};
 
 pub trait VM: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self>;
     type ResourceId: ResourceId;
+    type Ownership: Ownership;
     type AccessMetadata: AccessMetadata<Self::ResourceId>;
     type Error;
 

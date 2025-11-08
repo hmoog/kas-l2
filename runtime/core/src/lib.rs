@@ -2,6 +2,7 @@ mod runtime;
 mod vm;
 
 pub(crate) mod data {
+    pub(crate) mod ownership;
     pub(crate) mod state;
     pub(crate) mod state_diff;
     pub(crate) mod versioned_state;
@@ -41,6 +42,7 @@ pub(crate) mod scheduling {
 
 pub use crate::{
     data::{
+        ownership::Ownership,
         state::State,
         state_diff::{StateDiff, StateDiffRef},
         versioned_state::VersionedState,

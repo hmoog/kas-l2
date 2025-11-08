@@ -60,6 +60,7 @@ mod test_framework {
     impl VM for TestVM {
         type Transaction = Tx;
         type ResourceId = usize;
+        type Ownership = usize;
         type AccessMetadata = Access;
         type Error = ();
 
