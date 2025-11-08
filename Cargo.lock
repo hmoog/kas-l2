@@ -1118,7 +1118,6 @@ dependencies = [
  "kas-l2-core-atomics",
  "kas-l2-core-macros",
  "kas-l2-storage-manager",
- "num_cpus",
  "tap",
  "tokio",
 ]
