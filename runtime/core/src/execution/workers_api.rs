@@ -8,7 +8,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::Store;
 use tap::Tap;
 
-use crate::{Batch, RuntimeState, RuntimeTx, VecExt, Worker, vm::VM};
+use crate::{Batch, RuntimeState, RuntimeTx, Worker, vm::VM};
 
 #[smart_pointer]
 pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, V: VM> {
@@ -29,16 +29,18 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> WorkersApi<S, V> {
             shutdown: AtomicAsyncLatch::new(),
         };
 
-        let workers: Vec<Worker<S, V>> = (0..worker_count).into_vec(|id| {
-            Worker::new(id, vm.clone()).tap(|w| {
-                data.inboxes.push(w.inbox());
-                data.stealers.push(w.stealer());
-                data.unparkers.push(w.unparker());
+        let workers: Vec<Worker<S, V>> = (0..worker_count)
+            .map(|id| {
+                Worker::new(id, vm.clone()).tap(|w| {
+                    data.inboxes.push(w.inbox());
+                    data.stealers.push(w.stealer());
+                    data.unparkers.push(w.unparker());
+                })
             })
-        });
+            .collect();
 
         let this = Self(Arc::new(data));
-        let handles = workers.into_vec(|w| w.start(this.clone()));
+        let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
 
         (this, handles)
     }

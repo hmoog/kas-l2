@@ -12,8 +12,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_storage_manager::{StorageManager, Store, WriteStore};
 
 use crate::{
-    Read, RuntimeTx, Scheduler, StateDiff, VecExt, Write, storage::runtime_state::RuntimeState,
-    vm::VM,
+    Read, RuntimeTx, Scheduler, StateDiff, Write, storage::runtime_state::RuntimeState, vm::VM,
 };
 
 #[smart_pointer]
@@ -87,9 +86,12 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> Batch<S, V> {
                 storage: scheduler.storage().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
-                txs: txs.into_vec(|tx| {
-                    RuntimeTx::new(scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
-                }),
+                txs: txs
+                    .into_iter()
+                    .map(|tx| {
+                        RuntimeTx::new(scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
+                    })
+                    .collect(),
                 state_diffs,
                 available_txs: Injector::new(),
                 was_processed: Default::default(),

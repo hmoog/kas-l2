@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_core::{Batch, RuntimeState};
+use kas_l2_runtime_core::{AccessHandle, Batch, RuntimeState};
 use kas_l2_storage_manager::Store;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
@@ -43,10 +43,10 @@ impl kas_l2_runtime_core::VM for VM {
     type AccessMetadata = ObjectAccess;
     type Error = VMError;
 
-    fn process_transaction<S: kas_l2_storage_manager::Store<StateSpace = RuntimeState>>(
+    fn process_transaction<S: Store<StateSpace = RuntimeState>>(
         &self,
         tx: &Self::Transaction,
-        resources: &mut [kas_l2_runtime_core::AccessHandle<S, VM>],
+        resources: &mut [AccessHandle<S, VM>],
     ) -> VMResult<()> {
         tx.instruction.execute(ExecutionContext::new(&self.0, resources))
     }

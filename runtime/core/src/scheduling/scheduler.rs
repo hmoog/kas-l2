@@ -4,7 +4,7 @@ use kas_l2_storage_manager::{StorageManager, Store};
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, VecExt, Write,
+    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, Write,
     execution::runtime_tx::RuntimeTxRef, resources::resource_access::ResourceAccess,
     storage::runtime_state::RuntimeState, vm::VM,
 };
@@ -40,14 +40,19 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> Scheduler<S, V> {
         batch: &BatchRef<S, V>,
         state_diffs: &mut Vec<StateDiff<S, V>>,
     ) -> Vec<ResourceAccess<S, V>> {
-        tx.accessed_resources().iter().into_vec(|access| {
-            self.resources.entry(access.id()).or_default().access(access, &runtime_tx, batch).tap(
-                |access| {
-                    if access.is_batch_head() {
-                        state_diffs.push(access.state_diff());
-                    }
-                },
-            )
-        })
+        tx.accessed_resources()
+            .iter()
+            .map(|access| {
+                self.resources
+                    .entry(access.id())
+                    .or_default()
+                    .access(access, &runtime_tx, batch)
+                    .tap(|access| {
+                        if access.is_batch_head() {
+                            state_diffs.push(access.state_diff());
+                        }
+                    })
+            })
+            .collect()
     }
 }

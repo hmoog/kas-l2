@@ -1,5 +1,4 @@
 mod runtime;
-pub(crate) mod utils;
 mod vm;
 
 pub(crate) mod data {
@@ -64,5 +63,4 @@ pub(crate) use crate::{
     resources::{resource::Resource, resource_access::ResourceAccess},
     scheduling::{batch_queue::BatchQueue, scheduler::Scheduler},
     storage::cmd::{Read, Write},
-    utils::VecExt,
 };
