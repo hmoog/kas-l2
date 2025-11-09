@@ -85,13 +85,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
                 txs: txs
                     .into_iter()
                     .map(|tx| {
-                        RuntimeTx::new(
-                            vm.clone(),
-                            scheduler,
-                            &mut state_diffs,
-                            BatchRef(this.clone()),
-                            tx,
-                        )
+                        RuntimeTx::new(&vm, scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
                     })
                     .collect(),
                 state_diffs,
