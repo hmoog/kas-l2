@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use crossbeam_deque::{Injector, Steal, Worker};
+use crossbeam_deque::{Injector, Steal, Worker as DequeWorker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state_space::StateSpace;
@@ -115,7 +115,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
 
     pub(crate) fn steal_available_txs(
         &self,
-        worker: &Worker<RuntimeTx<S, V>>,
+        worker: &DequeWorker<RuntimeTx<S, V>>,
     ) -> Option<RuntimeTx<S, V>> {
         loop {
             match self.available_txs.steal_batch_and_pop(worker) {

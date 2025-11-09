@@ -1,26 +1,53 @@
-use std::{hint::spin_loop, sync::Arc, thread::JoinHandle};
+use std::{hint::spin_loop, marker::PhantomData, sync::Arc, thread::JoinHandle};
 
 use crossbeam_deque::{Steal, Stealer};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
 use kas_l2_core_atomics::AtomicAsyncLatch;
-use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{Batch, RuntimeTx, Worker, vm::VM};
+use crate::{ExecutionBatchQueue, ExecutionTask, Worker};
 
-#[smart_pointer]
-pub(crate) struct WorkersApi<S: Store<StateSpace = StateSpace>, V: VM> {
-    worker_count: usize,
-    inboxes: Vec<Arc<ArrayQueue<Batch<S, V>>>>,
-    stealers: Vec<Stealer<RuntimeTx<S, V>>>,
-    unparkers: Vec<Unparker>,
-    shutdown: AtomicAsyncLatch,
+pub struct WorkersApi<V, T, Q>
+where
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
+{
+    inner: Arc<WorkersApiData<V, T, Q>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
+struct WorkersApiData<V, T, Q>
+where
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
+{
+    worker_count: usize,
+    inboxes: Vec<Arc<ArrayQueue<Q::Batch>>>,
+    stealers: Vec<Stealer<T>>,
+    unparkers: Vec<Unparker>,
+    shutdown: AtomicAsyncLatch,
+    marker: PhantomData<V>,
+}
+
+impl<V, T, Q> Clone for WorkersApi<V, T, Q>
+where
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
+{
+    fn clone(&self) -> Self {
+        Self { inner: self.inner.clone() }
+    }
+}
+
+impl<V, T, Q> WorkersApi<V, T, Q>
+where
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
+{
     pub fn new_with_workers(worker_count: usize, vm: V) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
             worker_count,
@@ -28,9 +55,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
             unparkers: Vec::with_capacity(worker_count),
             inboxes: Vec::with_capacity(worker_count),
             shutdown: AtomicAsyncLatch::new(),
+            marker: PhantomData,
         };
 
-        let workers: Vec<Worker<S, V>> = (0..worker_count)
+        let workers: Vec<Worker<V, T, Q>> = (0..worker_count)
             .map(|id| {
                 Worker::new(id, vm.clone()).tap(|w| {
                     data.inboxes.push(w.inbox());
@@ -40,21 +68,21 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
             })
             .collect();
 
-        let this = Self(Arc::new(data));
+        let this = Self { inner: Arc::new(data) };
         let handles = workers.into_iter().map(|w| w.start(this.clone())).collect();
 
         (this, handles)
     }
 
-    pub fn push_batch(&self, batch: Batch<S, V>) {
-        for (inbox, unparker) in self.inboxes.iter().zip(&self.unparkers) {
+    pub fn push_batch(&self, batch: Q::Batch) {
+        for (inbox, unparker) in self.inner.inboxes.iter().zip(&self.inner.unparkers) {
             let mut item = batch.clone();
             loop {
                 match inbox.push(item) {
                     Ok(()) => break,
                     Err(back) => {
                         item = back;
-                        spin_loop(); // CPU relax; does NOT yield/park
+                        spin_loop();
                     }
                 }
             }
@@ -62,14 +90,14 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
         }
     }
 
-    pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<RuntimeTx<S, V>> {
-        if self.worker_count > 1 {
-            let start = fastrand::usize(..self.worker_count);
-            for offset in 0..self.worker_count {
-                let id = (start + offset) % self.worker_count;
+    pub fn steal_from_other_workers(&self, worker_id: usize) -> Option<T> {
+        if self.inner.worker_count > 1 {
+            let start = fastrand::usize(..self.inner.worker_count);
+            for offset in 0..self.inner.worker_count {
+                let id = (start + offset) % self.inner.worker_count;
                 if id != worker_id {
                     loop {
-                        match self.stealers[id].steal() {
+                        match self.inner.stealers[id].steal() {
                             Steal::Success(task) => return Some(task),
                             Steal::Retry => continue,
                             Steal::Empty => break,
@@ -82,14 +110,14 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
     }
 
     pub fn shutdown(&self) {
-        self.shutdown.open(); // trigger shutdown signal
+        self.inner.shutdown.open();
 
-        for unparker in &self.unparkers {
+        for unparker in &self.inner.unparkers {
             unparker.unpark();
         }
     }
 
     pub fn is_shutdown(&self) -> bool {
-        self.shutdown.is_open()
+        self.inner.shutdown.is_open()
     }
 }

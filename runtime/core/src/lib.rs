@@ -6,10 +6,7 @@ pub(crate) mod data {
 }
 
 pub(crate) mod execution {
-    pub(crate) mod executor;
     pub(crate) mod runtime_tx;
-    pub(crate) mod worker;
-    pub(crate) mod workers_api;
 }
 
 pub(crate) mod notarization {
@@ -41,11 +38,15 @@ pub use crate::{
     vm::VM,
 };
 pub(crate) use crate::{
-    execution::{
-        executor::Executor, runtime_tx::RuntimeTxRef, worker::Worker, workers_api::WorkersApi,
-    },
+    execution::runtime_tx::RuntimeTxRef,
     notarization::notarization_worker::NotarizationWorker,
     resources::{resource::Resource, resource_access::ResourceAccess},
-    scheduling::{batch_queue::BatchQueue, scheduler::Scheduler},
+    scheduling::scheduler::Scheduler,
     storage::cmd::{Read, Write},
 };
+
+pub(crate) type Executor<S, V> = kas_l2_runtime_execution::Executor<
+    V,
+    execution::runtime_tx::RuntimeTx<S, V>,
+    scheduling::batch_queue::BatchQueue<S, V>,
+>;

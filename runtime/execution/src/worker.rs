@@ -3,23 +3,27 @@ use std::{sync::Arc, thread, thread::JoinHandle, time::Duration};
 use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_interface::Store;
 
-use crate::{Batch, BatchQueue, RuntimeTx, WorkersApi, vm::VM};
+use crate::{ExecutionBatchQueue, ExecutionTask, WorkersApi};
 
-pub struct Worker<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct Worker<V, T, Q>
+where
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
+{
     id: usize,
-    local_queue: WorkerQueue<RuntimeTx<S, V>>,
-    inbox: Arc<ArrayQueue<Batch<S, V>>>,
+    local_queue: WorkerQueue<T>,
+    inbox: Arc<ArrayQueue<Q::Batch>>,
     vm: V,
     parker: Parker,
 }
 
-impl<S, V> Worker<S, V>
+impl<V, T, Q> Worker<V, T, Q>
 where
-    S: Store<StateSpace = StateSpace>,
-    V: VM,
+    T: ExecutionTask<V> + Send + 'static,
+    V: Clone + Send + Sync + 'static,
+    Q: ExecutionBatchQueue<T> + 'static,
 {
     pub(crate) fn new(id: usize, vm: V) -> Self {
         Self {
@@ -31,11 +35,11 @@ where
         }
     }
 
-    pub(crate) fn start(self, workers_api: WorkersApi<S, V>) -> JoinHandle<()> {
+    pub(crate) fn start(self, workers_api: WorkersApi<V, T, Q>) -> JoinHandle<()> {
         thread::spawn(move || self.run(workers_api))
     }
 
-    pub(crate) fn stealer(&self) -> Stealer<RuntimeTx<S, V>> {
+    pub(crate) fn stealer(&self) -> Stealer<T> {
         self.local_queue.stealer()
     }
 
@@ -43,12 +47,12 @@ where
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Batch<S, V>>> {
+    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Q::Batch>> {
         self.inbox.clone()
     }
 
-    fn run(self, workers_api: WorkersApi<S, V>) {
-        let mut pending_batches = BatchQueue::new(self.inbox);
+    fn run(self, workers_api: WorkersApi<V, T, Q>) {
+        let mut pending_batches = Q::new(self.inbox);
 
         while !workers_api.is_shutdown() {
             match self

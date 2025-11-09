@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
-use crossbeam_deque::Worker;
+use crossbeam_deque::Worker as DequeWorker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
+
+use kas_l2_runtime_execution::ExecutionBatchQueue;
 
 use crate::{Batch, RuntimeTx, vm::VM};
 
@@ -18,7 +20,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> BatchQueue<S, V> {
         Self { queue: LinkedList::new(linked_list::Adapter::new()), new_batches }
     }
 
-    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+    pub fn steal(
+        &mut self,
+        worker_queue: &DequeWorker<RuntimeTx<S, V>>,
+    ) -> Option<RuntimeTx<S, V>> {
         loop {
             let mut queue_element = self.queue.cursor_mut();
             queue_element.move_next();
@@ -48,6 +53,22 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> BatchQueue<S, V> {
             pulled = true;
         }
         pulled
+    }
+}
+
+impl<S, V> ExecutionBatchQueue<RuntimeTx<S, V>> for BatchQueue<S, V>
+where
+    S: Store<StateSpace = StateSpace>,
+    V: VM,
+{
+    type Batch = Batch<S, V>;
+
+    fn new(inbox: Arc<ArrayQueue<Self::Batch>>) -> Self {
+        BatchQueue::new(inbox)
+    }
+
+    fn steal(&mut self, worker_queue: &DequeWorker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+        BatchQueue::steal(self, worker_queue)
     }
 }
 

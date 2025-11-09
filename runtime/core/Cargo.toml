@@ -10,6 +10,7 @@ kas-l2-runtime-state = { path = "../state" }
 kas-l2-storage-interface = { path = "../../storage/interface" }
 kas-l2-runtime-state-space = { path = "../state-space" }
 kas-l2-runtime-interface = { path = "../interface" }
+kas-l2-runtime-execution = { path = "../execution" }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"
 crossbeam-queue = "0.3.12"
