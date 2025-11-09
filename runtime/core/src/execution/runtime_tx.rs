@@ -5,7 +5,7 @@ use std::sync::{
 
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 
 use crate::{
     AccessHandle, BatchRef, ResourceAccess, StateDiff, scheduling::scheduler::Scheduler, vm::VM,

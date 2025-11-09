@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType};
+use kas_l2_runtime_core::AccessHandle;
+use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::{effects::Op, runtime_value::MoveTypeLayout};
 use move_vm_runtime::{

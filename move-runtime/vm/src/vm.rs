@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kas_l2_runtime_core::{AccessHandle, Batch};
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;

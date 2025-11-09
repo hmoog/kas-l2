@@ -6,7 +6,7 @@ use crossbeam_utils::sync::Unparker;
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 use tap::Tap;
 
 use crate::{Batch, RuntimeTx, Worker, vm::VM};

@@ -1,7 +1,7 @@
 use kas_l2_runtime_core::{Runtime, VM};
 use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_interface::Store;
 use kas_l2_storage_manager::StorageConfig;
-use kas_l2_storage_store_interface::Store;
 
 pub struct RuntimeBuilder<S: Store<StateSpace = StateSpace>, V: VM> {
     pub(crate) execution_workers: usize,

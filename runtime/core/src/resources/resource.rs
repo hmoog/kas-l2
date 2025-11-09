@@ -1,8 +1,9 @@
+use kas_l2_runtime_interface::AccessMetadata;
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{AccessMetadata, BatchRef, ResourceAccess, RuntimeTxRef, StateDiff, vm::VM};
+use crate::{BatchRef, ResourceAccess, RuntimeTxRef, StateDiff, vm::VM};
 
 pub(crate) struct Resource<S: Store<StateSpace = StateSpace>, V: VM> {
     last_access: Option<ResourceAccess<S, V>>,

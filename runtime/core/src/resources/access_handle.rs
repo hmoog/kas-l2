@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
+use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 use kas_l2_runtime_state::{State, VersionedState};
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 
-use crate::{AccessMetadata, AccessType, ResourceAccess, vm::VM};
+use crate::{ResourceAccess, vm::VM};
 
 pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VM> {
     versioned_state: Arc<VersionedState<V::ResourceId, V::Ownership>>,

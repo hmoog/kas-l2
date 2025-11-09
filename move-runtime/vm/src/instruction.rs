@@ -1,5 +1,5 @@
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::{
     account_address::AccountAddress, identifier::Identifier, runtime_value::MoveValue,

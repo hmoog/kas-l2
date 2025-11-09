@@ -4,7 +4,7 @@ use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 
 use crate::{Batch, BatchQueue, RuntimeTx, WorkersApi, vm::VM};
 

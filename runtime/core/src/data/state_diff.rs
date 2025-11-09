@@ -4,7 +4,7 @@ use kas_l2_core_atomics::AtomicOptionArc;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::VersionedState;
 use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_store_interface::{Store, WriteStore};
+use kas_l2_storage_interface::{Store, WriteStore};
 
 use crate::{BatchRef, storage::cmd::Write, vm::VM};
 

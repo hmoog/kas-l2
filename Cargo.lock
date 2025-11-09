@@ -1087,10 +1087,11 @@ dependencies = [
  "borsh",
  "indexmap 2.11.0",
  "kas-l2-runtime-core",
+ "kas-l2-runtime-interface",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
- "kas-l2-storage-store-interface",
  "move-binary-format",
  "move-core-types",
  "move-stdlib-natives",
@@ -1104,8 +1105,8 @@ version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-core",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
- "kas-l2-storage-store-interface",
  "num_cpus",
 ]
 
@@ -1124,8 +1125,8 @@ dependencies = [
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
- "kas-l2-storage-store-interface",
  "tap",
  "tokio",
 ]
@@ -1144,8 +1145,8 @@ dependencies = [
  "borsh",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
- "kas-l2-storage-store-interface",
  "tap",
 ]
 
@@ -1159,13 +1160,18 @@ version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-builder",
  "kas-l2-runtime-core",
+ "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
- "kas-l2-storage-store-interface",
  "tempfile",
 ]
+
+[[package]]
+name = "kas-l2-storage-interface"
+version = "0.1.0"
 
 [[package]]
 name = "kas-l2-storage-manager"
@@ -1174,7 +1180,7 @@ dependencies = [
  "crossbeam-queue",
  "crossbeam-utils",
  "kas-l2-core-macros",
- "kas-l2-storage-store-interface",
+ "kas-l2-storage-interface",
 ]
 
 [[package]]
@@ -1183,16 +1189,12 @@ version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-core",
  "kas-l2-runtime-state-space",
+ "kas-l2-storage-interface",
  "kas-l2-storage-manager",
- "kas-l2-storage-store-interface",
  "num_cpus",
  "rocksdb",
  "tap",
 ]
-
-[[package]]
-name = "kas-l2-storage-store-interface"
-version = "0.1.0"
 
 [[package]]
 name = "keccak"

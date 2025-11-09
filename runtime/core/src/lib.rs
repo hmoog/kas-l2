@@ -8,7 +8,6 @@ pub(crate) mod data {
 pub(crate) mod execution {
     pub(crate) mod executor;
     pub(crate) mod runtime_tx;
-    pub(crate) mod transaction;
     pub(crate) mod worker;
     pub(crate) mod workers_api;
 }
@@ -23,8 +22,6 @@ pub(crate) mod storage {
 
 pub(crate) mod resources {
     pub(crate) mod access_handle;
-    pub(crate) mod access_metadata;
-    pub(crate) mod access_type;
     pub(crate) mod resource;
     pub(crate) mod resource_access;
 }
@@ -37,10 +34,8 @@ pub(crate) mod scheduling {
 
 pub use crate::{
     data::state_diff::{StateDiff, StateDiffRef},
-    execution::{runtime_tx::RuntimeTx, transaction::Transaction},
-    resources::{
-        access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
-    },
+    execution::runtime_tx::RuntimeTx,
+    resources::access_handle::AccessHandle,
     runtime::Runtime,
     scheduling::batch::{Batch, BatchRef},
     vm::VM,

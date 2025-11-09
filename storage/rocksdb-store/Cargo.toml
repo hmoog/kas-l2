@@ -8,6 +8,6 @@ rocksdb = { version = "0.24.0", default-features = false, features = ["lz4", "zs
 kas-l2-storage-manager = { path = "../manager" }
 kas-l2-runtime-core = { path = "../../runtime/core" }
 kas-l2-runtime-state-space = { path = "../../runtime/state-space" }
-kas-l2-storage-store-interface = { path = "../store-interface" }
+kas-l2-storage-interface = { path = "../interface" }
 num_cpus = "1.17.0"
 tap = "1.0.1"

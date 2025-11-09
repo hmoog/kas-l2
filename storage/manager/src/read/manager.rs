@@ -7,7 +7,7 @@ use std::{
 };
 
 use crossbeam_utils::CachePadded;
-use kas_l2_storage_store_interface::Store;
+use kas_l2_storage_interface::Store;
 
 use crate::{
     ReadCmd,

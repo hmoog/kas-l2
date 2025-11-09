@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
+use kas_l2_runtime_interface::{AccessMetadata, Transaction};
 use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_interface::Store;
 use kas_l2_storage_manager::StorageManager;
-use kas_l2_storage_store_interface::Store;
 use tap::Tap;
 
 use crate::{
-    AccessMetadata, Batch, BatchRef, Read, Resource, StateDiff, Transaction, Write,
-    execution::runtime_tx::RuntimeTxRef, resources::resource_access::ResourceAccess, vm::VM,
+    Batch, BatchRef, Read, Resource, StateDiff, Write, execution::runtime_tx::RuntimeTxRef,
+    resources::resource_access::ResourceAccess, vm::VM,
 };
 
 pub struct Scheduler<S: Store<StateSpace = StateSpace>, V: VM> {

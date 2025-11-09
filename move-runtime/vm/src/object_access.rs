@@ -7,7 +7,7 @@ pub enum ObjectAccess {
 }
 
 mod foreign_traits {
-    use kas_l2_runtime_core::{AccessMetadata, AccessType};
+    use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 
     use crate::{ObjectAccess, ObjectId};
 
