@@ -7,6 +7,8 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 
+use kas_l2_runtime_execution::ExecutionTask;
+
 use crate::{
     AccessHandle, BatchRef, ResourceAccess, StateDiff, scheduling::scheduler::Scheduler, vm::VM,
 };
@@ -70,5 +72,15 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
 impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTxRef<S, V> {
     pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, V>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
+    }
+}
+
+impl<S, V> ExecutionTask<V> for RuntimeTx<S, V>
+where
+    S: Store<StateSpace = StateSpace>,
+    V: VM,
+{
+    fn execute_with(&self, vm: &V) {
+        RuntimeTx::execute(self, vm);
     }
 }

@@ -9,6 +9,7 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
+use kas_l2_runtime_execution::TaskBatch;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::StorageManager;
 use kas_l2_storage_interface::{Store, WriteStore};
@@ -160,5 +161,19 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
     pub(crate) fn commit_done(self) {
         // TODO: EVICT STUFF?
         self.was_committed.open();
+    }
+}
+
+impl<S, V> TaskBatch<RuntimeTx<S, V>> for Batch<S, V>
+where
+    S: Store<StateSpace = StateSpace>,
+    V: VM,
+{
+    fn steal_available_task(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+        self.steal_available_txs(worker)
+    }
+
+    fn is_depleted(&self) -> bool {
+        Batch::is_depleted(self)
     }
 }

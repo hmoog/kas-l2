@@ -7,8 +7,8 @@ use kas_l2_storage_interface::Store;
 use tap::Tap;
 
 use crate::{
-    Batch, BatchRef, Read, Resource, StateDiff, Write, execution::runtime_tx::RuntimeTxRef,
-    resources::resource_access::ResourceAccess, vm::VM,
+    Batch, BatchRef, Read, Resource, StateDiff, Write, resources::resource_access::ResourceAccess,
+    runtime_tx::RuntimeTxRef, vm::VM,
 };
 
 pub struct Scheduler<S: Store<StateSpace = StateSpace>, V: VM> {

@@ -5,12 +5,7 @@ pub(crate) mod data {
     pub(crate) mod state_diff;
 }
 
-pub(crate) mod execution {
-    pub(crate) mod executor;
-    pub(crate) mod runtime_tx;
-    pub(crate) mod worker;
-    pub(crate) mod workers_api;
-}
+pub(crate) mod runtime_tx;
 
 pub(crate) mod notarization {
     pub(crate) mod notarization_worker;
@@ -28,24 +23,33 @@ pub(crate) mod resources {
 
 pub(crate) mod scheduling {
     pub(crate) mod batch;
-    pub(crate) mod batch_queue;
     pub(crate) mod scheduler;
 }
 
 pub use crate::{
     data::state_diff::{StateDiff, StateDiffRef},
-    execution::runtime_tx::RuntimeTx,
     resources::access_handle::AccessHandle,
     runtime::Runtime,
+    runtime_tx::RuntimeTx,
     scheduling::batch::{Batch, BatchRef},
     vm::VM,
 };
+
 pub(crate) use crate::{
-    execution::{
-        executor::Executor, runtime_tx::RuntimeTxRef, worker::Worker, workers_api::WorkersApi,
-    },
     notarization::notarization_worker::NotarizationWorker,
     resources::{resource::Resource, resource_access::ResourceAccess},
-    scheduling::{batch_queue::BatchQueue, scheduler::Scheduler},
+    runtime_tx::RuntimeTxRef,
+    scheduling::scheduler::Scheduler,
     storage::cmd::{Read, Write},
 };
+
+pub(crate) type Executor<S, V> =
+    kas_l2_runtime_execution::Executor<RuntimeTx<S, V>, Batch<S, V>, V>;
+
+pub(crate) type WorkersApi<S, V> =
+    kas_l2_runtime_execution::WorkersApi<RuntimeTx<S, V>, Batch<S, V>, V>;
+
+pub(crate) type Worker<S, V> = kas_l2_runtime_execution::Worker<RuntimeTx<S, V>, Batch<S, V>, V>;
+
+pub(crate) type BatchQueue<S, V> =
+    kas_l2_runtime_execution::BatchQueue<Batch<S, V>, RuntimeTx<S, V>>;

@@ -3,23 +3,27 @@ use std::{sync::Arc, thread, thread::JoinHandle, time::Duration};
 use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_interface::Store;
 
-use crate::{Batch, BatchQueue, RuntimeTx, WorkersApi, vm::VM};
+use crate::{BatchQueue, ExecutionTask, TaskBatch, WorkersApi};
 
-pub struct Worker<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct Worker<T, B, V>
+where
+    T: ExecutionTask<V> + Clone + Send + 'static,
+    B: TaskBatch<T>,
+    V: Clone + Send + Sync + 'static,
+{
     id: usize,
-    local_queue: WorkerQueue<RuntimeTx<S, V>>,
-    inbox: Arc<ArrayQueue<Batch<S, V>>>,
+    local_queue: WorkerQueue<T>,
+    inbox: Arc<ArrayQueue<B>>,
     vm: V,
     parker: Parker,
 }
 
-impl<S, V> Worker<S, V>
+impl<T, B, V> Worker<T, B, V>
 where
-    S: Store<StateSpace = StateSpace>,
-    V: VM,
+    T: ExecutionTask<V> + Clone + Send + 'static,
+    B: TaskBatch<T>,
+    V: Clone + Send + Sync + 'static,
 {
     pub(crate) fn new(id: usize, vm: V) -> Self {
         Self {
@@ -31,11 +35,11 @@ where
         }
     }
 
-    pub(crate) fn start(self, workers_api: WorkersApi<S, V>) -> JoinHandle<()> {
+    pub(crate) fn start(self, workers_api: WorkersApi<T, B, V>) -> JoinHandle<()> {
         thread::spawn(move || self.run(workers_api))
     }
 
-    pub(crate) fn stealer(&self) -> Stealer<RuntimeTx<S, V>> {
+    pub(crate) fn stealer(&self) -> Stealer<T> {
         self.local_queue.stealer()
     }
 
@@ -43,11 +47,11 @@ where
         self.parker.unparker().clone()
     }
 
-    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<Batch<S, V>>> {
+    pub(crate) fn inbox(&self) -> Arc<ArrayQueue<B>> {
         self.inbox.clone()
     }
 
-    fn run(self, workers_api: WorkersApi<S, V>) {
+    fn run(self, workers_api: WorkersApi<T, B, V>) {
         let mut pending_batches = BatchQueue::new(self.inbox);
 
         while !workers_api.is_shutdown() {
@@ -57,7 +61,7 @@ where
                 .or_else(|| pending_batches.steal(&self.local_queue))
                 .or_else(|| workers_api.steal_from_other_workers(self.id))
             {
-                Some(task) => task.execute(&self.vm),
+                Some(task) => task.execute_with(&self.vm),
                 None => self.parker.park_timeout(Duration::from_millis(100)),
             }
         }

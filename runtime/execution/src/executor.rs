@@ -1,22 +1,29 @@
 use std::thread::JoinHandle;
 
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_interface::Store;
+use crate::{ExecutionTask, TaskBatch, WorkersApi};
 
-use crate::{Batch, WorkersApi, vm::VM};
-
-pub struct Executor<S: Store<StateSpace = StateSpace>, V: VM> {
-    workers: WorkersApi<S, V>,
+pub struct Executor<T, B, V>
+where
+    T: ExecutionTask<V> + Clone + Send + 'static,
+    B: TaskBatch<T>,
+    V: Clone + Send + Sync + 'static,
+{
+    workers: WorkersApi<T, B, V>,
     handles: Vec<JoinHandle<()>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> Executor<S, V> {
+impl<T, B, V> Executor<T, B, V>
+where
+    T: ExecutionTask<V> + Clone + Send + 'static,
+    B: TaskBatch<T>,
+    V: Clone + Send + Sync + 'static,
+{
     pub fn new(worker_count: usize, vm: V) -> Self {
         let (workers, handles) = WorkersApi::new_with_workers(worker_count, vm);
         Self { workers, handles }
     }
 
-    pub fn execute(&self, batch: Batch<S, V>) {
+    pub fn execute(&self, batch: B) {
         self.workers.push_batch(batch);
     }
 
