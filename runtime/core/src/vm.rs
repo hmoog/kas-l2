@@ -1,5 +1,4 @@
-use kas_l2_runtime_interface::{AccessMetadata, ResourceId, Transaction};
-use kas_l2_runtime_state::Owner;
+use kas_l2_runtime_interface::{AccessMetadata, Owner, ResourceId, Transaction};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 

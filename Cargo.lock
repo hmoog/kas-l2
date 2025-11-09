@@ -1068,7 +1068,6 @@ dependencies = [
  "anyhow",
  "kas-l2-move-runtime-vm",
  "kas-l2-runtime-builder",
- "kas-l2-runtime-core",
  "kas-l2-runtime-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-compiler",
@@ -1089,9 +1088,7 @@ dependencies = [
  "kas-l2-runtime-core",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state-space",
- "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-rocksdb-store",
  "move-binary-format",
  "move-core-types",
  "move-stdlib-natives",
@@ -1114,7 +1111,6 @@ dependencies = [
 name = "kas-l2-runtime-core"
 version = "0.1.0"
 dependencies = [
- "borsh",
  "crossbeam-deque",
  "crossbeam-queue",
  "crossbeam-utils",

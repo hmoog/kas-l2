@@ -1,6 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-
-use crate::Owner;
+use kas_l2_runtime_interface::Owner;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
 pub struct State<O: Owner> {
