@@ -3,7 +3,7 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_storage_manager::StorageConfig;
+use kas_l2_runtime_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
 

@@ -1069,7 +1069,7 @@ dependencies = [
  "kas-l2-move-runtime-vm",
  "kas-l2-runtime-builder",
  "kas-l2-runtime-core",
- "kas-l2-storage-manager",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-compiler",
  "move-core-types",
@@ -1089,8 +1089,8 @@ dependencies = [
  "kas-l2-runtime-core",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state-space",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-binary-format",
  "move-core-types",
@@ -1105,8 +1105,8 @@ version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-core",
  "kas-l2-runtime-state-space",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "num_cpus",
 ]
 
@@ -1125,8 +1125,8 @@ dependencies = [
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-runtime-state-space",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "tap",
  "tokio",
 ]
@@ -1145,14 +1145,24 @@ dependencies = [
  "borsh",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state-space",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "tap",
 ]
 
 [[package]]
 name = "kas-l2-runtime-state-space"
 version = "0.1.0"
+
+[[package]]
+name = "kas-l2-runtime-storage-manager"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-queue",
+ "crossbeam-utils",
+ "kas-l2-core-macros",
+ "kas-l2-storage-interface",
+]
 
 [[package]]
 name = "kas-l2-runtime-test-suite"
@@ -1163,8 +1173,8 @@ dependencies = [
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-runtime-state-space",
+ "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "tempfile",
 ]
@@ -1174,23 +1184,11 @@ name = "kas-l2-storage-interface"
 version = "0.1.0"
 
 [[package]]
-name = "kas-l2-storage-manager"
-version = "0.1.0"
-dependencies = [
- "crossbeam-queue",
- "crossbeam-utils",
- "kas-l2-core-macros",
- "kas-l2-storage-interface",
-]
-
-[[package]]
 name = "kas-l2-storage-rocksdb-store"
 version = "0.1.0"
 dependencies = [
- "kas-l2-runtime-core",
  "kas-l2-runtime-state-space",
  "kas-l2-storage-interface",
- "kas-l2-storage-manager",
  "num_cpus",
  "rocksdb",
  "tap",

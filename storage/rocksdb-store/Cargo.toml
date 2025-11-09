@@ -5,8 +5,6 @@ edition = "2021"
 
 [dependencies]
 rocksdb = { version = "0.24.0", default-features = false, features = ["lz4", "zstd", "snappy", "zlib", "bzip2", "jemalloc", "mt_static"] }
-kas-l2-storage-manager = { path = "../manager" }
-kas-l2-runtime-core = { path = "../../runtime/core" }
 kas-l2-runtime-state-space = { path = "../../runtime/state-space" }
 kas-l2-storage-interface = { path = "../interface" }
 num_cpus = "1.17.0"

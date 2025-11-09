@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 kas-l2-runtime-core = { path = "../core" }
-kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-runtime-state-space = { path = "../state-space" }
+kas-l2-runtime-storage-manager = { path = "../storage-manager" }
 kas-l2-storage-interface = { path = "../../storage/interface" }
 num_cpus = "1.17.0"

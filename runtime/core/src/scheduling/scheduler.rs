@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use kas_l2_runtime_interface::{AccessMetadata, Transaction};
 use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_storage_manager::StorageManager;
 use kas_l2_storage_interface::Store;
-use kas_l2_storage_manager::StorageManager;
 use tap::Tap;
 
 use crate::{

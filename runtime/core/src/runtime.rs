@@ -1,6 +1,6 @@
 use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_storage_manager::{StorageConfig, StorageManager};
 use kas_l2_storage_interface::Store;
-use kas_l2_storage_manager::{StorageConfig, StorageManager};
 use tap::Tap;
 
 use crate::{Batch, Executor, NotarizationWorker, Read, Scheduler, Write, vm::VM};

@@ -5,8 +5,8 @@ use kas_l2_runtime_state_space::{
     StateSpace,
     StateSpace::{Data, LatestPtr, RollbackPtr},
 };
+use kas_l2_runtime_storage_manager::concat_bytes;
 use kas_l2_storage_interface::{ReadStore, WriteStore};
-use kas_l2_storage_manager::concat_bytes;
 use tap::Tap;
 
 use crate::{Owner, State};

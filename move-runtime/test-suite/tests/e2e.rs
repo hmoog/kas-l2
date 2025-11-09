@@ -9,7 +9,7 @@ use kas_l2_move_runtime_vm::{
     ObjectId, Transaction, VM,
 };
 use kas_l2_runtime_builder::RuntimeBuilder;
-use kas_l2_storage_manager::StorageConfig;
+use kas_l2_runtime_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use move_compiler::PreCompiledProgramInfo;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
