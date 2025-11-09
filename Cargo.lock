@@ -1113,11 +1113,9 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-queue",
- "crossbeam-utils",
- "fastrand",
- "intrusive-collections",
  "kas-l2-core-atomics",
  "kas-l2-core-macros",
+ "kas-l2-runtime-executor",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-runtime-state-space",
@@ -1125,6 +1123,20 @@ dependencies = [
  "kas-l2-storage-interface",
  "tap",
  "tokio",
+]
+
+[[package]]
+name = "kas-l2-runtime-executor"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-queue",
+ "crossbeam-utils",
+ "fastrand",
+ "intrusive-collections",
+ "kas-l2-core-atomics",
+ "kas-l2-core-macros",
+ "tap",
 ]
 
 [[package]]

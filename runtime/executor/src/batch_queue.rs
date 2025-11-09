@@ -1,30 +1,33 @@
-use std::sync::Arc;
+use std::{marker::PhantomData, sync::Arc};
 
 use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_storage_interface::Store;
 
-use crate::{Batch, RuntimeTx, vm::VM};
+use crate::{Batch, task::Task};
 
-pub struct BatchQueue<S: Store<StateSpace = StateSpace>, V: VM> {
-    queue: LinkedList<linked_list::Adapter<Batch<S, V>>>,
-    new_batches: Arc<ArrayQueue<Batch<S, V>>>,
+pub struct BatchQueue<T: Task, B: Batch<T>> {
+    queue: LinkedList<linked_list::Adapter<B>>,
+    new_batches: Arc<ArrayQueue<B>>,
+    _marker: PhantomData<T>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> BatchQueue<S, V> {
-    pub fn new(new_batches: Arc<ArrayQueue<Batch<S, V>>>) -> Self {
-        Self { queue: LinkedList::new(linked_list::Adapter::new()), new_batches }
+impl<T: Task, B: Batch<T>> BatchQueue<T, B> {
+    pub fn new(new_batches: Arc<ArrayQueue<B>>) -> Self {
+        Self {
+            queue: LinkedList::new(linked_list::Adapter::new()),
+            new_batches,
+            _marker: PhantomData,
+        }
     }
 
-    pub fn steal(&mut self, worker_queue: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+    pub fn steal(&mut self, worker_queue: &Worker<T>) -> Option<T> {
         loop {
             let mut queue_element = self.queue.cursor_mut();
             queue_element.move_next();
 
             while let Some(batch) = queue_element.get() {
-                if let Some(transaction) = batch.steal_available_txs(worker_queue) {
+                if let Some(transaction) = batch.steal_available_tasks(worker_queue) {
                     return Some(transaction);
                 }
 

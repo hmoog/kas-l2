@@ -50,10 +50,6 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
         self.pending_txs.load(Ordering::Acquire)
     }
 
-    pub fn is_depleted(&self) -> bool {
-        self.num_pending() == 0 && self.available_txs.is_empty()
-    }
-
     pub fn was_processed(&self) -> bool {
         self.was_processed.is_open()
     }
@@ -78,7 +74,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(scheduler: &mut Scheduler<S, V>, txs: Vec<V::Transaction>) -> Self {
+    pub(crate) fn new(vm: V, scheduler: &mut Scheduler<S, V>, txs: Vec<V::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             BatchData {
@@ -89,7 +85,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
                 txs: txs
                     .into_iter()
                     .map(|tx| {
-                        RuntimeTx::new(scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
+                        RuntimeTx::new(
+                            vm.clone(),
+                            scheduler,
+                            &mut state_diffs,
+                            BatchRef(this.clone()),
+                            tx,
+                        )
                     })
                     .collect(),
                 state_diffs,
@@ -111,19 +113,6 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
 
     pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, V>) {
         self.available_txs.push(tx.clone());
-    }
-
-    pub(crate) fn steal_available_txs(
-        &self,
-        worker: &Worker<RuntimeTx<S, V>>,
-    ) -> Option<RuntimeTx<S, V>> {
-        loop {
-            match self.available_txs.steal_batch_and_pop(worker) {
-                Steal::Success(task) => return Some(task),
-                Steal::Retry => continue,
-                Steal::Empty => return None,
-            }
-        }
     }
 
     pub(crate) fn decrease_pending_txs(&self) {
@@ -160,5 +149,23 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
     pub(crate) fn commit_done(self) {
         // TODO: EVICT STUFF?
         self.was_committed.open();
+    }
+}
+
+impl<S: Store<StateSpace = StateSpace>, V: VM> kas_l2_runtime_executor::Batch<RuntimeTx<S, V>>
+    for Batch<S, V>
+{
+    fn steal_available_tasks(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+        loop {
+            match self.available_txs.steal_batch_and_pop(worker) {
+                Steal::Success(task) => return Some(task),
+                Steal::Retry => continue,
+                Steal::Empty => return None,
+            }
+        }
+    }
+
+    fn is_depleted(&self) -> bool {
+        self.num_pending() == 0 && self.available_txs.is_empty()
     }
 }

@@ -1,14 +1,15 @@
+use kas_l2_runtime_executor::Executor;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::{StorageConfig, StorageManager};
 use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{Batch, Executor, NotarizationWorker, Read, Scheduler, Write, vm::VM};
+use crate::{Batch, NotarizationWorker, Read, RuntimeTx, Scheduler, Write, vm::VM};
 
 pub struct Runtime<S: Store<StateSpace = StateSpace>, V: VM> {
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     scheduler: Scheduler<S, V>,
-    executor: Executor<S, V>,
+    executor: Executor<RuntimeTx<S, V>, Batch<S, V>>,
     notarization: NotarizationWorker<S, V>,
 }
 
@@ -30,8 +31,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Runtime<S, V> {
         let storage = StorageManager::new(storage_config);
 
         Self {
-            scheduler: Scheduler::new(storage.clone()),
-            executor: Executor::new(execution_workers, vm.clone()),
+            scheduler: Scheduler::new(vm.clone(), storage.clone()),
+            executor: Executor::new(execution_workers),
             notarization: NotarizationWorker::new(vm),
             storage,
         }
