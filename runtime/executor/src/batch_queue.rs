@@ -4,21 +4,17 @@ use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
 
-use crate::{Batch, task::Task};
+use crate::{Batch, batch_queue::linked_list::Adapter, task::Task};
 
 pub struct BatchQueue<T: Task, B: Batch<T>> {
-    queue: LinkedList<linked_list::Adapter<B>>,
+    queue: LinkedList<Adapter<B>>,
     new_batches: Arc<ArrayQueue<B>>,
     _marker: PhantomData<T>,
 }
 
 impl<T: Task, B: Batch<T>> BatchQueue<T, B> {
     pub fn new(new_batches: Arc<ArrayQueue<B>>) -> Self {
-        Self {
-            queue: LinkedList::new(linked_list::Adapter::new()),
-            new_batches,
-            _marker: PhantomData,
-        }
+        Self { queue: LinkedList::new(Adapter::new()), new_batches, _marker: PhantomData }
     }
 
     pub fn steal(&mut self, worker_queue: &Worker<T>) -> Option<T> {
