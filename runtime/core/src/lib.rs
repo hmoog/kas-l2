@@ -1,45 +1,39 @@
+mod notarization_worker;
 mod runtime;
 mod vm;
 
-pub(crate) mod data {
-    pub(crate) mod state_diff;
-}
+pub(crate) mod storage {}
 
-pub(crate) mod execution {
-    pub(crate) mod runtime_tx;
-}
-
-pub(crate) mod notarization {
-    pub(crate) mod notarization_worker;
-}
-
-pub(crate) mod storage {
-    pub(crate) mod cmd;
-}
-
-pub(crate) mod resources {
-    pub(crate) mod access_handle;
-    pub(crate) mod resource;
-    pub(crate) mod resource_access;
-}
+pub(crate) mod resources {}
 
 pub(crate) mod scheduling {
+    pub(crate) mod access_handle;
     pub(crate) mod batch;
+    pub(crate) mod resource;
+    pub(crate) mod resource_access;
+    pub(crate) mod runtime_tx;
     pub(crate) mod scheduler;
+    pub(crate) mod state_diff;
+    pub(crate) mod storage_cmd;
 }
 
-pub use crate::{
-    data::state_diff::{StateDiff, StateDiffRef},
-    execution::runtime_tx::RuntimeTx,
-    resources::access_handle::AccessHandle,
-    runtime::Runtime,
-    scheduling::batch::{Batch, BatchRef},
-    vm::VM,
-};
 pub(crate) use crate::{
-    execution::runtime_tx::RuntimeTxRef,
-    notarization::notarization_worker::NotarizationWorker,
-    resources::{resource::Resource, resource_access::ResourceAccess},
-    scheduling::scheduler::Scheduler,
-    storage::cmd::{Read, Write},
+    notarization_worker::NotarizationWorker,
+    scheduling::{
+        resource::Resource,
+        resource_access::ResourceAccess,
+        runtime_tx::RuntimeTxRef,
+        scheduler::Scheduler,
+        storage_cmd::{Read, Write},
+    },
+};
+pub use crate::{
+    runtime::Runtime,
+    scheduling::{
+        access_handle::AccessHandle,
+        batch::{Batch, BatchRef},
+        runtime_tx::RuntimeTx,
+        state_diff::{StateDiff, StateDiffRef},
+    },
+    vm::VM,
 };
