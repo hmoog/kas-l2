@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime_core::AccessHandle;
+use kas_l2_runtime_execution_dag::AccessHandle;
 use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;

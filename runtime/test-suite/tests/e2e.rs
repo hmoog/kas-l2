@@ -48,7 +48,7 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_core::{AccessHandle, Batch, VM};
+    use kas_l2_runtime_execution_dag::{AccessHandle, Batch, VM};
     use kas_l2_runtime_interface::{AccessMetadata, AccessType, Transaction};
     use kas_l2_runtime_state::VersionedState;
     use kas_l2_runtime_state_space::StateSpace;

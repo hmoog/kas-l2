@@ -9,7 +9,9 @@ mod foreign_traits {
     use crate::{ObjectAccess, ObjectId, Transaction, VM};
 
     impl kas_l2_runtime_interface::Transaction<ObjectId, ObjectAccess> for Transaction {
-        fn accessed_resources(&self) -> &[<VM as kas_l2_runtime_core::VM>::AccessMetadata] {
+        fn accessed_resources(
+            &self,
+        ) -> &[<VM as kas_l2_runtime_execution_dag::VM>::AccessMetadata] {
             &self.accessed_resources
         }
     }

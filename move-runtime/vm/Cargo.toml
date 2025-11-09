@@ -10,6 +10,7 @@ move-vm-runtime = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7
 move-vm-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
 move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
 kas-l2-runtime-core = { path = "../../runtime/core" }
+kas-l2-runtime-execution-dag = { path = "../../runtime/execution-dag" }
 kas-l2-storage-interface = { path = "../../storage/interface" }
 kas-l2-runtime-state-space = { path = "../../runtime/state-space" }
 kas-l2-runtime-interface = { path = "../../runtime/interface" }
