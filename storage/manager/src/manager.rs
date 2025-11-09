@@ -4,8 +4,9 @@ use std::sync::{
 };
 
 use kas_l2_core_macros::smart_pointer;
+use kas_l2_storage_store_interface::Store;
 
-use crate::{ReadCmd, StorageConfig, Store, WriteCmd, read::ReadManager, write::WriteManager};
+use crate::{ReadCmd, StorageConfig, WriteCmd, read::ReadManager, write::WriteManager};
 
 #[smart_pointer]
 pub struct StorageManager<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpace>> {

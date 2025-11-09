@@ -1,19 +1,18 @@
-use kas_l2_storage_manager::{StorageConfig, StorageManager, Store};
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_manager::{StorageConfig, StorageManager};
+use kas_l2_storage_store_interface::Store;
 use tap::Tap;
 
-use crate::{
-    Batch, Executor, NotarizationWorker, Read, Scheduler, Write,
-    storage::runtime_state::RuntimeState, vm::VM,
-};
+use crate::{Batch, Executor, NotarizationWorker, Read, Scheduler, Write, vm::VM};
 
-pub struct Runtime<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct Runtime<S: Store<StateSpace = StateSpace>, V: VM> {
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     scheduler: Scheduler<S, V>,
     executor: Executor<S, V>,
     notarization: NotarizationWorker<S, V>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> Runtime<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> Runtime<S, V> {
     pub fn process(&mut self, transactions: Vec<V::Transaction>) -> Batch<S, V> {
         self.scheduler.schedule(transactions).tap(|batch| {
             self.executor.execute(batch.clone());

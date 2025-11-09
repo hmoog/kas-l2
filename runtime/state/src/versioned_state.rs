@@ -1,30 +1,31 @@
 use std::sync::Arc;
 
-use kas_l2_storage_manager::{ReadStore, WriteStore, concat_bytes};
+use kas_l2_runtime_interface::ResourceId;
+use kas_l2_runtime_state_space::{
+    StateSpace,
+    StateSpace::{Data, LatestPtr, RollbackPtr},
+};
+use kas_l2_storage_manager::concat_bytes;
+use kas_l2_storage_store_interface::{ReadStore, WriteStore};
 use tap::Tap;
 
-use crate::{
-    ResourceId, RuntimeState,
-    RuntimeState::{Data, LatestPtr, RollbackPtr},
-    State,
-    vm::VM,
-};
+use crate::{Owner, State};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
-pub struct VersionedState<V: VM> {
-    resource_id: V::ResourceId,
+pub struct VersionedState<R: ResourceId, O: Owner> {
+    resource_id: R,
     version: u64,
-    state: State<V>,
+    state: State<O>,
 }
 
-impl<V: VM> VersionedState<V> {
-    pub fn empty(id: V::ResourceId) -> Self {
+impl<R: ResourceId, O: Owner> VersionedState<R, O> {
+    pub fn empty(id: R) -> Self {
         Self { resource_id: id, version: 0, state: State::default() }
     }
 
-    pub fn from_latest_data<S>(store: &S, id: V::ResourceId) -> Self
+    pub fn from_latest_data<S>(store: &S, id: R) -> Self
     where
-        S: ReadStore<StateSpace = RuntimeState>,
+        S: ReadStore<StateSpace = StateSpace>,
     {
         let id_bytes: Vec<u8> = id.to_bytes();
         match store.get(LatestPtr, &id_bytes) {
@@ -44,35 +45,35 @@ impl<V: VM> VersionedState<V> {
         self.version
     }
 
-    pub fn state(&self) -> &State<V> {
+    pub fn state(&self) -> &State<O> {
         &self.state
     }
 
-    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<V> {
+    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<O> {
         &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
     }
 
-    pub(crate) fn write_data<S>(&self, store: &mut S)
+    pub fn write_data<S>(&self, store: &mut S)
     where
-        S: WriteStore<StateSpace = RuntimeState>,
+        S: WriteStore<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
         let state_data = self.state.to_bytes();
         store.put(Data, &key, &state_data);
     }
 
-    pub(crate) fn write_latest_ptr<S>(&self, store: &mut S)
+    pub fn write_latest_ptr<S>(&self, store: &mut S)
     where
-        S: WriteStore<StateSpace = RuntimeState>,
+        S: WriteStore<StateSpace = StateSpace>,
     {
         let key = self.resource_id.to_bytes();
         let version = self.version.to_be_bytes();
         store.put(LatestPtr, &key, &version);
     }
 
-    pub(crate) fn write_rollback_ptr<S>(&self, store: &mut S, batch_index: u64)
+    pub fn write_rollback_ptr<S>(&self, store: &mut S, batch_index: u64)
     where
-        S: WriteStore<StateSpace = RuntimeState>,
+        S: WriteStore<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&batch_index.to_be_bytes(), &self.resource_id.to_bytes());
         let version = self.version.to_be_bytes();
@@ -80,7 +81,7 @@ impl<V: VM> VersionedState<V> {
     }
 }
 
-impl<V: VM> Clone for VersionedState<V> {
+impl<R: ResourceId, O: Owner> Clone for VersionedState<R, O> {
     fn clone(&self) -> Self {
         Self {
             resource_id: self.resource_id.clone(),

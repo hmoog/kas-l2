@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state::{State, VersionedState};
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 
-use crate::{
-    AccessMetadata, AccessType, ResourceAccess, RuntimeState, State, VersionedState, vm::VM,
-};
+use crate::{AccessMetadata, AccessType, ResourceAccess, vm::VM};
 
-pub struct AccessHandle<'a, S: Store<StateSpace = RuntimeState>, V: VM> {
-    versioned_state: Arc<VersionedState<V>>,
+pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VM> {
+    versioned_state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
     access: &'a ResourceAccess<S, V>,
 }
 
-impl<'a, S: Store<StateSpace = RuntimeState>, V: VM> AccessHandle<'a, S, V> {
+impl<'a, S: Store<StateSpace = StateSpace>, V: VM> AccessHandle<'a, S, V> {
     #[inline]
     pub fn access_metadata(&self) -> &V::AccessMetadata {
         self.access.metadata()
@@ -22,12 +22,12 @@ impl<'a, S: Store<StateSpace = RuntimeState>, V: VM> AccessHandle<'a, S, V> {
     }
 
     #[inline]
-    pub fn state(&self) -> &State<V> {
+    pub fn state(&self) -> &State<V::Ownership> {
         self.versioned_state.state()
     }
 
     #[inline]
-    pub fn state_mut(&mut self) -> &mut State<V> {
+    pub fn state_mut(&mut self) -> &mut State<V::Ownership> {
         self.versioned_state.state_mut()
     }
 

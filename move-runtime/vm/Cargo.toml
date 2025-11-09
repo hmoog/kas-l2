@@ -12,6 +12,8 @@ move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", package =
 kas-l2-runtime-core = { path = "../../runtime/core" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+kas-l2-storage-store-interface = { path = "../../storage/store-interface" }
+kas-l2-runtime-state-space = { path = "../../runtime/state-space" }
 bcs = "0.1.6"
 borsh = "1.5.7"
 indexmap = "2.11.0"

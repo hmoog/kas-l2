@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
-use kas_l2_runtime_core::RuntimeState;
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 use rocksdb::DB;
 
 use crate::{
@@ -27,7 +27,7 @@ impl<C: Config> RocksDbStore<C> {
                 match DB::open_cf_descriptors(
                     &db_opts,
                     path,
-                    <RuntimeState as RuntimeStateExt<C>>::all_descriptors(),
+                    <StateSpace as RuntimeStateExt<C>>::all_descriptors(),
                 ) {
                     Ok(db) => db,
                     Err(e) => panic!("failed to open RocksDB: {e}"),
@@ -38,8 +38,8 @@ impl<C: Config> RocksDbStore<C> {
         }
     }
 
-    fn cf(&self, ns: &RuntimeState) -> &rocksdb::ColumnFamily {
-        let cf_name = <RuntimeState as RuntimeStateExt<C>>::cf_name;
+    fn cf(&self, ns: &StateSpace) -> &rocksdb::ColumnFamily {
+        let cf_name = <StateSpace as RuntimeStateExt<C>>::cf_name;
         match self.db.cf_handle(cf_name(ns)) {
             Some(cf) => cf,
             None => panic!("missing column family '{}'", cf_name(ns)),
@@ -48,23 +48,23 @@ impl<C: Config> RocksDbStore<C> {
 }
 
 impl<C: Config> Store for RocksDbStore<C> {
-    type StateSpace = RuntimeState;
+    type StateSpace = StateSpace;
     type WriteBatch = WriteBatch<C>;
 
-    fn get(&self, state_space: RuntimeState, key: &[u8]) -> Option<Vec<u8>> {
+    fn get(&self, state_space: StateSpace, key: &[u8]) -> Option<Vec<u8>> {
         match self.db.get_cf(self.cf(&state_space), key) {
             Ok(res) => res,
             Err(e) => panic!("rocksdb get failed: {e}"),
         }
     }
 
-    fn put(&self, state_space: RuntimeState, key: &[u8], value: &[u8]) {
+    fn put(&self, state_space: StateSpace, key: &[u8], value: &[u8]) {
         if let Err(err) = self.db.put_cf(self.cf(&state_space), key, value) {
             panic!("rocksdb put failed: {err}");
         }
     }
 
-    fn delete(&self, state_space: RuntimeState, key: &[u8]) {
+    fn delete(&self, state_space: StateSpace, key: &[u8]) {
         if let Err(err) = self.db.delete_cf(self.cf(&state_space), key) {
             panic!("rocksdb delete failed: {err}");
         }

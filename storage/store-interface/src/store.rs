@@ -1,4 +1,4 @@
-use crate::write::WriteStore;
+use crate::WriteStore;
 
 pub trait Store: Send + Sync + 'static {
     type StateSpace;

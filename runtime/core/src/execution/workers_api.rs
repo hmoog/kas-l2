@@ -5,13 +5,14 @@ use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 use tap::Tap;
 
-use crate::{Batch, RuntimeState, RuntimeTx, Worker, vm::VM};
+use crate::{Batch, RuntimeTx, Worker, vm::VM};
 
 #[smart_pointer]
-pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub(crate) struct WorkersApi<S: Store<StateSpace = StateSpace>, V: VM> {
     worker_count: usize,
     inboxes: Vec<Arc<ArrayQueue<Batch<S, V>>>>,
     stealers: Vec<Stealer<RuntimeTx<S, V>>>,
@@ -19,7 +20,7 @@ pub(crate) struct WorkersApi<S: Store<StateSpace = RuntimeState>, V: VM> {
     shutdown: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> WorkersApi<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> WorkersApi<S, V> {
     pub fn new_with_workers(worker_count: usize, vm: V) -> (Self, Vec<JoinHandle<()>>) {
         let mut data = WorkersApiData {
             worker_count,

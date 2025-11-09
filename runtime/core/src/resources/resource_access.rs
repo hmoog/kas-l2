@@ -5,39 +5,39 @@ use std::sync::{
 
 use kas_l2_core_atomics::{AtomicOptionArc, AtomicWeak};
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_storage_manager::{ReadStore, StorageManager, Store};
+use kas_l2_runtime_state::VersionedState;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_manager::StorageManager;
+use kas_l2_storage_store_interface::{ReadStore, Store};
 
-use crate::{
-    AccessMetadata, AccessType, Read, RuntimeTxRef, StateDiff, VersionedState, Write,
-    storage::runtime_state::RuntimeState, vm::VM,
-};
+use crate::{AccessMetadata, AccessType, Read, RuntimeTxRef, StateDiff, Write, vm::VM};
 
 #[smart_pointer(deref(metadata))]
-pub struct ResourceAccess<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VM> {
     metadata: V::AccessMetadata,
     is_batch_head: AtomicBool,
     is_batch_tail: AtomicBool,
     tx: RuntimeTxRef<S, V>,
     state_diff: StateDiff<S, V>,
-    read_state: AtomicOptionArc<VersionedState<V>>,
-    written_state: AtomicOptionArc<VersionedState<V>>,
+    read_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
+    written_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> ResourceAccess<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> ResourceAccess<S, V> {
     #[inline(always)]
     pub fn metadata(&self) -> &V::AccessMetadata {
         &self.metadata
     }
 
     #[inline(always)]
-    pub fn read_state(&self) -> Arc<VersionedState<V>> {
+    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
         self.read_state.load().expect("read state unknown")
     }
 
     #[inline(always)]
-    pub fn written_state(&self) -> Arc<VersionedState<V>> {
+    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
         self.written_state.load().expect("written state unknown")
     }
 
@@ -88,7 +88,7 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> ResourceAccess<S, V> {
         }
     }
 
-    pub(crate) fn read_latest_data<R: ReadStore<StateSpace = RuntimeState>>(&self, store: &R) {
+    pub(crate) fn read_latest_data<R: ReadStore<StateSpace = StateSpace>>(&self, store: &R) {
         self.set_read_state(Arc::new(VersionedState::from_latest_data(store, self.metadata.id())));
     }
 
@@ -100,7 +100,7 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> ResourceAccess<S, V> {
         self.state_diff.clone()
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId, V::Ownership>>) {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
@@ -118,7 +118,10 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> ResourceAccess<S, V> {
         }
     }
 
-    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<V>>) {
+    pub(crate) fn set_written_state(
+        &self,
+        state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
+    ) {
         if self.written_state.publish(state.clone()) {
             if self.is_batch_tail() {
                 self.state_diff.set_written_state(state.clone());

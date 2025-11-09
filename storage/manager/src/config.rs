@@ -1,4 +1,6 @@
-use crate::{Store, read::ReadConfig, write::WriteConfig};
+use kas_l2_storage_store_interface::Store;
+
+use crate::{read::ReadConfig, write::WriteConfig};
 
 #[derive(Clone, Debug)]
 pub struct StorageConfig<S: Store> {

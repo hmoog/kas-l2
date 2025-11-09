@@ -1,11 +1,12 @@
 [package]
-name = "kas-l2-runtime-builder"
+name = "kas-l2-runtime-state"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-runtime-core = { path = "../core" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-runtime-state-space = { path = "../state-space" }
 kas-l2-storage-store-interface = { path = "../../storage/store-interface" }
-num_cpus = "1.17.0"
+kas-l2-runtime-interface = { path = "../interface" }
+borsh = "1.5.7"
+tap = "1.0.1"

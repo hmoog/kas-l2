@@ -6,6 +6,10 @@ edition = "2021"
 [dependencies]
 kas-l2-core-atomics = { path = "../../core/atomics" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
+kas-l2-runtime-state = { path = "../state" }
+kas-l2-storage-store-interface = { path = "../../storage/store-interface" }
+kas-l2-runtime-state-space = { path = "../state-space" }
+kas-l2-runtime-interface = { path = "../interface" }
 borsh = { version = "1.5.7", features = ["derive"] }
 crossbeam-utils = "0.8.21"
 crossbeam-deque = "0.8.6"

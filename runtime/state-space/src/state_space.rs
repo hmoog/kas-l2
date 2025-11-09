@@ -1,4 +1,4 @@
-pub enum RuntimeState {
+pub enum StateSpace {
     Data,
     LatestPtr,
     RollbackPtr,

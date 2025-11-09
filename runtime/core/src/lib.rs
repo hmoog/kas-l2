@@ -2,10 +2,7 @@ mod runtime;
 mod vm;
 
 pub(crate) mod data {
-    pub(crate) mod ownership;
-    pub(crate) mod state;
     pub(crate) mod state_diff;
-    pub(crate) mod versioned_state;
 }
 
 pub(crate) mod execution {
@@ -22,7 +19,6 @@ pub(crate) mod notarization {
 
 pub(crate) mod storage {
     pub(crate) mod cmd;
-    pub(crate) mod runtime_state;
 }
 
 pub(crate) mod resources {
@@ -31,7 +27,6 @@ pub(crate) mod resources {
     pub(crate) mod access_type;
     pub(crate) mod resource;
     pub(crate) mod resource_access;
-    pub(crate) mod resource_id;
 }
 
 pub(crate) mod scheduling {
@@ -41,20 +36,13 @@ pub(crate) mod scheduling {
 }
 
 pub use crate::{
-    data::{
-        ownership::Ownership,
-        state::State,
-        state_diff::{StateDiff, StateDiffRef},
-        versioned_state::VersionedState,
-    },
+    data::state_diff::{StateDiff, StateDiffRef},
     execution::{runtime_tx::RuntimeTx, transaction::Transaction},
     resources::{
         access_handle::AccessHandle, access_metadata::AccessMetadata, access_type::AccessType,
-        resource_id::ResourceId,
     },
     runtime::Runtime,
     scheduling::batch::{Batch, BatchRef},
-    storage::runtime_state::RuntimeState,
     vm::VM,
 };
 pub(crate) use crate::{

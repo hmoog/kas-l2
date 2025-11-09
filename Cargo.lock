@@ -1087,8 +1087,10 @@ dependencies = [
  "borsh",
  "indexmap 2.11.0",
  "kas-l2-runtime-core",
+ "kas-l2-runtime-state-space",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
+ "kas-l2-storage-store-interface",
  "move-binary-format",
  "move-core-types",
  "move-stdlib-natives",
@@ -1101,7 +1103,9 @@ name = "kas-l2-runtime-builder"
 version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-core",
+ "kas-l2-runtime-state-space",
  "kas-l2-storage-manager",
+ "kas-l2-storage-store-interface",
  "num_cpus",
 ]
 
@@ -1117,10 +1121,37 @@ dependencies = [
  "intrusive-collections",
  "kas-l2-core-atomics",
  "kas-l2-core-macros",
+ "kas-l2-runtime-interface",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-state-space",
  "kas-l2-storage-manager",
+ "kas-l2-storage-store-interface",
  "tap",
  "tokio",
 ]
+
+[[package]]
+name = "kas-l2-runtime-interface"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+]
+
+[[package]]
+name = "kas-l2-runtime-state"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-interface",
+ "kas-l2-runtime-state-space",
+ "kas-l2-storage-manager",
+ "kas-l2-storage-store-interface",
+ "tap",
+]
+
+[[package]]
+name = "kas-l2-runtime-state-space"
+version = "0.1.0"
 
 [[package]]
 name = "kas-l2-runtime-test-suite"
@@ -1128,8 +1159,11 @@ version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-builder",
  "kas-l2-runtime-core",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-state-space",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
+ "kas-l2-storage-store-interface",
  "tempfile",
 ]
 
@@ -1140,6 +1174,7 @@ dependencies = [
  "crossbeam-queue",
  "crossbeam-utils",
  "kas-l2-core-macros",
+ "kas-l2-storage-store-interface",
 ]
 
 [[package]]
@@ -1147,11 +1182,17 @@ name = "kas-l2-storage-rocksdb-store"
 version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-core",
+ "kas-l2-runtime-state-space",
  "kas-l2-storage-manager",
+ "kas-l2-storage-store-interface",
  "num_cpus",
  "rocksdb",
  "tap",
 ]
+
+[[package]]
+name = "kas-l2-storage-store-interface"
+version = "0.1.0"
 
 [[package]]
 name = "keccak"

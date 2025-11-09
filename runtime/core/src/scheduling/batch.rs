@@ -9,14 +9,14 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_storage_manager::{StorageManager, Store, WriteStore};
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_manager::StorageManager;
+use kas_l2_storage_store_interface::{Store, WriteStore};
 
-use crate::{
-    Read, RuntimeTx, Scheduler, StateDiff, Write, storage::runtime_state::RuntimeState, vm::VM,
-};
+use crate::{Read, RuntimeTx, Scheduler, StateDiff, Write, vm::VM};
 
 #[smart_pointer]
-pub struct Batch<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct Batch<S: Store<StateSpace = StateSpace>, V: VM> {
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -29,7 +29,7 @@ pub struct Batch<S: Store<StateSpace = RuntimeState>, V: VM> {
     was_committed: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> Batch<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
     pub fn index(&self) -> u64 {
         self.index
     }
@@ -150,7 +150,7 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> Batch<S, V> {
 
     pub(crate) fn commit<W>(&self, store: &mut W)
     where
-        W: WriteStore<StateSpace = RuntimeState>,
+        W: WriteStore<StateSpace = StateSpace>,
     {
         for state_diff in self.state_diffs() {
             state_diff.written_state().write_latest_ptr(store);

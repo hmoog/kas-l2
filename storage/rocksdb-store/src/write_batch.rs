@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, sync::Arc};
 
-use kas_l2_runtime_core::RuntimeState;
-use kas_l2_storage_manager::WriteStore;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::WriteStore;
 use rocksdb::DB;
 
 use crate::{
@@ -22,18 +22,18 @@ impl<C: Config> WriteBatch<C> {
 }
 
 impl<C: Config> WriteStore for WriteBatch<C> {
-    type StateSpace = RuntimeState;
+    type StateSpace = StateSpace;
 
-    fn put(&mut self, ns: RuntimeState, key: &[u8], value: &[u8]) {
-        let cf_handle = <RuntimeState as RuntimeStateExt<C>>::cf_name(&ns);
+    fn put(&mut self, ns: StateSpace, key: &[u8], value: &[u8]) {
+        let cf_handle = <StateSpace as RuntimeStateExt<C>>::cf_name(&ns);
         let Some(cf) = self.db.cf_handle(cf_handle) else {
             panic!("missing column family '{}'", cf_handle)
         };
         self.inner.put_cf(cf, key, value)
     }
 
-    fn delete(&mut self, ns: RuntimeState, key: &[u8]) {
-        let cf_handle = <RuntimeState as RuntimeStateExt<C>>::cf_name(&ns);
+    fn delete(&mut self, ns: StateSpace, key: &[u8]) {
+        let cf_handle = <StateSpace as RuntimeStateExt<C>>::cf_name(&ns);
         let Some(cf) = self.db.cf_handle(cf_handle) else {
             panic!("missing column family '{}'", cf_handle)
         };

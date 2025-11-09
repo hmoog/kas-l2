@@ -3,16 +3,17 @@ use std::sync::Arc;
 use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 
-use crate::{Batch, RuntimeState, RuntimeTx, vm::VM};
+use crate::{Batch, RuntimeTx, vm::VM};
 
-pub struct BatchQueue<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct BatchQueue<S: Store<StateSpace = StateSpace>, V: VM> {
     queue: LinkedList<linked_list::Adapter<Batch<S, V>>>,
     new_batches: Arc<ArrayQueue<Batch<S, V>>>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> BatchQueue<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> BatchQueue<S, V> {
     pub fn new(new_batches: Arc<ArrayQueue<Batch<S, V>>>) -> Self {
         Self { queue: LinkedList::new(linked_list::Adapter::new()), new_batches }
     }

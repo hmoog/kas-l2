@@ -3,11 +3,12 @@ use std::{sync::Arc, thread, thread::JoinHandle, time::Duration};
 use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 
-use crate::{Batch, BatchQueue, RuntimeState, RuntimeTx, WorkersApi, vm::VM};
+use crate::{Batch, BatchQueue, RuntimeTx, WorkersApi, vm::VM};
 
-pub struct Worker<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct Worker<S: Store<StateSpace = StateSpace>, V: VM> {
     id: usize,
     local_queue: WorkerQueue<RuntimeTx<S, V>>,
     inbox: Arc<ArrayQueue<Batch<S, V>>>,
@@ -17,7 +18,7 @@ pub struct Worker<S: Store<StateSpace = RuntimeState>, V: VM> {
 
 impl<S, V> Worker<S, V>
 where
-    S: Store<StateSpace = RuntimeState>,
+    S: Store<StateSpace = StateSpace>,
     V: VM,
 {
     pub(crate) fn new(id: usize, vm: V) -> Self {

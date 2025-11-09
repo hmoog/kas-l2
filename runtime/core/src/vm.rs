@@ -1,24 +1,24 @@
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_interface::ResourceId;
+use kas_l2_runtime_state::Owner;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 
-use crate::{
-    AccessHandle, AccessMetadata, Batch, ResourceId, RuntimeState, Transaction,
-    data::ownership::Ownership,
-};
+use crate::{AccessHandle, AccessMetadata, Batch, Transaction};
 
 pub trait VM: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self>;
     type ResourceId: ResourceId;
-    type Ownership: Ownership;
+    type Ownership: Owner;
     type AccessMetadata: AccessMetadata<Self::ResourceId>;
     type Error;
 
-    fn process_transaction<S: Store<StateSpace = RuntimeState>>(
+    fn process_transaction<S: Store<StateSpace = StateSpace>>(
         &self,
         tx: &Self::Transaction,
         resources: &mut [AccessHandle<S, Self>],
     ) -> Result<(), Self::Error>;
 
-    fn notarize_batch<S: Store<StateSpace = RuntimeState>>(&self, batch: &Batch<S, Self>) {
+    fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &Batch<S, Self>) {
         // don't do anything by default
         let _ = batch;
     }

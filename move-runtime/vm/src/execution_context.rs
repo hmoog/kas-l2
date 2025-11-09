@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType, RuntimeState};
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType};
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::{effects::Op, runtime_value::MoveTypeLayout};
 use move_vm_runtime::{
@@ -11,7 +12,7 @@ use move_vm_runtime::{
 
 use crate::{MethodCallArg, Modules, ObjectId, VM};
 
-pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = RuntimeState>> {
+pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> {
     pub resources: &'r mut [AccessHandle<'a, S, VM>],
     pub input_objects: Vec<ObjectId>,
     pub mutations: HashMap<ObjectId, Op<Vec<u8>>>,
@@ -20,7 +21,7 @@ pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = RuntimeState>> {
     pub session: Session<'a, 'v, Modules>,
 }
 
-impl<'a, 'v, 'r, S: Store<StateSpace = RuntimeState>> ExecutionContext<'a, 'v, 'r, S> {
+impl<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> ExecutionContext<'a, 'v, 'r, S> {
     pub fn new(vm: &'v MoveVM, resources: &'r mut [AccessHandle<'a, S, VM>]) -> Self {
         let mut modules = Modules::default();
         let mut input_objects = Vec::with_capacity(resources.len());

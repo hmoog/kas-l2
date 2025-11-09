@@ -4,22 +4,22 @@ use std::sync::{
 };
 
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 
 use crate::{
-    AccessHandle, BatchRef, ResourceAccess, RuntimeState, StateDiff,
-    scheduling::scheduler::Scheduler, vm::VM,
+    AccessHandle, BatchRef, ResourceAccess, StateDiff, scheduling::scheduler::Scheduler, vm::VM,
 };
 
 #[smart_pointer(deref(tx))]
-pub struct RuntimeTx<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {
     batch: BatchRef<S, V>,
     resources: Vec<ResourceAccess<S, V>>,
     pending_resources: AtomicU64,
     tx: V::Transaction,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTx<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
     pub fn accessed_resources(&self) -> &[ResourceAccess<S, V>] {
         &self.resources
     }
@@ -67,7 +67,7 @@ impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTx<S, V> {
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeTxRef<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTxRef<S, V> {
     pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, V>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }

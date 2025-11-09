@@ -48,11 +48,10 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_core::{
-        AccessHandle, AccessMetadata, AccessType, Batch, RuntimeState, Transaction, VM,
-        VersionedState,
-    };
-    use kas_l2_storage_manager::{ReadStore, Store};
+    use kas_l2_runtime_core::{AccessHandle, AccessMetadata, AccessType, Batch, Transaction, VM};
+    use kas_l2_runtime_state::VersionedState;
+    use kas_l2_runtime_state_space::StateSpace;
+    use kas_l2_storage_store_interface::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;
@@ -64,7 +63,7 @@ mod test_framework {
         type AccessMetadata = Access;
         type Error = ();
 
-        fn process_transaction<S: Store<StateSpace = RuntimeState>>(
+        fn process_transaction<S: Store<StateSpace = StateSpace>>(
             &self,
             tx: &Self::Transaction,
             resources: &mut [AccessHandle<S, Self>],
@@ -77,7 +76,7 @@ mod test_framework {
             Ok::<(), ()>(())
         }
 
-        fn notarize_batch<S: Store<StateSpace = RuntimeState>>(&self, batch: &Batch<S, Self>) {
+        fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &Batch<S, Self>) {
             eprintln!(
                 ">> Processed batch with {} transactions and {} state changes",
                 batch.txs().len(),
@@ -119,11 +118,11 @@ mod test_framework {
     pub struct AssertWrittenState(pub usize, pub Vec<usize>);
 
     impl AssertWrittenState {
-        pub fn assert<S: ReadStore<StateSpace = RuntimeState>>(&self, store: &S) {
+        pub fn assert<S: ReadStore<StateSpace = StateSpace>>(&self, store: &S) {
             let writer_count = self.1.len();
             let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
 
-            let versioned_state = VersionedState::<TestVM>::from_latest_data(store, self.0);
+            let versioned_state = VersionedState::<usize, usize>::from_latest_data(store, self.0);
             assert_eq!(versioned_state.version(), writer_count as u64);
             assert_eq!(versioned_state.state().data, writer_log);
         }

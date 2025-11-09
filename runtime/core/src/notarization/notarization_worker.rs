@@ -4,18 +4,19 @@ use std::{
 };
 
 use crossbeam_queue::SegQueue;
-use kas_l2_storage_manager::Store;
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_store_interface::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-use crate::{Batch, RuntimeState, vm::VM};
+use crate::{Batch, vm::VM};
 
-pub(crate) struct NotarizationWorker<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub(crate) struct NotarizationWorker<S: Store<StateSpace = StateSpace>, V: VM> {
     queue: Arc<SegQueue<Batch<S, V>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> NotarizationWorker<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> NotarizationWorker<S, V> {
     pub(crate) fn new(vm: V) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());

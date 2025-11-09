@@ -1,7 +1,9 @@
-use kas_l2_runtime_core::{Runtime, RuntimeState, VM};
-use kas_l2_storage_manager::{StorageConfig, Store};
+use kas_l2_runtime_core::{Runtime, VM};
+use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_storage_manager::StorageConfig;
+use kas_l2_storage_store_interface::Store;
 
-pub struct RuntimeBuilder<S: Store<StateSpace = RuntimeState>, V: VM> {
+pub struct RuntimeBuilder<S: Store<StateSpace = StateSpace>, V: VM> {
     pub(crate) execution_workers: usize,
     pub(crate) vm: Option<V>,
     pub(crate) storage_config: StorageConfig<S>,
@@ -9,7 +11,7 @@ pub struct RuntimeBuilder<S: Store<StateSpace = RuntimeState>, V: VM> {
 
 impl<S, V> Default for RuntimeBuilder<S, V>
 where
-    S: Store<StateSpace = RuntimeState>,
+    S: Store<StateSpace = StateSpace>,
     V: VM,
 {
     fn default() -> Self {
@@ -21,7 +23,7 @@ where
     }
 }
 
-impl<S: Store<StateSpace = RuntimeState>, V: VM> RuntimeBuilder<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBuilder<S, V> {
     pub fn with_execution_workers(mut self, workers: usize) -> Self {
         self.execution_workers = workers;
         self

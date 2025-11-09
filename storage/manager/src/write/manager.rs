@@ -3,8 +3,10 @@ use std::{
     sync::{Arc, atomic::AtomicBool},
 };
 
+use kas_l2_storage_store_interface::Store;
+
 use crate::{
-    Store, WriteCmd,
+    WriteCmd,
     utils::{CmdQueue, WorkerHandle},
     write::{WriteConfig, WriteWorker},
 };
