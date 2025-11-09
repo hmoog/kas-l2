@@ -2,7 +2,7 @@ use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::{ReadCmd, WriteCmd};
 use kas_l2_storage_interface::{ReadStore, Store, WriteStore};
 
-use crate::{Batch, StateDiff, resources::resource_access::ResourceAccess, vm::VM};
+use crate::{Batch, ResourceAccess, StateDiff, vm::VM};
 
 pub enum Read<S: Store<StateSpace = StateSpace>, V: VM> {
     LatestData(ResourceAccess<S, V>),
