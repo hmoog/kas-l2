@@ -8,12 +8,12 @@ use kas_l2_runtime_executor::Task;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 
-use crate::{AccessHandle, BatchRef, ResourceAccess, Scheduler, StateDiff, vm::VM};
+use crate::{AccessHandle, ExecutionDag, ResourceAccess, RuntimeBatchRef, StateDiff, vm::VM};
 
 #[smart_pointer(deref(tx))]
 pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {
     vm: V,
-    batch: BatchRef<S, V>,
+    batch: RuntimeBatchRef<S, V>,
     resources: Vec<ResourceAccess<S, V>>,
     pending_resources: AtomicU64,
     tx: V::Transaction,
@@ -26,9 +26,9 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
 
     pub(crate) fn new(
         vm: &V,
-        scheduler: &mut Scheduler<S, V>,
+        scheduler: &mut ExecutionDag<S, V>,
         state_diffs: &mut Vec<StateDiff<S, V>>,
-        batch: BatchRef<S, V>,
+        batch: RuntimeBatchRef<S, V>,
         tx: V::Transaction,
     ) -> Self {
         Self(Arc::new_cyclic(|this: &Weak<RuntimeTxData<S, V>>| {
@@ -52,13 +52,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
         }
     }
 
-    pub(crate) fn batch(&self) -> &BatchRef<S, V> {
+    pub(crate) fn batch(&self) -> &RuntimeBatchRef<S, V> {
         &self.batch
     }
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTxRef<S, V> {
-    pub(crate) fn belongs_to_batch(&self, batch: &BatchRef<S, V>) -> bool {
+    pub(crate) fn belongs_to_batch(&self, batch: &RuntimeBatchRef<S, V>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }

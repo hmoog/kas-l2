@@ -13,4 +13,7 @@ kas-l2-storage-interface = { path = "../../storage/interface" }
 kas-l2-runtime-storage-manager = { path = "../storage-manager" }
 kas-l2-runtime-executor = { path = "../executor" }
 crossbeam-deque = "0.8.6"
+crossbeam-queue = "0.3.12"
+num_cpus = "1.17.0"
+tokio = { version = "1.47.1", features = ["rt", "sync"] }
 tap = "1.0.1"

@@ -2,7 +2,7 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
-use kas_l2_runtime_builder::RuntimeBuilder;
+use kas_l2_runtime_execution_dag::{ExecutionConfig, ExecutionDag};
 use kas_l2_runtime_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
@@ -15,18 +15,18 @@ pub fn test_runtime() {
     {
         let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
 
-        let mut runtime = RuntimeBuilder::default()
-            .with_storage_config(StorageConfig::default().with_store(store.clone()))
-            .with_vm(TestVM)
-            .build();
+        let mut runtime = ExecutionDag::new(
+            ExecutionConfig::default().with_vm(TestVM),
+            StorageConfig::default().with_store(store.clone()),
+        );
 
-        runtime.process(vec![
+        runtime.schedule(vec![
             Tx(0, vec![Access::Write(1), Access::Read(3)]),
             Tx(1, vec![Access::Write(1), Access::Write(2)]),
             Tx(2, vec![Access::Read(3)]),
         ]);
 
-        runtime.process(vec![
+        runtime.schedule(vec![
             Tx(3, vec![Access::Write(1), Access::Read(3)]),
             Tx(4, vec![Access::Write(10), Access::Write(20)]),
         ]);
@@ -48,7 +48,7 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_execution_dag::{AccessHandle, Batch, VM};
+    use kas_l2_runtime_execution_dag::{AccessHandle, RuntimeBatch, VM};
     use kas_l2_runtime_interface::{AccessMetadata, AccessType, Transaction};
     use kas_l2_runtime_state::VersionedState;
     use kas_l2_runtime_state_space::StateSpace;
@@ -77,7 +77,7 @@ mod test_framework {
             Ok::<(), ()>(())
         }
 
-        fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &Batch<S, Self>) {
+        fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &RuntimeBatch<S, Self>) {
             eprintln!(
                 ">> Processed batch with {} transactions and {} state changes",
                 batch.txs().len(),

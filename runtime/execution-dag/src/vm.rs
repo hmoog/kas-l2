@@ -2,7 +2,7 @@ use kas_l2_runtime_interface::{AccessMetadata, Owner, ResourceId, Transaction};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 
-use crate::{AccessHandle, Batch};
+use crate::{AccessHandle, RuntimeBatch};
 
 pub trait VM: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
@@ -17,7 +17,7 @@ pub trait VM: Clone + Sized + Send + Sync + 'static {
         resources: &mut [AccessHandle<S, Self>],
     ) -> Result<(), Self::Error>;
 
-    fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &Batch<S, Self>) {
+    fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &RuntimeBatch<S, Self>) {
         // don't do anything by default
         let _ = batch;
     }

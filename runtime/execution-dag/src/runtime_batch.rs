@@ -13,10 +13,10 @@ use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::StorageManager;
 use kas_l2_storage_interface::{Store, WriteStore};
 
-use crate::{Read, RuntimeTx, Scheduler, StateDiff, Write, vm::VM};
+use crate::{ExecutionDag, Read, RuntimeTx, StateDiff, Write, vm::VM};
 
 #[smart_pointer]
-pub struct Batch<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -29,7 +29,7 @@ pub struct Batch<S: Store<StateSpace = StateSpace>, V: VM> {
     was_committed: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
     pub fn index(&self) -> u64 {
         self.index
     }
@@ -74,10 +74,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(vm: V, scheduler: &mut Scheduler<S, V>, txs: Vec<V::Transaction>) -> Self {
+    pub(crate) fn new(vm: V, scheduler: &mut ExecutionDag<S, V>, txs: Vec<V::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
-            BatchData {
+            RuntimeBatchData {
                 index: scheduler.batch_index(),
                 storage: scheduler.storage().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
@@ -85,7 +85,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
                 txs: txs
                     .into_iter()
                     .map(|tx| {
-                        RuntimeTx::new(&vm, scheduler, &mut state_diffs, BatchRef(this.clone()), tx)
+                        RuntimeTx::new(
+                            &vm,
+                            scheduler,
+                            &mut state_diffs,
+                            RuntimeBatchRef(this.clone()),
+                            tx,
+                        )
                     })
                     .collect(),
                 state_diffs,
@@ -147,7 +153,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VM> kas_l2_runtime_executor::Batch<RuntimeTx<S, V>>
-    for Batch<S, V>
+    for RuntimeBatch<S, V>
 {
     fn steal_available_tasks(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
         loop {
