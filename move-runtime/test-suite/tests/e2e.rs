@@ -8,7 +8,7 @@ use kas_l2_move_runtime_vm::{
     ObjectAccess::{Read, Write},
     ObjectId, Transaction, VM,
 };
-use kas_l2_runtime_execution_dag::{ExecutionConfig, ExecutionDag};
+use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
 use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use move_compiler::PreCompiledProgramInfo;
@@ -21,7 +21,7 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     {
         let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
 
-        let mut runtime = ExecutionDag::new(
+        let mut runtime = RuntimeManager::new(
             ExecutionConfig::default().with_vm(VM::default()),
             StorageConfig::default().with_store(store.clone()),
         );

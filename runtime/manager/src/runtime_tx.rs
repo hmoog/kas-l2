@@ -8,7 +8,7 @@ use kas_l2_runtime_executor::Task;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 
-use crate::{AccessHandle, ExecutionDag, ResourceAccess, RuntimeBatchRef, StateDiff, vm::VM};
+use crate::{AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff, vm::VM};
 
 #[smart_pointer(deref(tx))]
 pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {
@@ -26,7 +26,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
 
     pub(crate) fn new(
         vm: &V,
-        scheduler: &mut ExecutionDag<S, V>,
+        scheduler: &mut RuntimeManager<S, V>,
         state_diffs: &mut Vec<StateDiff<S, V>>,
         batch: RuntimeBatchRef<S, V>,
         tx: V::Transaction,

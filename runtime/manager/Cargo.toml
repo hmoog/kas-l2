@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-runtime-execution-dag"
+name = "kas-l2-runtime-manager"
 version = "0.1.0"
 edition = "2021"
 

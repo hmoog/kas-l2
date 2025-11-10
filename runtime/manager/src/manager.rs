@@ -12,7 +12,7 @@ use crate::{
     RuntimeTxRef, StateDiff, WorkerLoop, Write, vm::VM,
 };
 
-pub struct ExecutionDag<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VM> {
     vm: V,
     batch_index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
@@ -21,7 +21,7 @@ pub struct ExecutionDag<S: Store<StateSpace = StateSpace>, V: VM> {
     executor: Executor<RuntimeTx<S, V>, RuntimeBatch<S, V>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> ExecutionDag<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeManager<S, V> {
     pub fn new(execution_config: ExecutionConfig<V>, storage_config: StorageConfig<S>) -> Self {
         let (worker_count, vm) = execution_config.unpack();
         Self {

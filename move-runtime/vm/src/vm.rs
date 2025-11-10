@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_execution_dag::{AccessHandle, RuntimeBatch};
+use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch};
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use move_binary_format::errors::{VMError, VMResult};
@@ -39,7 +39,7 @@ impl Clone for VM {
     }
 }
 
-impl kas_l2_runtime_execution_dag::VM for VM {
+impl kas_l2_runtime_manager::VM for VM {
     type Transaction = Transaction;
     type ResourceId = ObjectId;
     type Ownership = Ownership;

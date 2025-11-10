@@ -1067,7 +1067,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "kas-l2-move-runtime-vm",
- "kas-l2-runtime-execution-dag",
+ "kas-l2-runtime-manager",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
  "move-compiler",
@@ -1085,8 +1085,8 @@ dependencies = [
  "bcs",
  "borsh",
  "indexmap 2.11.0",
- "kas-l2-runtime-execution-dag",
  "kas-l2-runtime-interface",
+ "kas-l2-runtime-manager",
  "kas-l2-runtime-state",
  "kas-l2-storage-interface",
  "move-binary-format",
@@ -1094,24 +1094,6 @@ dependencies = [
  "move-stdlib-natives",
  "move-vm-runtime",
  "move-vm-types",
-]
-
-[[package]]
-name = "kas-l2-runtime-execution-dag"
-version = "0.1.0"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-queue",
- "kas-l2-core-atomics",
- "kas-l2-core-macros",
- "kas-l2-runtime-executor",
- "kas-l2-runtime-interface",
- "kas-l2-runtime-state",
- "kas-l2-storage-interface",
- "kas-l2-storage-manager",
- "num_cpus",
- "tap",
- "tokio",
 ]
 
 [[package]]
@@ -1136,6 +1118,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-runtime-manager"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-queue",
+ "kas-l2-core-atomics",
+ "kas-l2-core-macros",
+ "kas-l2-runtime-executor",
+ "kas-l2-runtime-interface",
+ "kas-l2-runtime-state",
+ "kas-l2-storage-interface",
+ "kas-l2-storage-manager",
+ "num_cpus",
+ "tap",
+ "tokio",
+]
+
+[[package]]
 name = "kas-l2-runtime-state"
 version = "0.1.0"
 dependencies = [
@@ -1150,8 +1150,8 @@ dependencies = [
 name = "kas-l2-runtime-test-suite"
 version = "0.1.0"
 dependencies = [
- "kas-l2-runtime-execution-dag",
  "kas-l2-runtime-interface",
+ "kas-l2-runtime-manager",
  "kas-l2-runtime-state",
  "kas-l2-storage-interface",
  "kas-l2-storage-manager",

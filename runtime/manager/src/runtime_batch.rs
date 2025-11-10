@@ -13,7 +13,7 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::{Store, WriteStore};
 use kas_l2_storage_manager::StorageManager;
 
-use crate::{ExecutionDag, Read, RuntimeTx, StateDiff, Write, vm::VM};
+use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm::VM};
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
@@ -74,7 +74,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(vm: V, scheduler: &mut ExecutionDag<S, V>, txs: Vec<V::Transaction>) -> Self {
+    pub(crate) fn new(
+        vm: V,
+        scheduler: &mut RuntimeManager<S, V>,
+        txs: Vec<V::Transaction>,
+    ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             RuntimeBatchData {

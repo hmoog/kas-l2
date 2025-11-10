@@ -1,6 +1,6 @@
 mod access_handle;
 mod config;
-mod execution_dag;
+mod manager;
 mod resource;
 mod resource_access;
 mod runtime_batch;
@@ -12,7 +12,7 @@ mod worker_loop;
 
 pub use access_handle::AccessHandle;
 pub use config::ExecutionConfig;
-pub use execution_dag::ExecutionDag;
+pub use manager::RuntimeManager;
 pub(crate) use resource::Resource;
 pub(crate) use resource_access::ResourceAccess;
 pub use runtime_batch::{RuntimeBatch, RuntimeBatchRef};
