@@ -5,17 +5,17 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_storage_interface::{Store, WriteStore};
 
-use crate::{RuntimeBatchRef, Write, vm::VM};
+use crate::{RuntimeBatchRef, Write, vm::VmInterface};
 
 #[smart_pointer]
-pub struct StateDiff<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct StateDiff<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     batch: RuntimeBatchRef<S, V>,
     resource_id: V::ResourceId,
     read_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
     written_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> StateDiff<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> StateDiff<S, V> {
     pub fn new(batch: RuntimeBatchRef<S, V>, resource_id: V::ResourceId) -> Self {
         Self(Arc::new(StateDiffData {
             batch,

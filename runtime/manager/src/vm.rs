@@ -4,7 +4,7 @@ use kas_l2_storage_interface::Store;
 
 use crate::{AccessHandle, RuntimeBatch};
 
-pub trait VM: Clone + Sized + Send + Sync + 'static {
+pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
     type ResourceId: ResourceId;
     type Ownership: Owner;

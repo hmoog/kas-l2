@@ -11,10 +11,10 @@ use move_vm_runtime::{
     session::{SerializedReturnValues, Session},
 };
 
-use crate::{MethodCallArg, Modules, ObjectId, VM};
+use crate::{MethodCallArg, Modules, ObjectId, Vm};
 
 pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> {
-    pub resources: &'r mut [AccessHandle<'a, S, VM>],
+    pub resources: &'r mut [AccessHandle<'a, S, Vm>],
     pub input_objects: Vec<ObjectId>,
     pub mutations: HashMap<ObjectId, Op<Vec<u8>>>,
     pub last_args: Vec<ObjectId>,
@@ -23,7 +23,7 @@ pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> {
 }
 
 impl<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> ExecutionContext<'a, 'v, 'r, S> {
-    pub fn new(vm: &'v MoveVM, resources: &'r mut [AccessHandle<'a, S, VM>]) -> Self {
+    pub fn new(vm: &'v MoveVM, resources: &'r mut [AccessHandle<'a, S, Vm>]) -> Self {
         let mut modules = Modules::default();
         let mut input_objects = Vec::with_capacity(resources.len());
 

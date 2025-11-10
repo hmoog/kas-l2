@@ -4,14 +4,14 @@ use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 use kas_l2_runtime_state::{State, StateSpace, VersionedState};
 use kas_l2_storage_interface::Store;
 
-use crate::{ResourceAccess, vm::VM};
+use crate::{ResourceAccess, vm::VmInterface};
 
-pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VmInterface> {
     versioned_state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
     access: &'a ResourceAccess<S, V>,
 }
 
-impl<'a, S: Store<StateSpace = StateSpace>, V: VM> AccessHandle<'a, S, V> {
+impl<'a, S: Store<StateSpace = StateSpace>, V: VmInterface> AccessHandle<'a, S, V> {
     #[inline]
     pub fn access_metadata(&self) -> &V::AccessMetadata {
         self.access.metadata()

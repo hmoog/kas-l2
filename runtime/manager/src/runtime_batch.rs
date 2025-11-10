@@ -13,10 +13,10 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::{Store, WriteStore};
 use kas_l2_storage_manager::StorageManager;
 
-use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm::VM};
+use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm::VmInterface};
 
 #[smart_pointer]
-pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -29,7 +29,7 @@ pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
     was_committed: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     pub fn index(&self) -> u64 {
         self.index
     }
@@ -156,8 +156,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
     }
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> kas_l2_runtime_executor::Batch<RuntimeTx<S, V>>
-    for RuntimeBatch<S, V>
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface>
+    kas_l2_runtime_execution_workers::Batch<RuntimeTx<S, V>> for RuntimeBatch<S, V>
 {
     fn steal_available_tasks(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
         loop {

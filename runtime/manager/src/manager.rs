@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime_executor::Executor;
+use kas_l2_runtime_execution_workers::Executor;
 use kas_l2_runtime_interface::{AccessMetadata, Transaction};
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
@@ -9,10 +9,10 @@ use tap::Tap;
 
 use crate::{
     ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTx,
-    RuntimeTxRef, StateDiff, WorkerLoop, Write, vm::VM,
+    RuntimeTxRef, StateDiff, WorkerLoop, Write, vm::VmInterface,
 };
 
-pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     vm: V,
     batch_index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
@@ -21,7 +21,7 @@ pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VM> {
     executor: Executor<RuntimeTx<S, V>, RuntimeBatch<S, V>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeManager<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
     pub fn new(execution_config: ExecutionConfig<V>, storage_config: StorageConfig<S>) -> Self {
         let (worker_count, vm) = execution_config.unpack();
         Self {

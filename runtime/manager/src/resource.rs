@@ -3,19 +3,19 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm::VM};
+use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm::VmInterface};
 
-pub(crate) struct Resource<S: Store<StateSpace = StateSpace>, V: VM> {
+pub(crate) struct Resource<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     last_access: Option<ResourceAccess<S, V>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> Default for Resource<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Default for Resource<S, V> {
     fn default() -> Self {
         Self { last_access: None }
     }
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> Resource<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Resource<S, V> {
     pub(crate) fn access(
         &mut self,
         meta: &V::AccessMetadata,

@@ -49,14 +49,14 @@ pub fn test_runtime() {
 
 mod test_framework {
     use kas_l2_runtime_interface::{AccessMetadata, AccessType, Transaction};
-    use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VM};
+    use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
     use kas_l2_runtime_state::{StateSpace, VersionedState};
     use kas_l2_storage_interface::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;
 
-    impl VM for TestVM {
+    impl VmInterface for TestVM {
         type Transaction = Tx;
         type ResourceId = usize;
         type Ownership = usize;
@@ -88,7 +88,7 @@ mod test_framework {
     pub struct Tx(pub usize, pub Vec<Access>);
 
     impl Transaction<usize, Access> for Tx {
-        fn accessed_resources(&self) -> &[<TestVM as VM>::AccessMetadata] {
+        fn accessed_resources(&self) -> &[<TestVM as VmInterface>::AccessMetadata] {
             &self.1
         }
     }

@@ -20,5 +20,5 @@ pub use runtime_tx::RuntimeTx;
 pub(crate) use runtime_tx::RuntimeTxRef;
 pub use state_diff::{StateDiff, StateDiffRef};
 pub use storage_cmd::{Read, Write};
-pub use vm::VM;
+pub use vm::VmInterface;
 pub(crate) use worker_loop::WorkerLoop;

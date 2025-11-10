@@ -1097,7 +1097,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-runtime-executor"
+name = "kas-l2-runtime-execution-workers"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
@@ -1125,7 +1125,7 @@ dependencies = [
  "crossbeam-queue",
  "kas-l2-core-atomics",
  "kas-l2-core-macros",
- "kas-l2-runtime-executor",
+ "kas-l2-runtime-execution-workers",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
  "kas-l2-storage-interface",
