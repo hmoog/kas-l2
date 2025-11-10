@@ -1087,7 +1087,7 @@ dependencies = [
  "indexmap 2.11.0",
  "kas-l2-runtime-execution-dag",
  "kas-l2-runtime-interface",
- "kas-l2-runtime-state-space",
+ "kas-l2-runtime-state",
  "kas-l2-storage-interface",
  "move-binary-format",
  "move-core-types",
@@ -1107,7 +1107,6 @@ dependencies = [
  "kas-l2-runtime-executor",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
- "kas-l2-runtime-state-space",
  "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
  "num_cpus",
@@ -1142,15 +1141,10 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "kas-l2-runtime-interface",
- "kas-l2-runtime-state-space",
  "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
  "tap",
 ]
-
-[[package]]
-name = "kas-l2-runtime-state-space"
-version = "0.1.0"
 
 [[package]]
 name = "kas-l2-runtime-storage-manager"
@@ -1169,7 +1163,6 @@ dependencies = [
  "kas-l2-runtime-execution-dag",
  "kas-l2-runtime-interface",
  "kas-l2-runtime-state",
- "kas-l2-runtime-state-space",
  "kas-l2-runtime-storage-manager",
  "kas-l2-storage-interface",
  "kas-l2-storage-rocksdb-store",
@@ -1184,7 +1177,7 @@ version = "0.1.0"
 name = "kas-l2-storage-rocksdb-store"
 version = "0.1.0"
 dependencies = [
- "kas-l2-runtime-state-space",
+ "kas-l2-runtime-state",
  "kas-l2-storage-interface",
  "num_cpus",
  "rocksdb",

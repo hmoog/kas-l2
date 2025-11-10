@@ -6,8 +6,7 @@ use std::sync::{
 use kas_l2_core_atomics::{AtomicOptionArc, AtomicWeak};
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_interface::{AccessMetadata, AccessType};
-use kas_l2_runtime_state::VersionedState;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_runtime_storage_manager::StorageManager;
 use kas_l2_storage_interface::{ReadStore, Store};
 

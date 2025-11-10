@@ -4,7 +4,7 @@ use std::{
 };
 
 use crossbeam_queue::SegQueue;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use tokio::{runtime::Builder, sync::Notify};
 

@@ -1,15 +1,14 @@
 use std::sync::Arc;
 
 use kas_l2_runtime_interface::{Owner, ResourceId};
-use kas_l2_runtime_state_space::{
-    StateSpace,
-    StateSpace::{Data, LatestPtr, RollbackPtr},
-};
 use kas_l2_runtime_storage_manager::concat_bytes;
 use kas_l2_storage_interface::{ReadStore, WriteStore};
 use tap::Tap;
 
-use crate::State;
+use crate::{
+    State, StateSpace,
+    StateSpace::{Data, LatestPtr, RollbackPtr},
+};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<R: ResourceId, O: Owner> {

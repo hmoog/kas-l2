@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use kas_l2_core_atomics::AtomicOptionArc;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state::VersionedState;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_storage_interface::{Store, WriteStore};
 
 use crate::{RuntimeBatchRef, Write, vm::VM};

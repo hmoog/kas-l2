@@ -9,7 +9,7 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_runtime_storage_manager::StorageManager;
 use kas_l2_storage_interface::{Store, WriteStore};
 
