@@ -11,7 +11,7 @@ use move_vm_runtime::{
     session::{SerializedReturnValues, Session},
 };
 
-use crate::{MethodCallArg, Modules, ObjectId, Vm};
+use crate::{MethodCallArg, Modules, ObjectId, TransactionEffects, Vm};
 
 pub struct ExecutionContext<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> {
     pub resources: &'r mut [AccessHandle<'a, S, Vm>],
@@ -89,7 +89,7 @@ impl<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> ExecutionContext<'a, 'v, 'r,
         self.session.get_resolver()
     }
 
-    pub fn finalize(mut self) -> VMResult<()> {
+    pub fn finalize(mut self) -> VMResult<TransactionEffects> {
         // collect module mutations
         for (module_id, op) in self.session.finish().0?.into_modules() {
             self.mutations.insert(ObjectId::Module(module_id), op);
@@ -116,6 +116,6 @@ impl<'a, 'v, 'r, S: Store<StateSpace = StateSpace>> ExecutionContext<'a, 'v, 'r,
             panic!("There are unprocessed mutations: {:?}", self.mutations);
         }
 
-        Ok(())
+        Ok(self.return_stack)
     }
 }

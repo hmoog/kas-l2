@@ -8,8 +8,10 @@ use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
 
 use crate::{
-    ObjectAccess, ObjectId, execution_context::ExecutionContext, ownership::Ownership,
-    transaction::Transaction,
+    ObjectAccess, ObjectId,
+    execution_context::ExecutionContext,
+    ownership::Ownership,
+    transaction::{Transaction, TransactionEffects},
 };
 
 pub struct Vm(Arc<MoveVM>);
@@ -41,7 +43,7 @@ impl Clone for Vm {
 
 impl kas_l2_runtime_manager::VmInterface for Vm {
     type Transaction = Transaction;
-    type TransactionEffects = ();
+    type TransactionEffects = TransactionEffects;
     type ResourceId = ObjectId;
     type Ownership = Ownership;
     type AccessMetadata = ObjectAccess;
@@ -51,7 +53,7 @@ impl kas_l2_runtime_manager::VmInterface for Vm {
         &self,
         tx: &Self::Transaction,
         resources: &mut [AccessHandle<S, Vm>],
-    ) -> VMResult<()> {
+    ) -> VMResult<Self::TransactionEffects> {
         tx.instruction.execute(ExecutionContext::new(&self.0, resources))
     }
 

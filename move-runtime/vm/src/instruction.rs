@@ -6,7 +6,7 @@ use move_core_types::{
 };
 use move_vm_types::{gas::UnmeteredGasMeter, loaded_data::runtime_types::Type};
 
-use crate::execution_context::ExecutionContext;
+use crate::{TransactionEffects, execution_context::ExecutionContext};
 
 pub enum Instruction {
     PublishModules { modules: Vec<Vec<u8>>, sender: AccountAddress },
@@ -17,7 +17,7 @@ impl Instruction {
     pub fn execute<S: Store<StateSpace = StateSpace>>(
         &self,
         mut ctx: ExecutionContext<S>,
-    ) -> VMResult<()> {
+    ) -> VMResult<TransactionEffects> {
         match self {
             Instruction::PublishModules { modules, sender } => ctx.session.publish_module_bundle(
                 modules.clone(),
