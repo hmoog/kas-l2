@@ -1085,15 +1085,22 @@ dependencies = [
  "bcs",
  "borsh",
  "indexmap 2.11.0",
+ "kas-l2-runtime-common-types",
  "kas-l2-runtime-manager",
  "kas-l2-runtime-state",
- "kas-l2-runtime-types",
- "kas-l2-storage-types",
+ "kas-l2-storage-common-types",
  "move-binary-format",
  "move-core-types",
  "move-stdlib-natives",
  "move-vm-runtime",
  "move-vm-types",
+]
+
+[[package]]
+name = "kas-l2-runtime-common-types"
+version = "0.1.0"
+dependencies = [
+ "borsh",
 ]
 
 [[package]]
@@ -1118,11 +1125,11 @@ dependencies = [
  "crossbeam-queue",
  "kas-l2-core-atomics",
  "kas-l2-core-macros",
+ "kas-l2-runtime-common-types",
  "kas-l2-runtime-execution-workers",
  "kas-l2-runtime-state",
- "kas-l2-runtime-types",
+ "kas-l2-storage-common-types",
  "kas-l2-storage-manager",
- "kas-l2-storage-types",
  "num_cpus",
  "tap",
  "tokio",
@@ -1133,9 +1140,9 @@ name = "kas-l2-runtime-state"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "kas-l2-runtime-types",
+ "kas-l2-runtime-common-types",
+ "kas-l2-storage-common-types",
  "kas-l2-storage-manager",
- "kas-l2-storage-types",
  "tap",
 ]
 
@@ -1143,21 +1150,18 @@ dependencies = [
 name = "kas-l2-runtime-test-suite"
 version = "0.1.0"
 dependencies = [
+ "kas-l2-runtime-common-types",
  "kas-l2-runtime-manager",
  "kas-l2-runtime-state",
- "kas-l2-runtime-types",
+ "kas-l2-storage-common-types",
  "kas-l2-storage-manager",
  "kas-l2-storage-rocksdb-store",
- "kas-l2-storage-types",
  "tempfile",
 ]
 
 [[package]]
-name = "kas-l2-runtime-types"
+name = "kas-l2-storage-common-types"
 version = "0.1.0"
-dependencies = [
- "borsh",
-]
 
 [[package]]
 name = "kas-l2-storage-manager"
@@ -1166,7 +1170,7 @@ dependencies = [
  "crossbeam-queue",
  "crossbeam-utils",
  "kas-l2-core-macros",
- "kas-l2-storage-types",
+ "kas-l2-storage-common-types",
 ]
 
 [[package]]
@@ -1174,15 +1178,11 @@ name = "kas-l2-storage-rocksdb-store"
 version = "0.1.0"
 dependencies = [
  "kas-l2-runtime-state",
- "kas-l2-storage-types",
+ "kas-l2-storage-common-types",
  "num_cpus",
  "rocksdb",
  "tap",
 ]
-
-[[package]]
-name = "kas-l2-storage-types"
-version = "0.1.0"
 
 [[package]]
 name = "keccak"

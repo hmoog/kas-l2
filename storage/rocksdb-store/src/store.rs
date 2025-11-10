@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
+use kas_l2_storage_common_types::Store;
 use rocksdb::DB;
 
 use crate::{

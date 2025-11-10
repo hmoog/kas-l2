@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 kas-l2-storage-manager = { path = "../../storage/manager" }
-kas-l2-storage-types = { path = "../../storage/types" }
-kas-l2-runtime-types = { path = "../types" }
+kas-l2-storage-common-types = { path = "../../storage/common-types" }
+kas-l2-runtime-common-types = { path = "../common-types" }
 borsh = "1.5.7"
 tap = "1.0.1"

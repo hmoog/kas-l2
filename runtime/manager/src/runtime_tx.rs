@@ -6,7 +6,7 @@ use std::sync::{
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_execution_workers::Task;
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
+use kas_l2_storage_common_types::Store;
 
 use crate::{
     AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,

@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-runtime-types = { path = "../types" }
+kas-l2-runtime-common-types = { path = "../common-types" }
 kas-l2-runtime-state = { path = "../state" }
 kas-l2-core-macros = { path = "../../core/macros" }
 kas-l2-core-atomics = { path = "../../core/atomics" }
-kas-l2-storage-types = { path = "../../storage/types" }
+kas-l2-storage-common-types = { path = "../../storage/common-types" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-runtime-execution-workers = { path = "../execution-workers" }
 crossbeam-deque = "0.8.6"
