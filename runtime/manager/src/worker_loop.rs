@@ -4,19 +4,19 @@ use std::{
 };
 
 use crossbeam_queue::SegQueue;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-use crate::{RuntimeBatch, VM};
+use crate::{RuntimeBatch, VmInterface};
 
-pub(crate) struct WorkerLoop<S: Store<StateSpace = StateSpace>, V: VM> {
+pub(crate) struct WorkerLoop<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     queue: Arc<SegQueue<RuntimeBatch<S, V>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> WorkerLoop<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> WorkerLoop<S, V> {
     pub(crate) fn new(vm: V) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());

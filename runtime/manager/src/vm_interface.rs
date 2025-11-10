@@ -1,10 +1,10 @@
 use kas_l2_runtime_interface::{AccessMetadata, Owner, ResourceId, Transaction};
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 
 use crate::{AccessHandle, RuntimeBatch};
 
-pub trait VM: Clone + Sized + Send + Sync + 'static {
+pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
     type ResourceId: ResourceId;
     type Ownership: Owner;

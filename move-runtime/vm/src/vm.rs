@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_execution_dag::{AccessHandle, RuntimeBatch};
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch};
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
@@ -12,9 +12,9 @@ use crate::{
     transaction::Transaction,
 };
 
-pub struct VM(Arc<MoveVM>);
+pub struct Vm(Arc<MoveVM>);
 
-impl VM {
+impl Vm {
     pub fn new() -> Self {
         Self(Arc::new(
             MoveVM::new(move_stdlib_natives::all_natives(
@@ -27,19 +27,19 @@ impl VM {
     }
 }
 
-impl Default for VM {
+impl Default for Vm {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Clone for VM {
+impl Clone for Vm {
     fn clone(&self) -> Self {
         Self(Arc::clone(&self.0))
     }
 }
 
-impl kas_l2_runtime_execution_dag::VM for VM {
+impl kas_l2_runtime_manager::VmInterface for Vm {
     type Transaction = Transaction;
     type ResourceId = ObjectId;
     type Ownership = Ownership;
@@ -49,7 +49,7 @@ impl kas_l2_runtime_execution_dag::VM for VM {
     fn process_transaction<S: Store<StateSpace = StateSpace>>(
         &self,
         tx: &Self::Transaction,
-        resources: &mut [AccessHandle<S, VM>],
+        resources: &mut [AccessHandle<S, Vm>],
     ) -> VMResult<()> {
         tx.instruction.execute(ExecutionContext::new(&self.0, resources))
     }

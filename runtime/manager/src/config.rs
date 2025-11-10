@@ -1,12 +1,12 @@
-use crate::VM;
+use crate::VmInterface;
 
 #[derive(Clone, Debug)]
-pub struct ExecutionConfig<V: VM> {
+pub struct ExecutionConfig<V: VmInterface> {
     pub(crate) worker_count: usize,
     pub(crate) vm: Option<V>,
 }
 
-impl<V: VM> ExecutionConfig<V> {
+impl<V: VmInterface> ExecutionConfig<V> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -26,7 +26,7 @@ impl<V: VM> ExecutionConfig<V> {
     }
 }
 
-impl<V: VM> Default for ExecutionConfig<V> {
+impl<V: VmInterface> Default for ExecutionConfig<V> {
     fn default() -> Self {
         Self { worker_count: num_cpus::get_physical(), vm: None }
     }

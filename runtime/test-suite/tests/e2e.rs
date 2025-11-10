@@ -2,8 +2,8 @@ extern crate core;
 
 use std::{thread::sleep, time::Duration};
 
-use kas_l2_runtime_execution_dag::{ExecutionConfig, ExecutionDag};
-use kas_l2_runtime_storage_manager::StorageConfig;
+use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
+use kas_l2_storage_manager::StorageConfig;
 use kas_l2_storage_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
 
@@ -15,7 +15,7 @@ pub fn test_runtime() {
     {
         let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
 
-        let mut runtime = ExecutionDag::new(
+        let mut runtime = RuntimeManager::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(store.clone()),
         );
@@ -48,16 +48,15 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_execution_dag::{AccessHandle, RuntimeBatch, VM};
     use kas_l2_runtime_interface::{AccessMetadata, AccessType, Transaction};
-    use kas_l2_runtime_state::VersionedState;
-    use kas_l2_runtime_state_space::StateSpace;
+    use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
+    use kas_l2_runtime_state::{StateSpace, VersionedState};
     use kas_l2_storage_interface::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;
 
-    impl VM for TestVM {
+    impl VmInterface for TestVM {
         type Transaction = Tx;
         type ResourceId = usize;
         type Ownership = usize;
@@ -89,7 +88,7 @@ mod test_framework {
     pub struct Tx(pub usize, pub Vec<Access>);
 
     impl Transaction<usize, Access> for Tx {
-        fn accessed_resources(&self) -> &[<TestVM as VM>::AccessMetadata] {
+        fn accessed_resources(&self) -> &[<TestVM as VmInterface>::AccessMetadata] {
             &self.1
         }
     }

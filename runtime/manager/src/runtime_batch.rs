@@ -9,14 +9,14 @@ use std::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_runtime_storage_manager::StorageManager;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::{Store, WriteStore};
+use kas_l2_storage_manager::StorageManager;
 
-use crate::{ExecutionDag, Read, RuntimeTx, StateDiff, Write, vm::VM};
+use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm_interface::VmInterface};
 
 #[smart_pointer]
-pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -29,7 +29,7 @@ pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VM> {
     was_committed: AtomicAsyncLatch,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     pub fn index(&self) -> u64 {
         self.index
     }
@@ -74,7 +74,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
         self.was_committed.wait()
     }
 
-    pub(crate) fn new(vm: V, scheduler: &mut ExecutionDag<S, V>, txs: Vec<V::Transaction>) -> Self {
+    pub(crate) fn new(
+        vm: V,
+        scheduler: &mut RuntimeManager<S, V>,
+        txs: Vec<V::Transaction>,
+    ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             RuntimeBatchData {
@@ -152,8 +156,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeBatch<S, V> {
     }
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> kas_l2_runtime_executor::Batch<RuntimeTx<S, V>>
-    for RuntimeBatch<S, V>
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface>
+    kas_l2_runtime_execution_workers::Batch<RuntimeTx<S, V>> for RuntimeBatch<S, V>
 {
     fn steal_available_tasks(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
         loop {

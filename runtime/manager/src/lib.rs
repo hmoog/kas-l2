@@ -1,18 +1,18 @@
 mod access_handle;
 mod config;
-mod execution_dag;
+mod manager;
 mod resource;
 mod resource_access;
 mod runtime_batch;
 mod runtime_tx;
 mod state_diff;
 mod storage_cmd;
-mod vm;
+mod vm_interface;
 mod worker_loop;
 
 pub use access_handle::AccessHandle;
 pub use config::ExecutionConfig;
-pub use execution_dag::ExecutionDag;
+pub use manager::RuntimeManager;
 pub(crate) use resource::Resource;
 pub(crate) use resource_access::ResourceAccess;
 pub use runtime_batch::{RuntimeBatch, RuntimeBatchRef};
@@ -20,5 +20,5 @@ pub use runtime_tx::RuntimeTx;
 pub(crate) use runtime_tx::RuntimeTxRef;
 pub use state_diff::{StateDiff, StateDiffRef};
 pub use storage_cmd::{Read, Write};
-pub use vm::VM;
+pub use vm_interface::VmInterface;
 pub(crate) use worker_loop::WorkerLoop;

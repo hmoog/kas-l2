@@ -4,14 +4,17 @@ use std::sync::{
 };
 
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_executor::Task;
-use kas_l2_runtime_state_space::StateSpace;
+use kas_l2_runtime_execution_workers::Task;
+use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 
-use crate::{AccessHandle, ExecutionDag, ResourceAccess, RuntimeBatchRef, StateDiff, vm::VM};
+use crate::{
+    AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,
+    vm_interface::VmInterface,
+};
 
 #[smart_pointer(deref(tx))]
-pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     vm: V,
     batch: RuntimeBatchRef<S, V>,
     resources: Vec<ResourceAccess<S, V>>,
@@ -19,14 +22,14 @@ pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {
     tx: V::Transaction,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
     pub fn accessed_resources(&self) -> &[ResourceAccess<S, V>] {
         &self.resources
     }
 
     pub(crate) fn new(
         vm: &V,
-        scheduler: &mut ExecutionDag<S, V>,
+        scheduler: &mut RuntimeManager<S, V>,
         state_diffs: &mut Vec<StateDiff<S, V>>,
         batch: RuntimeBatchRef<S, V>,
         tx: V::Transaction,
@@ -57,13 +60,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTx<S, V> {
     }
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> RuntimeTxRef<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTxRef<S, V> {
     pub(crate) fn belongs_to_batch(&self, batch: &RuntimeBatchRef<S, V>) -> bool {
         self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> Task for RuntimeTx<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Task for RuntimeTx<S, V> {
     fn execute(&self) {
         if let Some(batch) = self.batch.upgrade() {
             let mut handles = self.resources.iter().map(AccessHandle::new).collect::<Vec<_>>();

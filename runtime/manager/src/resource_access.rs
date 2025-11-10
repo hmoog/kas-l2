@@ -6,15 +6,14 @@ use std::sync::{
 use kas_l2_core_atomics::{AtomicOptionArc, AtomicWeak};
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_interface::{AccessMetadata, AccessType};
-use kas_l2_runtime_state::VersionedState;
-use kas_l2_runtime_state_space::StateSpace;
-use kas_l2_runtime_storage_manager::StorageManager;
+use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_storage_interface::{ReadStore, Store};
+use kas_l2_storage_manager::StorageManager;
 
-use crate::{Read, RuntimeTxRef, StateDiff, Write, vm::VM};
+use crate::{Read, RuntimeTxRef, StateDiff, Write, vm_interface::VmInterface};
 
 #[smart_pointer(deref(metadata))]
-pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VM> {
+pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     metadata: V::AccessMetadata,
     is_batch_head: AtomicBool,
     is_batch_tail: AtomicBool,
@@ -26,7 +25,7 @@ pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VM> {
     next: AtomicWeak<Self>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> ResourceAccess<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
     #[inline(always)]
     pub fn metadata(&self) -> &V::AccessMetadata {
         &self.metadata
