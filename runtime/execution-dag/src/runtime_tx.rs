@@ -8,9 +8,7 @@ use kas_l2_runtime_executor::Task;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 
-use crate::{
-    AccessHandle, BatchRef, ResourceAccess, StateDiff, scheduling::scheduler::Scheduler, vm::VM,
-};
+use crate::{AccessHandle, BatchRef, ResourceAccess, Scheduler, StateDiff, vm::VM};
 
 #[smart_pointer(deref(tx))]
 pub struct RuntimeTx<S: Store<StateSpace = StateSpace>, V: VM> {

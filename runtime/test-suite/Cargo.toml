@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-runtime-core = { path = "../core" }
+kas-l2-runtime-execution-dag = { path = "../execution-dag" }
 kas-l2-runtime-builder = { path = "../builder" }
 kas-l2-runtime-storage-manager = { path = "../storage-manager" }
 kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }

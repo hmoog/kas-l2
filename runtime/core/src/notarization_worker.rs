@@ -4,11 +4,10 @@ use std::{
 };
 
 use crossbeam_queue::SegQueue;
+use kas_l2_runtime_execution_dag::{Batch, VM};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 use tokio::{runtime::Builder, sync::Notify};
-
-use crate::{Batch, vm::VM};
 
 pub(crate) struct NotarizationWorker<S: Store<StateSpace = StateSpace>, V: VM> {
     queue: Arc<SegQueue<Batch<S, V>>>,

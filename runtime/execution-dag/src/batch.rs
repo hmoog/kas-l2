@@ -127,7 +127,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Batch<S, V> {
         }
     }
 
-    pub(crate) fn schedule_commit(&self) {
+    pub fn schedule_commit(&self) {
         self.storage.submit_write(Write::CommitBatch(self.clone()));
     }
 

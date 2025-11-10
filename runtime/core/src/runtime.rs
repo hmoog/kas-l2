@@ -1,10 +1,11 @@
+use kas_l2_runtime_execution_dag::{Batch, Read, RuntimeTx, Scheduler, VM, Write};
 use kas_l2_runtime_executor::Executor;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::{StorageConfig, StorageManager};
 use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{Batch, NotarizationWorker, Read, RuntimeTx, Scheduler, Write, vm::VM};
+use crate::NotarizationWorker;
 
 pub struct Runtime<S: Store<StateSpace = StateSpace>, V: VM> {
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,

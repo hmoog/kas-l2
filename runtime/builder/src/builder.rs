@@ -1,4 +1,5 @@
-use kas_l2_runtime_core::{Runtime, VM};
+use kas_l2_runtime_core::Runtime;
+use kas_l2_runtime_execution_dag::VM;
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::StorageConfig;
 use kas_l2_storage_interface::Store;

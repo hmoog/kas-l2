@@ -4,15 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-core-atomics = { path = "../../core/atomics" }
 kas-l2-runtime-storage-manager = { path = "../storage-manager" }
-kas-l2-runtime-state = { path = "../state" }
 kas-l2-storage-interface = { path = "../../storage/interface" }
 kas-l2-runtime-state-space = { path = "../state-space" }
-kas-l2-runtime-interface = { path = "../interface" }
-crossbeam-deque = "0.8.6"
+kas-l2-runtime-execution-dag = { path = "../execution-dag" }
 crossbeam-queue = "0.3.12"
 tokio = { version = "1.47.1", features = ["rt", "sync"] }
 tap = "1.0.1"
-kas-l2-core-macros = { path = "../../core/macros" }
 kas-l2-runtime-executor = { path = "../executor" }
