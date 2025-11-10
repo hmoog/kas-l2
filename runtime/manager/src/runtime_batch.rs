@@ -13,7 +13,7 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::{Store, WriteStore};
 use kas_l2_storage_manager::StorageManager;
 
-use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm::VmInterface};
+use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm_interface::VmInterface};
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {

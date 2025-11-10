@@ -9,7 +9,7 @@ use tap::Tap;
 
 use crate::{
     ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTx,
-    RuntimeTxRef, StateDiff, WorkerLoop, Write, vm::VmInterface,
+    RuntimeTxRef, StateDiff, WorkerLoop, Write, vm_interface::VmInterface,
 };
 
 pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
@@ -26,11 +26,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         let (worker_count, vm) = execution_config.unpack();
         Self {
             worker_loop: WorkerLoop::new(vm.clone()),
-            vm,
             storage: StorageManager::new(storage_config),
             resources: HashMap::new(),
             batch_index: 0,
             executor: Executor::new(worker_count),
+            vm,
         }
     }
 

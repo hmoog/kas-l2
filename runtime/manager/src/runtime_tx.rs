@@ -9,7 +9,8 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 
 use crate::{
-    AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff, vm::VmInterface,
+    AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,
+    vm_interface::VmInterface,
 };
 
 #[smart_pointer(deref(tx))]

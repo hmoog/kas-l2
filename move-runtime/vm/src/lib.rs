@@ -3,7 +3,7 @@ pub(crate) use modules::Modules;
 pub use object_access::ObjectAccess;
 pub use object_id::ObjectId;
 pub use transaction::Transaction;
-pub use vm_interface::Vm;
+pub use vm::Vm;
 
 mod execution_context;
 mod instruction;
@@ -12,4 +12,4 @@ mod object_access;
 mod object_id;
 mod ownership;
 mod transaction;
-mod vm_interface;
+mod vm;

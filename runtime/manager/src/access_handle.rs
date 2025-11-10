@@ -4,7 +4,7 @@ use kas_l2_runtime_interface::{AccessMetadata, AccessType};
 use kas_l2_runtime_state::{State, StateSpace, VersionedState};
 use kas_l2_storage_interface::Store;
 
-use crate::{ResourceAccess, vm::VmInterface};
+use crate::{ResourceAccess, vm_interface::VmInterface};
 
 pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VmInterface> {
     versioned_state: Arc<VersionedState<V::ResourceId, V::Ownership>>,

@@ -7,7 +7,7 @@ mod runtime_batch;
 mod runtime_tx;
 mod state_diff;
 mod storage_cmd;
-mod vm;
+mod vm_interface;
 mod worker_loop;
 
 pub use access_handle::AccessHandle;
@@ -20,5 +20,5 @@ pub use runtime_tx::RuntimeTx;
 pub(crate) use runtime_tx::RuntimeTxRef;
 pub use state_diff::{StateDiff, StateDiffRef};
 pub use storage_cmd::{Read, Write};
-pub use vm::VmInterface;
+pub use vm_interface::VmInterface;
 pub(crate) use worker_loop::WorkerLoop;

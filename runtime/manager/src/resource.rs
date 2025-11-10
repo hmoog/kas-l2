@@ -3,7 +3,7 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm::VmInterface};
+use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm_interface::VmInterface};
 
 pub(crate) struct Resource<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     last_access: Option<ResourceAccess<S, V>>,

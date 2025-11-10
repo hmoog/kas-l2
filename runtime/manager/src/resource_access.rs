@@ -10,7 +10,7 @@ use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_storage_interface::{ReadStore, Store};
 use kas_l2_storage_manager::StorageManager;
 
-use crate::{Read, RuntimeTxRef, StateDiff, Write, vm::VmInterface};
+use crate::{Read, RuntimeTxRef, StateDiff, Write, vm_interface::VmInterface};
 
 #[smart_pointer(deref(metadata))]
 pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VmInterface> {

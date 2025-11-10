@@ -5,7 +5,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_storage_interface::{Store, WriteStore};
 
-use crate::{RuntimeBatchRef, Write, vm::VmInterface};
+use crate::{RuntimeBatchRef, Write, vm_interface::VmInterface};
 
 #[smart_pointer]
 pub struct StateDiff<S: Store<StateSpace = StateSpace>, V: VmInterface> {
