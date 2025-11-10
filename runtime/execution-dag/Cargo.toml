@@ -9,7 +9,7 @@ kas-l2-runtime-state = { path = "../state" }
 kas-l2-core-macros = { path = "../../core/macros" }
 kas-l2-core-atomics = { path = "../../core/atomics" }
 kas-l2-storage-interface = { path = "../../storage/interface" }
-kas-l2-runtime-storage-manager = { path = "../../storage/storage-manager" }
+kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-runtime-executor = { path = "../executor" }
 crossbeam-deque = "0.8.6"
 crossbeam-queue = "0.3.12"

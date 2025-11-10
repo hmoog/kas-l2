@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use kas_l2_runtime_interface::{Owner, ResourceId};
-use kas_l2_runtime_storage_manager::concat_bytes;
 use kas_l2_storage_interface::{ReadStore, WriteStore};
+use kas_l2_storage_manager::concat_bytes;
 use tap::Tap;
 
 use crate::{

@@ -1,6 +1,6 @@
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_runtime_storage_manager::{ReadCmd, WriteCmd};
 use kas_l2_storage_interface::{ReadStore, Store, WriteStore};
+use kas_l2_storage_manager::{ReadCmd, WriteCmd};
 
 use crate::{ResourceAccess, RuntimeBatch, StateDiff, vm::VM};
 
