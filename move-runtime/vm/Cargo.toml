@@ -11,8 +11,8 @@ move-vm-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d"
 move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
 kas-l2-runtime-manager = { path = "../../runtime/manager" }
 kas-l2-runtime-state = { path = "../../runtime/state" }
-kas-l2-storage-interface = { path = "../../storage/interface" }
-kas-l2-runtime-interface = { path = "../../runtime/interface" }
+kas-l2-storage-types = { path = "../../storage/types" }
+kas-l2-runtime-types = { path = "../../runtime/types" }
 bcs = "0.1.6"
 borsh = "1.5.7"
 indexmap = "2.11.0"

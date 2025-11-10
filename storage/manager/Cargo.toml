@@ -6,5 +6,5 @@ edition = "2021"
 [dependencies]
 crossbeam-utils = "0.8.21"
 crossbeam-queue = "0.3.12"
-kas-l2-storage-interface = { path = "../../storage/interface" }
+kas-l2-storage-types = { path = "../types" }
 kas-l2-core-macros = { path = "../../core/macros" }

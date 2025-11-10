@@ -48,10 +48,10 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_interface::{AccessMetadata, AccessType, Transaction};
     use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
     use kas_l2_runtime_state::{StateSpace, VersionedState};
-    use kas_l2_storage_interface::{ReadStore, Store};
+    use kas_l2_runtime_types::{AccessMetadata, AccessType, Transaction};
+    use kas_l2_storage_types::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;

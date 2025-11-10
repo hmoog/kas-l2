@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use kas_l2_runtime_execution_workers::Executor;
-use kas_l2_runtime_interface::{AccessMetadata, Transaction};
+use kas_l2_runtime_execution_workers::ExecutionWorkers;
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_interface::Store;
+use kas_l2_runtime_types::{AccessMetadata, Transaction};
 use kas_l2_storage_manager::{StorageConfig, StorageManager};
+use kas_l2_storage_types::Store;
 use tap::Tap;
 
 use crate::{
@@ -18,7 +18,7 @@ pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     resources: HashMap<V::ResourceId, Resource<S, V>>,
     worker_loop: WorkerLoop<S, V>,
-    executor: Executor<RuntimeTx<S, V>, RuntimeBatch<S, V>>,
+    executor: ExecutionWorkers<RuntimeTx<S, V>, RuntimeBatch<S, V>>,
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
@@ -29,7 +29,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
             storage: StorageManager::new(storage_config),
             resources: HashMap::new(),
             batch_index: 0,
-            executor: Executor::new(worker_count),
+            executor: ExecutionWorkers::new(worker_count),
             vm,
         }
     }

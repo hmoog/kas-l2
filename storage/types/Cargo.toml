@@ -1,4 +1,4 @@
 [package]
-name = "kas-l2-storage-interface"
+name = "kas-l2-storage-types"
 version = "0.1.0"
 edition = "2021"

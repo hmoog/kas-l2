@@ -7,7 +7,7 @@ edition = "2021"
 kas-l2-runtime-manager = { path = "../manager" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
-kas-l2-runtime-interface = { path = "../interface" }
-kas-l2-storage-interface = { path = "../../storage/interface" }
+kas-l2-runtime-types = { path = "../types" }
+kas-l2-storage-types = { path = "../../storage/types" }
 kas-l2-runtime-state = { path = "../state" }
 tempfile = "3.23.0"
