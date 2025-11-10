@@ -5,9 +5,9 @@ use std::sync::{
 
 use kas_l2_core_atomics::{AtomicOptionArc, AtomicWeak};
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_common_types::{AccessMetadata, AccessType};
+use kas_l2_runtime_types::{AccessMetadata, AccessType};
 use kas_l2_runtime_state::{StateSpace, VersionedState};
-use kas_l2_storage_common_types::{ReadStore, Store};
+use kas_l2_storage_types::{ReadStore, Store};
 use kas_l2_storage_manager::StorageManager;
 
 use crate::{Read, RuntimeTxRef, StateDiff, Write, vm_interface::VmInterface};

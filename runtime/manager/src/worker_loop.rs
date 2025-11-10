@@ -5,7 +5,7 @@ use std::{
 
 use crossbeam_queue::SegQueue;
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_common_types::Store;
+use kas_l2_storage_types::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
 use crate::{RuntimeBatch, VmInterface};

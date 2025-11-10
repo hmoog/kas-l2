@@ -10,7 +10,7 @@ use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_common_types::{Store, WriteStore};
+use kas_l2_storage_types::{Store, WriteStore};
 use kas_l2_storage_manager::StorageManager;
 
 use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm_interface::VmInterface};

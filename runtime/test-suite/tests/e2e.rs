@@ -4,7 +4,7 @@ use std::{thread::sleep, time::Duration};
 
 use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
 use kas_l2_storage_manager::StorageConfig;
-use kas_l2_storage_rocksdb_store::RocksDbStore;
+use kas_l2_runtime_rocksdb_store::RocksDbStore;
 use tempfile::TempDir;
 
 use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
@@ -48,10 +48,10 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_common_types::{AccessMetadata, AccessType, Transaction};
+    use kas_l2_runtime_types::{AccessMetadata, AccessType, Transaction};
     use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
     use kas_l2_runtime_state::{StateSpace, VersionedState};
-    use kas_l2_storage_common_types::{ReadStore, Store};
+    use kas_l2_storage_types::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;

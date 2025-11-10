@@ -1,6 +1,6 @@
-use kas_l2_runtime_common_types::{AccessMetadata, Owner, ResourceId, Transaction};
+use kas_l2_runtime_types::{AccessMetadata, Owner, ResourceId, Transaction};
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_common_types::Store;
+use kas_l2_storage_types::Store;
 
 use crate::{AccessHandle, RuntimeBatch};
 

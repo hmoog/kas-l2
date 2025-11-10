@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 kas-l2-runtime-manager = { path = "../manager" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
-kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
-kas-l2-runtime-common-types = { path = "../common-types" }
-kas-l2-storage-common-types = { path = "../../storage/common-types" }
+kas-l2-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
+kas-l2-runtime-types = { path = "../types" }
+kas-l2-storage-types = { path = "../../storage/types" }
 kas-l2-runtime-state = { path = "../state" }
 tempfile = "3.23.0"

@@ -1,4 +1,4 @@
-use kas_l2_storage_common_types::Store;
+use kas_l2_storage_types::Store;
 
 use crate::{read::ReadConfig, write::WriteConfig};
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_common_types::{Owner, ResourceId};
-use kas_l2_storage_common_types::{ReadStore, WriteStore};
+use kas_l2_runtime_types::{Owner, ResourceId};
+use kas_l2_storage_types::{ReadStore, WriteStore};
 use kas_l2_storage_manager::concat_bytes;
 use tap::Tap;
 

@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 kas-l2-runtime-manager = { path = "../../runtime/manager" }
-kas-l2-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+kas-l2-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
 kas-l2-storage-manager = { path = "../../storage/manager" }
 kas-l2-move-runtime-vm = { path = "../vm" }
 move-core-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
