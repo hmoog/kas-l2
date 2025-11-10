@@ -10,6 +10,7 @@ use crate::{ReadCmd, StorageConfig, WriteCmd, read::ReadManager, write::WriteMan
 
 #[smart_pointer]
 pub struct StorageManager<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpace>> {
+    store: Arc<S>,
     reader: ReadManager<S, R>,
     writer: WriteManager<S, W>,
     is_shutdown: Arc<AtomicBool>,
@@ -25,6 +26,7 @@ impl<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpace>> StorageMan
         Self(Arc::new(StorageManagerData {
             reader: ReadManager::new(read_config, &store, &is_shutdown),
             writer: WriteManager::new(write_config, &store, &is_shutdown),
+            store,
             is_shutdown,
         }))
     }
@@ -35,6 +37,10 @@ impl<S: Store, R: ReadCmd<S::StateSpace>, W: WriteCmd<S::StateSpace>> StorageMan
 
     pub fn submit_write(&self, cmd: W) {
         self.writer.submit(cmd);
+    }
+
+    pub fn store(&self) -> &S {
+        &self.store
     }
 
     pub fn shutdown(&self) {

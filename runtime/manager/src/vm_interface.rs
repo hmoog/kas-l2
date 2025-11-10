@@ -1,11 +1,12 @@
-use kas_l2_runtime_types::{AccessMetadata, Owner, ResourceId, Transaction};
 use kas_l2_runtime_state::StateSpace;
+use kas_l2_runtime_types::{AccessMetadata, Owner, ResourceId, Transaction};
 use kas_l2_storage_types::Store;
 
 use crate::{AccessHandle, RuntimeBatch};
 
 pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
+    type TransactionEffects: Send + Sync + 'static;
     type ResourceId: ResourceId;
     type Ownership: Owner;
     type AccessMetadata: AccessMetadata<Self::ResourceId>;
@@ -15,7 +16,7 @@ pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
         &self,
         tx: &Self::Transaction,
         resources: &mut [AccessHandle<S, Self>],
-    ) -> Result<(), Self::Error>;
+    ) -> Result<Self::TransactionEffects, Self::Error>;
 
     fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &RuntimeBatch<S, Self>) {
         // don't do anything by default

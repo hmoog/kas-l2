@@ -41,6 +41,7 @@ impl Clone for Vm {
 
 impl kas_l2_runtime_manager::VmInterface for Vm {
     type Transaction = Transaction;
+    type TransactionEffects = ();
     type ResourceId = ObjectId;
     type Ownership = Ownership;
     type AccessMetadata = ObjectAccess;

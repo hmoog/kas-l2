@@ -1,5 +1,5 @@
-use kas_l2_runtime_types::AccessMetadata;
 use kas_l2_runtime_state::StateSpace;
+use kas_l2_runtime_types::AccessMetadata;
 use kas_l2_storage_types::Store;
 use tap::Tap;
 

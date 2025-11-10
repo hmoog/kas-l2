@@ -3,8 +3,8 @@ extern crate core;
 use std::{thread::sleep, time::Duration};
 
 use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
-use kas_l2_storage_manager::StorageConfig;
 use kas_l2_runtime_rocksdb_store::RocksDbStore;
+use kas_l2_storage_manager::StorageConfig;
 use tempfile::TempDir;
 
 use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
@@ -13,11 +13,10 @@ use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
 pub fn test_runtime() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
-        let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
-
+        let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
         let mut runtime = RuntimeManager::new(
             ExecutionConfig::default().with_vm(TestVM),
-            StorageConfig::default().with_store(store.clone()),
+            StorageConfig::default().with_store(storage),
         );
 
         runtime.schedule(vec![
@@ -40,7 +39,7 @@ pub fn test_runtime() {
             AssertWrittenState(10, vec![4]),
             AssertWrittenState(20, vec![4]),
         ] {
-            assertion.assert(&store);
+            assertion.assert(runtime.storage_manager().store());
         }
 
         runtime.shutdown();
@@ -48,9 +47,9 @@ pub fn test_runtime() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_types::{AccessMetadata, AccessType, Transaction};
     use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
     use kas_l2_runtime_state::{StateSpace, VersionedState};
+    use kas_l2_runtime_types::{AccessMetadata, AccessType, Transaction};
     use kas_l2_storage_types::{ReadStore, Store};
 
     #[derive(Clone)]
@@ -58,6 +57,7 @@ mod test_framework {
 
     impl VmInterface for TestVM {
         type Transaction = Tx;
+        type TransactionEffects = ();
         type ResourceId = usize;
         type Ownership = usize;
         type AccessMetadata = Access;

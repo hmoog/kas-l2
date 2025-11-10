@@ -9,8 +9,8 @@ use kas_l2_move_runtime_vm::{
     ObjectId, Transaction, Vm,
 };
 use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
+use kas_l2_runtime_rocksdb_store::{DefaultConfig, RocksDbStore};
 use kas_l2_storage_manager::StorageConfig;
-use kas_l2_runtime_rocksdb_store::RocksDbStore;
 use move_compiler::PreCompiledProgramInfo;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use tempfile::TempDir;
@@ -19,11 +19,10 @@ use tempfile::TempDir;
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
-        let store: RocksDbStore = RocksDbStore::open(temp_dir.path());
-
         let mut runtime = RuntimeManager::new(
             ExecutionConfig::default().with_vm(Vm::default()),
-            StorageConfig::default().with_store(store.clone()),
+            StorageConfig::default()
+                .with_store(RocksDbStore::<DefaultConfig>::open(temp_dir.path())),
         );
 
         runtime.schedule(vec![

@@ -10,8 +10,8 @@ use crossbeam_deque::{Injector, Steal, Worker};
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::{Store, WriteStore};
 use kas_l2_storage_manager::StorageManager;
+use kas_l2_storage_types::{Store, WriteStore};
 
 use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm_interface::VmInterface};
 
@@ -83,7 +83,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
             let mut state_diffs = Vec::new();
             RuntimeBatchData {
                 index: scheduler.batch_index(),
-                storage: scheduler.storage().clone(),
+                storage: scheduler.storage_manager().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs

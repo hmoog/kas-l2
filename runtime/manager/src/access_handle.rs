@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_types::{AccessMetadata, AccessType};
 use kas_l2_runtime_state::{State, StateSpace, VersionedState};
+use kas_l2_runtime_types::{AccessMetadata, AccessType};
 use kas_l2_storage_types::Store;
 
 use crate::{ResourceAccess, vm_interface::VmInterface};
