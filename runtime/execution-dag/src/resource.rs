@@ -3,7 +3,7 @@ use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 use tap::Tap;
 
-use crate::{BatchRef, ResourceAccess, RuntimeTxRef, StateDiff, vm::VM};
+use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm::VM};
 
 pub(crate) struct Resource<S: Store<StateSpace = StateSpace>, V: VM> {
     last_access: Option<ResourceAccess<S, V>>,
@@ -20,7 +20,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> Resource<S, V> {
         &mut self,
         meta: &V::AccessMetadata,
         tx: &RuntimeTxRef<S, V>,
-        batch: &BatchRef<S, V>,
+        batch: &RuntimeBatchRef<S, V>,
     ) -> ResourceAccess<S, V> {
         let (state_diff_ref, prev_access) = match self.last_access.take() {
             Some(prev_access) if prev_access.tx().belongs_to_batch(batch) => {

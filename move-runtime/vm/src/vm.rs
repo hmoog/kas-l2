@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_execution_dag::{AccessHandle, Batch};
+use kas_l2_runtime_execution_dag::{AccessHandle, RuntimeBatch};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 use move_binary_format::errors::{VMError, VMResult};
@@ -54,7 +54,7 @@ impl kas_l2_runtime_execution_dag::VM for VM {
         tx.instruction.execute(ExecutionContext::new(&self.0, resources))
     }
 
-    fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &Batch<S, Self>) {
+    fn notarize_batch<S: Store<StateSpace = StateSpace>>(&self, batch: &RuntimeBatch<S, Self>) {
         eprintln!(
             ">> Processed batch with {} transactions and {} state changes",
             batch.txs().len(),

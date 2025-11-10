@@ -4,18 +4,19 @@ use std::{
 };
 
 use crossbeam_queue::SegQueue;
-use kas_l2_runtime_execution_dag::{Batch, VM};
 use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_storage_interface::Store;
 use tokio::{runtime::Builder, sync::Notify};
 
-pub(crate) struct NotarizationWorker<S: Store<StateSpace = StateSpace>, V: VM> {
-    queue: Arc<SegQueue<Batch<S, V>>>,
+use crate::{RuntimeBatch, VM};
+
+pub(crate) struct WorkerLoop<S: Store<StateSpace = StateSpace>, V: VM> {
+    queue: Arc<SegQueue<RuntimeBatch<S, V>>>,
     notify: Arc<Notify>,
     handle: JoinHandle<()>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VM> NotarizationWorker<S, V> {
+impl<S: Store<StateSpace = StateSpace>, V: VM> WorkerLoop<S, V> {
     pub(crate) fn new(vm: V) -> Self {
         let queue = Arc::new(SegQueue::new());
         let notify = Arc::new(Notify::new());
@@ -24,7 +25,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> NotarizationWorker<S, V> {
         Self { queue, notify, handle }
     }
 
-    pub(crate) fn push(&self, batch: Batch<S, V>) {
+    pub(crate) fn push(&self, batch: RuntimeBatch<S, V>) {
         self.queue.push(batch);
         self.notify.notify_one();
     }
@@ -35,7 +36,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> NotarizationWorker<S, V> {
         self.handle.join().expect("batch processor panicked");
     }
 
-    fn start(queue: Arc<SegQueue<Batch<S, V>>>, notify: Arc<Notify>, vm: V) -> JoinHandle<()> {
+    fn start(
+        queue: Arc<SegQueue<RuntimeBatch<S, V>>>,
+        notify: Arc<Notify>,
+        vm: V,
+    ) -> JoinHandle<()> {
         thread::spawn(move || {
             Builder::new_current_thread().build().expect("failed to build tokio runtime").block_on(
                 async move {

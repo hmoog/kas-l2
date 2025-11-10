@@ -2,7 +2,7 @@ use kas_l2_runtime_state_space::StateSpace;
 use kas_l2_runtime_storage_manager::{ReadCmd, WriteCmd};
 use kas_l2_storage_interface::{ReadStore, Store, WriteStore};
 
-use crate::{Batch, ResourceAccess, StateDiff, vm::VM};
+use crate::{ResourceAccess, RuntimeBatch, StateDiff, vm::VM};
 
 pub enum Read<S: Store<StateSpace = StateSpace>, V: VM> {
     LatestData(ResourceAccess<S, V>),
@@ -18,7 +18,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VM> ReadCmd<StateSpace> for Read<S, V
 
 pub enum Write<S: Store<StateSpace = StateSpace>, V: VM> {
     StateDiff(StateDiff<S, V>),
-    CommitBatch(Batch<S, V>),
+    CommitBatch(RuntimeBatch<S, V>),
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VM> WriteCmd<StateSpace> for Write<S, V> {
