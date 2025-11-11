@@ -1,53 +1,26 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use tokio_util::sync::CancellationToken;
 
-use tokio::sync::Notify;
-
-/// A one-shot async latch.
-///
-/// Starts "closed". Once opened, it stays open forever.
-/// All current and future waiters will observe it as open.
-pub struct AtomicAsyncLatch {
-    ready: AtomicBool,
-    notify: Notify,
-}
+#[derive(Default)]
+pub struct AtomicAsyncLatch(CancellationToken);
 
 impl AtomicAsyncLatch {
-    /// Create a new latch in the "closed" state.
     pub fn new() -> Self {
-        Self { ready: AtomicBool::new(false), notify: Notify::new() }
+        Self::default()
     }
 
-    /// Open the latch (transition from false → true).
-    /// Wakes all current waiters. Idempotent.
-    pub fn open(&self) -> bool {
-        if !self.ready.swap(true, Ordering::SeqCst) {
-            self.notify.notify_waiters();
-            true
-        } else {
-            false
-        }
+    pub fn open(&self) {
+        self.0.cancel();
     }
 
-    /// Returns whether the latch is already open.
     pub fn is_open(&self) -> bool {
-        self.ready.load(Ordering::SeqCst)
+        self.0.is_cancelled()
     }
 
-    /// Wait until the latch is open.
-    /// Returns immediately if it's already open.
+    pub fn wait_blocking(&self) {
+        futures::executor::block_on(self.wait())
+    }
+
     pub async fn wait(&self) {
-        let notified = self.notify.notified();
-
-        if self.ready.load(Ordering::SeqCst) {
-            return;
-        }
-
-        notified.await;
-    }
-}
-
-impl Default for AtomicAsyncLatch {
-    fn default() -> Self {
-        Self::new()
+        self.0.cancelled().await;
     }
 }

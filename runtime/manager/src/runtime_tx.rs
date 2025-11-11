@@ -29,8 +29,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
         &self.resources
     }
 
-    pub fn effects(&self) -> Option<Arc<V::TransactionEffects>> {
-        self.effects.load()
+    pub fn effects(&self) -> Arc<V::TransactionEffects> {
+        self.effects.load().expect("effects not ready")
     }
 
     pub(crate) fn new(

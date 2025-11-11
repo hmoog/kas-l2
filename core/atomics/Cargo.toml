@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.47.1", features = ["sync"] }
+tokio-util = "0.7.17"
+futures = "0.3.31"

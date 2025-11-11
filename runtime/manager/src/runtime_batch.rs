@@ -58,6 +58,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_processed.wait()
     }
 
+    pub fn wait_processed_blocking(&self) -> &Self {
+        self.was_processed.wait_blocking();
+        self
+    }
+
     pub fn was_persisted(&self) -> bool {
         self.was_persisted.is_open()
     }
@@ -66,12 +71,22 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_persisted.wait()
     }
 
+    pub fn wait_persisted_blocking(&self) -> &Self {
+        self.was_persisted.wait_blocking();
+        self
+    }
+
     pub fn was_committed(&self) -> bool {
         self.was_committed.is_open()
     }
 
     pub fn wait_committed(&self) -> impl Future<Output = ()> + '_ {
         self.was_committed.wait()
+    }
+
+    pub fn wait_committed_blocking(&self) -> &Self {
+        self.was_committed.wait_blocking();
+        self
     }
 
     pub(crate) fn new(

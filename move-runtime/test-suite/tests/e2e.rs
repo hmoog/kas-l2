@@ -1,8 +1,10 @@
 extern crate core;
 
-use std::{str::FromStr, sync::Arc, thread::sleep, time::Duration};
+use std::{str::FromStr, sync::Arc};
 
-use kas_l2_move_runtime_test_suite::{SerializePreCompiledProgramInfoExt, compile_source_code};
+use kas_l2_move_runtime_test_suite::{
+    AssertTx, AssertTxEffect, AssertTxExt, SerializePreCompiledProgramInfoExt, compile_source_code,
+};
 use kas_l2_move_runtime_vm::{
     Instruction,
     ObjectAccess::{Read, Write},
@@ -12,7 +14,11 @@ use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
 use kas_l2_runtime_rocksdb_store::{DefaultConfig, RocksDbStore};
 use kas_l2_storage_manager::StorageConfig;
 use move_compiler::PreCompiledProgramInfo;
-use move_core_types::{account_address::AccountAddress, identifier::Identifier};
+use move_core_types::{
+    account_address::AccountAddress,
+    identifier::Identifier,
+    runtime_value::{MoveStruct, MoveValue},
+};
 use tempfile::TempDir;
 
 #[test]
@@ -25,7 +31,7 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
                 .with_store(RocksDbStore::<DefaultConfig>::open(temp_dir.path())),
         );
 
-        runtime.schedule(vec![
+        let batch = runtime.schedule(vec![
             Transaction {
                 accessed_resources: vec![Write(ObjectId::from_str("0x1::Test")?)],
                 instruction: Instruction::PublishModules {
@@ -44,17 +50,13 @@ pub fn test_move_runtime() -> Result<(), anyhow::Error> {
             },
         ]);
 
-        sleep(Duration::from_secs(1));
-
-        // for assertion in [
-        //     AssertWrittenState(1, vec![0, 1, 3]),
-        //     AssertWrittenState(2, vec![1]),
-        //     AssertWrittenState(3, vec![]),
-        //     AssertWrittenState(10, vec![4]),
-        //     AssertWrittenState(20, vec![4]),
-        // ] {
-        //     assertion.assert(&store);
-        // }
+        batch.wait_processed_blocking().txs().assert(&[AssertTx::new(
+            1,
+            vec![AssertTxEffect::ReturnValue {
+                reference: (0, 0),
+                expected: MoveValue::Struct(MoveStruct(vec![MoveValue::U64(7)])),
+            }],
+        )]);
 
         runtime.shutdown();
 

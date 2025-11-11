@@ -1,7 +1,5 @@
 extern crate core;
 
-use std::{thread::sleep, time::Duration};
-
 use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
 use kas_l2_runtime_rocksdb_store::RocksDbStore;
 use kas_l2_storage_manager::StorageConfig;
@@ -19,18 +17,19 @@ pub fn test_runtime() {
             StorageConfig::default().with_store(storage),
         );
 
-        runtime.schedule(vec![
+        let batch1 = runtime.schedule(vec![
             Tx(0, vec![Access::Write(1), Access::Read(3)]),
             Tx(1, vec![Access::Write(1), Access::Write(2)]),
             Tx(2, vec![Access::Read(3)]),
         ]);
 
-        runtime.schedule(vec![
+        let batch2 = runtime.schedule(vec![
             Tx(3, vec![Access::Write(1), Access::Read(3)]),
             Tx(4, vec![Access::Write(10), Access::Write(20)]),
         ]);
 
-        sleep(Duration::from_secs(1));
+        batch1.wait_committed_blocking();
+        batch2.wait_committed_blocking();
 
         for assertion in [
             AssertWrittenState(1, vec![0, 1, 3]),
