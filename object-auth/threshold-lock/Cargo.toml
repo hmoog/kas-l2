@@ -1,8 +1,0 @@
-[package]
-name = "kas-l2-object-auth-threshold-lock"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-kas-l2-object-auth-capabilities = { path = "../capabilities" }
-thiserror = "2.0.17"

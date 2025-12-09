@@ -1,7 +1,0 @@
-[package]
-name = "kas-l2-capability-runtime"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-kas-l2-capability-errors = { path = "../errors" }
