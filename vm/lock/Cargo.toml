@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-vm-data = { path = "../data" }
-kas-l2-vm-builtin-capabilities = { path = "../builtin-capabilities" }
-kas-l2-vm-object-lock-type = { path = "../lock-types" }
-kas-l2-vm-auth-context = { path = "../auth-context" }
 borsh = "1.5.7"
+kas-l2-vm-auth-context = { path = "../auth-context" }
+kas-l2-vm-builtin-capabilities = { path = "../builtin-capabilities" }
+kas-l2-vm-data = { path = "../data" }
+kas-l2-vm-signature-lock = { path = "../signature-lock" }

@@ -4,7 +4,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use kas_l2_vm_auth_context::AuthContext;
 use kas_l2_vm_builtin_capabilities::AccessGranted;
 use kas_l2_vm_data::Data;
-use kas_l2_vm_object_lock_type::SignatureLock;
+use kas_l2_vm_signature_lock::SignatureLock;
 
 #[derive(Default, Clone, Hash, Eq, PartialEq, Debug)]
 pub enum Lock {
