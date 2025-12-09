@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+kas-l2-vm-transaction-context = { path = "../transaction-context" }
 kas-l2-vm-instruction = { path = "../instruction" }
 kas-l2-vm-interface = { path = "../interface" }
 kas-l2-vm-transaction = { path = "../transaction" }

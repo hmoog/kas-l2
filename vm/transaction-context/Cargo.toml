@@ -1,5 +1,5 @@
 [package]
-name = "kas-l2-vm-tx-context"
+name = "kas-l2-vm-transaction-context"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,7 +11,6 @@ kas-l2-vm-transaction = { path = "../transaction" }
 kas-l2-vm-data = { path = "../data" }
 kas-l2-vm-program = { path = "../program" }
 kas-l2-vm-crypto = { path = "../crypto" }
-kas-l2-vm-object-access = { path = "../object-access" }
 kas-l2-vm-object-id = { path = "../object-id" }
 kas-l2-vm-lock = { path = "../lock" }
 kas-l2-storage-types = { path = "../../storage/types" }

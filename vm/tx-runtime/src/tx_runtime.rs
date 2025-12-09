@@ -6,8 +6,7 @@ use kas_l2_vm_lock::Lock;
 use kas_l2_vm_object_access::ObjectAccess;
 use kas_l2_vm_object_id::ObjectId;
 use kas_l2_vm_transaction::{Transaction, TransactionEffects};
-
-use crate::TransactionContext;
+use kas_l2_vm_transaction_context::TransactionContext;
 
 #[derive(Clone)]
 pub struct TxRuntime {}

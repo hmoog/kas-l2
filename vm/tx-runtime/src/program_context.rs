@@ -4,8 +4,7 @@ use kas_l2_storage_types::Store;
 use kas_l2_vm_crypto::Address;
 use kas_l2_vm_lock::Lock;
 use kas_l2_vm_object_id::ObjectId;
-
-use crate::TransactionContext;
+use kas_l2_vm_transaction_context::TransactionContext;
 
 pub struct ProgramContext<
     'e,
