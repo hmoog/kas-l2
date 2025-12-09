@@ -15,24 +15,21 @@ use kas_l2_vm_object_id::ObjectId;
 use kas_l2_vm_program::Program;
 use kas_l2_vm_transaction::{Transaction, TransactionEffects};
 
-pub struct TransactionContext<
-    'a,
-    'b,
+pub struct TransactionContext<'a, 'b, S, V>
+where
     S: Store<StateSpace = StateSpace>,
     V: VmInterface<ResourceId = ObjectId, Ownership = Lock>,
-> {
+{
     handles: &'a mut [AccessHandle<'b, S, V>],
     signers: HashSet<PubKey>,
     loaded_data: HashMap<Address, AuthenticatedData>,
     loaded_programs: HashMap<Address, Program>,
 }
 
-impl<
-    'a,
-    'b,
+impl<'a, 'b, S, V> TransactionContext<'a, 'b, S, V>
+where
     S: Store<StateSpace = StateSpace>,
     V: VmInterface<ResourceId = ObjectId, Ownership = Lock>,
-> TransactionContext<'a, 'b, S, V>
 {
     pub fn execute(
         tx: &'a Transaction,
@@ -100,12 +97,10 @@ impl<
     }
 }
 
-impl<
-    'a,
-    'b,
+impl<'a, 'b, S, V> kas_l2_vm_interface::AuthContext for TransactionContext<'a, 'b, S, V>
+where
     S: Store<StateSpace = StateSpace>,
     V: VmInterface<ResourceId = ObjectId, Ownership = Lock>,
-> kas_l2_vm_interface::AuthContext for TransactionContext<'a, 'b, S, V>
 {
     fn has_signer(&self, pub_key: &PubKey) -> bool {
         self.signers.contains(pub_key)
