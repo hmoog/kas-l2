@@ -5,7 +5,6 @@ use std::sync::{
 
 use kas_l2_core_atomics::AtomicOptionArc;
 use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_execution_workers::Task;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_types::Store;
 
@@ -62,19 +61,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
         }
     }
 
-    pub(crate) fn batch(&self) -> &RuntimeBatchRef<S, V> {
-        &self.batch
-    }
-}
-
-impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTxRef<S, V> {
-    pub(crate) fn belongs_to_batch(&self, batch: &RuntimeBatchRef<S, V>) -> bool {
-        self.upgrade().is_some_and(|tx| tx.batch() == batch)
-    }
-}
-
-impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Task for RuntimeTx<S, V> {
-    fn execute(&self) {
+    pub(crate) fn execute(&self) {
         if let Some(batch) = self.batch.upgrade() {
             let mut handles = self.resources.iter().map(AccessHandle::new).collect::<Vec<_>>();
             match self.vm.process_transaction(&self.tx, &mut handles) {
@@ -87,5 +74,15 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Task for RuntimeTx<S, V>
 
             batch.decrease_pending_txs();
         }
+    }
+
+    pub(crate) fn batch(&self) -> &RuntimeBatchRef<S, V> {
+        &self.batch
+    }
+}
+
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTxRef<S, V> {
+    pub(crate) fn belongs_to_batch(&self, batch: &RuntimeBatchRef<S, V>) -> bool {
+        self.upgrade().is_some_and(|tx| tx.batch() == batch)
     }
 }

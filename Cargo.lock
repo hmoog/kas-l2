@@ -1285,6 +1285,170 @@ name = "kas-l2-storage-types"
 version = "0.1.0"
 
 [[package]]
+name = "kas-l2-vm-authenticated-data"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-data",
+]
+
+[[package]]
+name = "kas-l2-vm-builtin-capabilities"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-data",
+ "kas-l2-vm-interface",
+ "kas-l2-vm-object-id",
+]
+
+[[package]]
+name = "kas-l2-vm-crypto"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-types",
+ "kas-l2-storage-types",
+]
+
+[[package]]
+name = "kas-l2-vm-data"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-crypto",
+]
+
+[[package]]
+name = "kas-l2-vm-errors"
+version = "0.1.0"
+
+[[package]]
+name = "kas-l2-vm-instruction"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-program-arg",
+]
+
+[[package]]
+name = "kas-l2-vm-interface"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-types",
+ "kas-l2-storage-types",
+ "kas-l2-vm-crypto",
+]
+
+[[package]]
+name = "kas-l2-vm-lock"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-builtin-capabilities",
+ "kas-l2-vm-data",
+ "kas-l2-vm-interface",
+ "kas-l2-vm-object-lock-type",
+]
+
+[[package]]
+name = "kas-l2-vm-object-access"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-types",
+ "kas-l2-vm-object-id",
+]
+
+[[package]]
+name = "kas-l2-vm-object-id"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-crypto",
+]
+
+[[package]]
+name = "kas-l2-vm-object-lock-type"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-builtin-capabilities",
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-interface",
+]
+
+[[package]]
+name = "kas-l2-vm-program"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-crypto",
+]
+
+[[package]]
+name = "kas-l2-vm-program-arg"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-crypto",
+]
+
+[[package]]
+name = "kas-l2-vm-transaction"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-types",
+ "kas-l2-vm-instruction",
+ "kas-l2-vm-object-access",
+ "kas-l2-vm-object-id",
+]
+
+[[package]]
+name = "kas-l2-vm-tx-context"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-manager",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-types",
+ "kas-l2-storage-types",
+ "kas-l2-vm-authenticated-data",
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-data",
+ "kas-l2-vm-errors",
+ "kas-l2-vm-instruction",
+ "kas-l2-vm-interface",
+ "kas-l2-vm-lock",
+ "kas-l2-vm-object-access",
+ "kas-l2-vm-object-id",
+ "kas-l2-vm-program",
+ "kas-l2-vm-transaction",
+]
+
+[[package]]
+name = "kas-l2-vm-tx-runtime"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-manager",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-types",
+ "kas-l2-storage-types",
+ "kas-l2-vm-crypto",
+ "kas-l2-vm-data",
+ "kas-l2-vm-errors",
+ "kas-l2-vm-instruction",
+ "kas-l2-vm-interface",
+ "kas-l2-vm-lock",
+ "kas-l2-vm-object-access",
+ "kas-l2-vm-object-id",
+ "kas-l2-vm-program",
+ "kas-l2-vm-transaction",
+]
+
+[[package]]
 name = "keccak"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

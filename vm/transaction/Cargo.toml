@@ -1,0 +1,10 @@
+[package]
+name = "kas-l2-vm-transaction"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-vm-instruction = { path = "../instruction" }
+kas-l2-vm-object-id = { path = "../object-id" }
+kas-l2-vm-object-access = { path = "../object-access" }
+kas-l2-runtime-types = { path = "../../runtime/types" }

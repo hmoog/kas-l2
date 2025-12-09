@@ -1,0 +1,8 @@
+[package]
+name = "kas-l2-vm-data"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-vm-crypto = { path = "../crypto" }
+borsh = "1.5.7"

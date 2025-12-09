@@ -6,6 +6,7 @@ members = [
     "move-runtime/*",
     "runtime/*",
     "storage/*",
+    "vm/*",
 ]
 
 default-members = [
@@ -13,4 +14,10 @@ default-members = [
     "move-runtime/*",
     "runtime/*",
     "storage/*",
+    "vm/*",
+]
+
+exclude = [
+    "capability/*",
+    "object-auth/*",
 ]

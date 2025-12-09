@@ -1,0 +1,9 @@
+[package]
+name = "kas-l2-object-auth-test-suite"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-object-auth-capabilities = { path = "../capabilities" }
+kas-l2-object-auth-threshold-lock = { path = "../threshold-lock" }
+kas-l2-object-auth-signature-lock = { path = "../signature-lock" }

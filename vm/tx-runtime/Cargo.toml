@@ -1,0 +1,21 @@
+[package]
+name = "kas-l2-vm-tx-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-vm-instruction = { path = "../instruction" }
+kas-l2-vm-interface = { path = "../interface" }
+kas-l2-vm-transaction = { path = "../transaction" }
+kas-l2-vm-data = { path = "../data" }
+kas-l2-vm-program = { path = "../program" }
+kas-l2-vm-crypto = { path = "../crypto" }
+kas-l2-vm-object-access = { path = "../object-access" }
+kas-l2-vm-object-id = { path = "../object-id" }
+kas-l2-vm-lock = { path = "../lock" }
+kas-l2-storage-types = { path = "../../storage/types" }
+kas-l2-runtime-state = { path = "../../runtime/state" }
+kas-l2-runtime-types = { path = "../../runtime/types" }
+kas-l2-runtime-manager = { path = "../../runtime/manager" }
+kas-l2-vm-errors = { path = "../errors" }
+borsh = "1.5.7"

@@ -13,7 +13,10 @@ use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_manager::StorageManager;
 use kas_l2_storage_types::{Store, WriteStore};
 
-use crate::{Read, RuntimeManager, RuntimeTx, StateDiff, Write, vm_interface::VmInterface};
+use crate::{
+    Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
+    vm_interface::VmInterface,
+};
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
@@ -21,7 +24,7 @@ pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
     state_diffs: Vec<StateDiff<S, V>>,
-    available_txs: Injector<RuntimeTx<S, V>>,
+    available_txs: Injector<ManagerTask<S, V>>,
     pending_txs: AtomicU64,
     pending_writes: AtomicI64,
     was_processed: AtomicAsyncLatch,
@@ -131,7 +134,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, V>) {
-        self.available_txs.push(tx.clone());
+        self.available_txs.push(ManagerTask::ExecuteTransaction(tx.clone()));
     }
 
     pub(crate) fn decrease_pending_txs(&self) {
@@ -172,9 +175,12 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface>
-    kas_l2_runtime_execution_workers::Batch<RuntimeTx<S, V>> for RuntimeBatch<S, V>
+    kas_l2_runtime_execution_workers::Batch<ManagerTask<S, V>> for RuntimeBatch<S, V>
 {
-    fn steal_available_tasks(&self, worker: &Worker<RuntimeTx<S, V>>) -> Option<RuntimeTx<S, V>> {
+    fn steal_available_tasks(
+        &self,
+        worker: &Worker<ManagerTask<S, V>>,
+    ) -> Option<ManagerTask<S, V>> {
         loop {
             match self.available_txs.steal_batch_and_pop(worker) {
                 Steal::Success(task) => return Some(task),

@@ -1,0 +1,11 @@
+[package]
+name = "kas-l2-vm-lock"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-vm-data = { path = "../data" }
+kas-l2-vm-builtin-capabilities = { path = "../builtin-capabilities" }
+kas-l2-vm-object-lock-type = { path = "../lock-types" }
+kas-l2-vm-interface = { path = "../interface" }
+borsh = "1.5.7"
