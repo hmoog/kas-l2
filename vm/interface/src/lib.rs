@@ -1,3 +1,5 @@
-mod auth_context;
+use kas_l2_vm_pub_key::PubKey;
 
-pub use auth_context::AuthContext;
+pub trait AuthContext {
+    fn has_signer(&self, pub_key: &PubKey) -> bool;
+}

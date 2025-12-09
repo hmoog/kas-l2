@@ -1,6 +1,6 @@
 use kas_l2_vm_builtin_capabilities::AccessGranted;
-use kas_l2_vm_crypto::PubKey;
 use kas_l2_vm_interface::AuthContext;
+use kas_l2_vm_pub_key::PubKey;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct SignatureLock(pub PubKey);

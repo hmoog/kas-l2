@@ -1285,10 +1285,17 @@ name = "kas-l2-storage-types"
 version = "0.1.0"
 
 [[package]]
+name = "kas-l2-vm-address"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+]
+
+[[package]]
 name = "kas-l2-vm-authenticated-data"
 version = "0.1.0"
 dependencies = [
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
  "kas-l2-vm-data",
 ]
 
@@ -1296,21 +1303,8 @@ dependencies = [
 name = "kas-l2-vm-builtin-capabilities"
 version = "0.1.0"
 dependencies = [
- "borsh",
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
  "kas-l2-vm-data",
- "kas-l2-vm-interface",
- "kas-l2-vm-object-id",
-]
-
-[[package]]
-name = "kas-l2-vm-crypto"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "kas-l2-runtime-state",
- "kas-l2-runtime-types",
- "kas-l2-storage-types",
 ]
 
 [[package]]
@@ -1318,7 +1312,7 @@ name = "kas-l2-vm-data"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
 ]
 
 [[package]]
@@ -1329,7 +1323,7 @@ version = "0.1.0"
 name = "kas-l2-vm-instruction"
 version = "0.1.0"
 dependencies = [
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
  "kas-l2-vm-program-arg",
 ]
 
@@ -1337,11 +1331,7 @@ dependencies = [
 name = "kas-l2-vm-interface"
 version = "0.1.0"
 dependencies = [
- "borsh",
- "kas-l2-runtime-state",
- "kas-l2-runtime-types",
- "kas-l2-storage-types",
- "kas-l2-vm-crypto",
+ "kas-l2-vm-pub-key",
 ]
 
 [[package]]
@@ -1368,7 +1358,7 @@ name = "kas-l2-vm-object-id"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
 ]
 
 [[package]]
@@ -1376,8 +1366,8 @@ name = "kas-l2-vm-object-lock-type"
 version = "0.1.0"
 dependencies = [
  "kas-l2-vm-builtin-capabilities",
- "kas-l2-vm-crypto",
  "kas-l2-vm-interface",
+ "kas-l2-vm-pub-key",
 ]
 
 [[package]]
@@ -1385,15 +1375,18 @@ name = "kas-l2-vm-program"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "kas-l2-vm-crypto",
 ]
 
 [[package]]
 name = "kas-l2-vm-program-arg"
 version = "0.1.0"
 dependencies = [
- "kas-l2-vm-crypto",
+ "kas-l2-vm-address",
 ]
+
+[[package]]
+name = "kas-l2-vm-pub-key"
+version = "0.1.0"
 
 [[package]]
 name = "kas-l2-vm-transaction"
@@ -1414,8 +1407,8 @@ dependencies = [
  "kas-l2-runtime-state",
  "kas-l2-runtime-types",
  "kas-l2-storage-types",
+ "kas-l2-vm-address",
  "kas-l2-vm-authenticated-data",
- "kas-l2-vm-crypto",
  "kas-l2-vm-data",
  "kas-l2-vm-errors",
  "kas-l2-vm-instruction",
@@ -1423,6 +1416,7 @@ dependencies = [
  "kas-l2-vm-lock",
  "kas-l2-vm-object-id",
  "kas-l2-vm-program",
+ "kas-l2-vm-pub-key",
  "kas-l2-vm-transaction",
 ]
 
@@ -1430,20 +1424,14 @@ dependencies = [
 name = "kas-l2-vm-tx-runtime"
 version = "0.1.0"
 dependencies = [
- "borsh",
  "kas-l2-runtime-manager",
  "kas-l2-runtime-state",
- "kas-l2-runtime-types",
  "kas-l2-storage-types",
- "kas-l2-vm-crypto",
- "kas-l2-vm-data",
+ "kas-l2-vm-address",
  "kas-l2-vm-errors",
- "kas-l2-vm-instruction",
- "kas-l2-vm-interface",
  "kas-l2-vm-lock",
  "kas-l2-vm-object-access",
  "kas-l2-vm-object-id",
- "kas-l2-vm-program",
  "kas-l2-vm-transaction",
  "kas-l2-vm-transaction-context",
 ]

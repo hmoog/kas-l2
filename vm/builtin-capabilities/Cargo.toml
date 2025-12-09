@@ -5,7 +5,4 @@ edition = "2021"
 
 [dependencies]
 kas-l2-vm-data = { path = "../data" }
-kas-l2-vm-object-id = { path = "../object-id" }
-kas-l2-vm-crypto = { path = "../crypto" }
-kas-l2-vm-interface = { path = "../interface" }
-borsh = "1.5.7"
+kas-l2-vm-address = { path = "../address" }

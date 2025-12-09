@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_vm_crypto::Address;
+use kas_l2_vm_address::Address;
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug, Default)]
 pub enum ObjectId {
