@@ -1,7 +1,0 @@
-[package]
-edition = "2021"
-name    = "kas-l2-vm-error"
-version = "0.1.0"
-
-[dependencies]
-kas-l2-vm-address = { path = "../address" }

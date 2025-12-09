@@ -1,4 +1,0 @@
-[package]
-edition = "2021"
-name    = "kas-l2-vm-transaction-effects"
-version = "0.1.0"
