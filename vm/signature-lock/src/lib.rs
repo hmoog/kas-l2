@@ -1,8 +1,9 @@
+use borsh::{BorshDeserialize, BorshSerialize};
 use kas_l2_vm_auth_context::AuthContext;
 use kas_l2_vm_builtin_capabilities::AccessGranted;
 use kas_l2_vm_pubkey::PubKey;
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct SignatureLock(pub PubKey);
 
 impl SignatureLock {

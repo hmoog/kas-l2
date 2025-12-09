@@ -1420,6 +1420,7 @@ version = "0.1.0"
 name = "kas-l2-vm-signature-lock"
 version = "0.1.0"
 dependencies = [
+ "borsh",
  "kas-l2-vm-auth-context",
  "kas-l2-vm-builtin-capabilities",
  "kas-l2-vm-pubkey",
