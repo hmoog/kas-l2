@@ -1,9 +1,9 @@
 use std::io::{Read, Write};
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use kas_l2_vm_auth_context::AuthContext;
 use kas_l2_vm_builtin_capabilities::AccessGranted;
 use kas_l2_vm_data::Data;
-use kas_l2_vm_interface::AuthContext;
 use kas_l2_vm_object_lock_type::SignatureLock;
 
 #[derive(Default, Clone, Hash, Eq, PartialEq, Debug)]

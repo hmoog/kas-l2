@@ -1,5 +1,5 @@
+use kas_l2_vm_auth_context::AuthContext;
 use kas_l2_vm_builtin_capabilities::AccessGranted;
-use kas_l2_vm_interface::AuthContext;
 use kas_l2_vm_pubkey::PubKey;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]

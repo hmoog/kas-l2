@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 kas-l2-vm-builtin-capabilities = { path = "../builtin-capabilities" }
 kas-l2-vm-pubkey = { path = "../pubkey" }
-kas-l2-vm-interface = { path = "../interface" }
+kas-l2-vm-auth-context = { path = "../auth-context" }

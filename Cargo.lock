@@ -1292,6 +1292,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-vm-auth-context"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-pubkey",
+]
+
+[[package]]
 name = "kas-l2-vm-authenticated-data"
 version = "0.1.0"
 dependencies = [
@@ -1328,20 +1335,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-vm-interface"
-version = "0.1.0"
-dependencies = [
- "kas-l2-vm-pubkey",
-]
-
-[[package]]
 name = "kas-l2-vm-lock"
 version = "0.1.0"
 dependencies = [
  "borsh",
+ "kas-l2-vm-auth-context",
  "kas-l2-vm-builtin-capabilities",
  "kas-l2-vm-data",
- "kas-l2-vm-interface",
  "kas-l2-vm-object-lock-type",
 ]
 
@@ -1365,8 +1365,8 @@ dependencies = [
 name = "kas-l2-vm-object-lock-type"
 version = "0.1.0"
 dependencies = [
+ "kas-l2-vm-auth-context",
  "kas-l2-vm-builtin-capabilities",
- "kas-l2-vm-interface",
  "kas-l2-vm-pubkey",
 ]
 
@@ -1416,11 +1416,11 @@ dependencies = [
  "kas-l2-runtime-types",
  "kas-l2-storage-types",
  "kas-l2-vm-address",
+ "kas-l2-vm-auth-context",
  "kas-l2-vm-authenticated-data",
  "kas-l2-vm-data",
  "kas-l2-vm-errors",
  "kas-l2-vm-instruction",
- "kas-l2-vm-interface",
  "kas-l2-vm-lock",
  "kas-l2-vm-object-id",
  "kas-l2-vm-program",

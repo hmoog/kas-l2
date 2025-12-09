@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 kas-l2-vm-authenticated-data = { path = "../authenticated-data" }
 kas-l2-vm-instruction = { path = "../instruction" }
-kas-l2-vm-interface = { path = "../interface" }
+kas-l2-vm-auth-context = { path = "../auth-context" }
 kas-l2-vm-transaction = { path = "../transaction" }
 kas-l2-vm-data = { path = "../data" }
 kas-l2-vm-program = { path = "../program" }

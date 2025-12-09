@@ -7,5 +7,5 @@ edition = "2021"
 kas-l2-vm-data = { path = "../data" }
 kas-l2-vm-builtin-capabilities = { path = "../builtin-capabilities" }
 kas-l2-vm-object-lock-type = { path = "../lock-types" }
-kas-l2-vm-interface = { path = "../interface" }
+kas-l2-vm-auth-context = { path = "../auth-context" }
 borsh = "1.5.7"
