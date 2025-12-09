@@ -1325,7 +1325,6 @@ dependencies = [
 name = "kas-l2-vm-data-context"
 version = "0.1.0"
 dependencies = [
- "borsh",
  "kas-l2-vm-address",
  "kas-l2-vm-authenticated-data",
  "kas-l2-vm-error",

@@ -1,8 +1,8 @@
 [package]
-name = "kas-l2-vm-program"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-vm-program"
+version = "0.1.0"
 
 [dependencies]
-borsh = "1.5.7"
+borsh                  = "1.5.7"
 kas-l2-vm-program-type = { path = "../program-type" }

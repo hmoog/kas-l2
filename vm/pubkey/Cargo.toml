@@ -1,6 +1,6 @@
 [package]
-name = "kas-l2-vm-pubkey"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-vm-pubkey"
+version = "0.1.0"
 
 [dependencies]

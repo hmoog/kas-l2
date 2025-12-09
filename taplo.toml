@@ -1,0 +1,12 @@
+[formatting]
+align_comments = true
+align_entries  = true
+indent_tables  = true
+reorder_keys   = true
+
+  [formatting.keys]
+  "build-dependencies"     = { order = "ascending" }
+  "dependencies"           = { order = "ascending" }
+  "dev-dependencies"       = { order = "ascending" }
+  "target.*.dependencies"  = { order = "ascending" }
+  "workspace.dependencies" = { order = "ascending" }

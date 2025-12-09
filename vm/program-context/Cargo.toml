@@ -1,18 +1,18 @@
 [package]
-name = "kas-l2-vm-program-context"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-vm-program-context"
+version = "0.1.0"
 
 [dependencies]
-kas-l2-runtime-manager = { path = "../../runtime/manager" }
-kas-l2-runtime-state = { path = "../../runtime/state" }
-kas-l2-storage-types = { path = "../../storage/types" }
-kas-l2-vm-address = { path = "../address" }
-kas-l2-vm-authenticated-data = { path = "../authenticated-data" }
-kas-l2-vm-data-context = { path = "../data-context" }
-kas-l2-vm-error = { path = "../error" }
-kas-l2-vm-lock = { path = "../lock" }
-kas-l2-vm-object-access = { path = "../object-access" }
-kas-l2-vm-object-id = { path = "../object-id" }
-kas-l2-vm-transaction = { path = "../transaction" }
+kas-l2-runtime-manager        = { path = "../../runtime/manager" }
+kas-l2-runtime-state          = { path = "../../runtime/state" }
+kas-l2-storage-types          = { path = "../../storage/types" }
+kas-l2-vm-address             = { path = "../address" }
+kas-l2-vm-authenticated-data  = { path = "../authenticated-data" }
+kas-l2-vm-data-context        = { path = "../data-context" }
+kas-l2-vm-error               = { path = "../error" }
+kas-l2-vm-lock                = { path = "../lock" }
+kas-l2-vm-object-access       = { path = "../object-access" }
+kas-l2-vm-object-id           = { path = "../object-id" }
+kas-l2-vm-transaction         = { path = "../transaction" }
 kas-l2-vm-transaction-context = { path = "../transaction-context" }

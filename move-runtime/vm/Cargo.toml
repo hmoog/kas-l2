@@ -1,19 +1,19 @@
 [package]
-name = "kas-l2-move-runtime-vm"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-move-runtime-vm"
+version = "0.1.0"
 
 [dependencies]
-anyhow = "1.0.99"
-bcs = "0.1.6"
-borsh = "1.5.7"
-indexmap = "2.11.0"
+anyhow                 = "1.0.99"
+bcs                    = "0.1.6"
+borsh                  = "1.5.7"
+indexmap               = "2.11.0"
 kas-l2-runtime-manager = { path = "../../runtime/manager" }
-kas-l2-runtime-state = { path = "../../runtime/state" }
-kas-l2-runtime-types = { path = "../../runtime/types" }
-kas-l2-storage-types = { path = "../../storage/types" }
-move-binary-format = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-core-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-stdlib-natives = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-vm-runtime = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-vm-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+kas-l2-runtime-state   = { path = "../../runtime/state" }
+kas-l2-runtime-types   = { path = "../../runtime/types" }
+kas-l2-storage-types   = { path = "../../storage/types" }
+move-binary-format     = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-core-types        = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-stdlib-natives    = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-vm-runtime        = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-vm-types          = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }

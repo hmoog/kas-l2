@@ -1,10 +1,10 @@
 [package]
-name = "kas-l2-storage-manager"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-storage-manager"
+version = "0.1.0"
 
 [dependencies]
-crossbeam-queue = "0.3.12"
-crossbeam-utils = "0.8.21"
-kas-l2-core-macros = { path = "../../core/macros" }
+crossbeam-queue      = "0.3.12"
+crossbeam-utils      = "0.8.21"
+kas-l2-core-macros   = { path = "../../core/macros" }
 kas-l2-storage-types = { path = "../types" }

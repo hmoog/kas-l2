@@ -1,18 +1,18 @@
 [package]
-name = "kas-l2-runtime-manager"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-runtime-manager"
+version = "0.1.0"
 
 [dependencies]
-crossbeam-deque = "0.8.6"
-crossbeam-queue = "0.3.12"
-kas-l2-core-atomics = { path = "../../core/atomics" }
-kas-l2-core-macros = { path = "../../core/macros" }
+crossbeam-deque                  = "0.8.6"
+crossbeam-queue                  = "0.3.12"
+kas-l2-core-atomics              = { path = "../../core/atomics" }
+kas-l2-core-macros               = { path = "../../core/macros" }
 kas-l2-runtime-execution-workers = { path = "../execution-workers" }
-kas-l2-runtime-state = { path = "../state" }
-kas-l2-runtime-types = { path = "../types" }
-kas-l2-storage-manager = { path = "../../storage/manager" }
-kas-l2-storage-types = { path = "../../storage/types" }
-num_cpus = "1.17.0"
-tap = "1.0.1"
-tokio = { version = "1.47.1", features = ["rt", "sync"] }
+kas-l2-runtime-state             = { path = "../state" }
+kas-l2-runtime-types             = { path = "../types" }
+kas-l2-storage-manager           = { path = "../../storage/manager" }
+kas-l2-storage-types             = { path = "../../storage/types" }
+num_cpus                         = "1.17.0"
+tap                              = "1.0.1"
+tokio                            = { version = "1.47.1", features = ["rt", "sync"] }
