@@ -1,0 +1,10 @@
+[package]
+name = "kas-l2-vm-data-context"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kas-l2-vm-error = { path = "../error" }
+kas-l2-vm-address = { path = "../address" }
+kas-l2-vm-authenticated-data = { path = "../authenticated-data" }
+borsh = "1.5.7"

@@ -1,9 +1,13 @@
 use std::io::Error;
 
+use kas_l2_vm_address::Address;
+
 use crate::VmError::SerializationError;
 
 pub enum VmError {
     Generic,
+    DataNotFound(Address),
+    MissingMutCapability(Address),
     SerializationError(Error),
 }
 
@@ -12,3 +16,5 @@ impl From<Error> for VmError {
         SerializationError(err)
     }
 }
+
+pub type VmResult<T> = Result<T, VmError>;

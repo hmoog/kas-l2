@@ -1323,8 +1323,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "kas-l2-vm-errors"
+name = "kas-l2-vm-data-context"
 version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-vm-address",
+ "kas-l2-vm-authenticated-data",
+ "kas-l2-vm-error",
+]
+
+[[package]]
+name = "kas-l2-vm-error"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-vm-address",
+]
 
 [[package]]
 name = "kas-l2-vm-instruction"
@@ -1386,6 +1399,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "kas-l2-vm-program-context"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-manager",
+ "kas-l2-runtime-state",
+ "kas-l2-storage-types",
+ "kas-l2-vm-address",
+ "kas-l2-vm-authenticated-data",
+ "kas-l2-vm-data-context",
+ "kas-l2-vm-error",
+ "kas-l2-vm-lock",
+ "kas-l2-vm-object-access",
+ "kas-l2-vm-object-id",
+ "kas-l2-vm-transaction",
+ "kas-l2-vm-transaction-context",
+]
+
+[[package]]
 name = "kas-l2-vm-program-type"
 version = "0.1.0"
 dependencies = [
@@ -1419,7 +1450,8 @@ dependencies = [
  "kas-l2-vm-auth-context",
  "kas-l2-vm-authenticated-data",
  "kas-l2-vm-data",
- "kas-l2-vm-errors",
+ "kas-l2-vm-data-context",
+ "kas-l2-vm-error",
  "kas-l2-vm-instruction",
  "kas-l2-vm-lock",
  "kas-l2-vm-object-id",
@@ -1436,7 +1468,8 @@ dependencies = [
  "kas-l2-runtime-state",
  "kas-l2-storage-types",
  "kas-l2-vm-address",
- "kas-l2-vm-errors",
+ "kas-l2-vm-data-context",
+ "kas-l2-vm-error",
  "kas-l2-vm-lock",
  "kas-l2-vm-object-access",
  "kas-l2-vm-object-id",
