@@ -5,13 +5,6 @@ use kas_l2_storage_types::Store;
 use crate::{AccessHandle, RuntimeBatch};
 
 pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
-    type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
-    type TransactionEffects: Send + Sync + 'static;
-    type ResourceId: ResourceId;
-    type Ownership: Owner;
-    type AccessMetadata: AccessMetadata<Self::ResourceId>;
-    type Error;
-
     fn process_transaction<S: Store<StateSpace = StateSpace>>(
         &self,
         tx: &Self::Transaction,
@@ -22,4 +15,11 @@ pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
         // don't do anything by default
         let _ = batch;
     }
+
+    type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
+    type TransactionEffects: Send + Sync + 'static;
+    type ResourceId: ResourceId;
+    type Ownership: Owner;
+    type AccessMetadata: AccessMetadata<Self::ResourceId>;
+    type Error;
 }

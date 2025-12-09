@@ -1,5 +1,6 @@
 mod access_handle;
 mod config;
+mod cpu_task;
 mod manager;
 mod resource;
 mod resource_access;

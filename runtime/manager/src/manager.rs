@@ -8,8 +8,8 @@ use kas_l2_storage_types::Store;
 use tap::Tap;
 
 use crate::{
-    ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTx,
-    RuntimeTxRef, StateDiff, WorkerLoop, Write, vm_interface::VmInterface,
+    ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTxRef,
+    StateDiff, WorkerLoop, Write, cpu_task::ManagerTask, vm_interface::VmInterface,
 };
 
 pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
@@ -18,7 +18,7 @@ pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     storage_manager: StorageManager<S, Read<S, V>, Write<S, V>>,
     resources: HashMap<V::ResourceId, Resource<S, V>>,
     worker_loop: WorkerLoop<S, V>,
-    execution_workers: ExecutionWorkers<RuntimeTx<S, V>, RuntimeBatch<S, V>>,
+    execution_workers: ExecutionWorkers<ManagerTask<S, V>, RuntimeBatch<S, V>>,
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {

@@ -1,11 +1,19 @@
 [package]
-name = "kas-l2-runtime-rocksdb-store"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-runtime-rocksdb-store"
+version = "0.1.0"
 
 [dependencies]
-rocksdb = { version = "0.24.0", default-features = false, features = ["lz4", "zstd", "snappy", "zlib", "bzip2", "jemalloc", "mt_static"] }
 kas-l2-runtime-state = { path = "../state" }
 kas-l2-storage-types = { path = "../../storage/types" }
 num_cpus = "1.17.0"
+rocksdb = { version = "0.24.0", default-features = false, features = [
+  "lz4",
+  "zstd",
+  "snappy",
+  "zlib",
+  "bzip2",
+  "jemalloc",
+  "mt_static",
+] }
 tap = "1.0.1"

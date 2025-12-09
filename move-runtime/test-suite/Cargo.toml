@@ -1,19 +1,19 @@
 [package]
-name = "kas-l2-move-runtime-test-suite"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-move-runtime-test-suite"
+version = "0.1.0"
 
 [dependencies]
-kas-l2-runtime-manager = { path = "../../runtime/manager" }
+anyhow                       = "1.0.99"
+bcs                          = "0.1.6"
+kas-l2-move-runtime-vm       = { path = "../vm" }
+kas-l2-runtime-manager       = { path = "../../runtime/manager" }
 kas-l2-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
-kas-l2-storage-manager = { path = "../../storage/manager" }
-kas-l2-storage-types = { path = "../../storage/types" }
-kas-l2-runtime-state = { path = "../../runtime/state" }
-kas-l2-move-runtime-vm = { path = "../vm" }
-move-core-types = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-compiler = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-move-symbol-pool = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
-tempfile = "3.23.0"
-anyhow = "1.0.99"
-vfs = "0.10.0"
-bcs = "0.1.6"
+kas-l2-runtime-state         = { path = "../../runtime/state" }
+kas-l2-storage-manager       = { path = "../../storage/manager" }
+kas-l2-storage-types         = { path = "../../storage/types" }
+move-compiler                = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-core-types              = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+move-symbol-pool             = { git = "https://github.com/MystenLabs/sui.git", rev = "0d4ab7d" }
+tempfile                     = "3.23.0"
+vfs                          = "0.10.0"

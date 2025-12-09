@@ -1,9 +1,8 @@
 [package]
-name = "kas-l2-core-atomics"
-version = "0.1.0"
 edition = "2021"
+name    = "kas-l2-core-atomics"
+version = "0.1.0"
 
 [dependencies]
-tokio = { version = "1.47.1", features = ["sync"] }
+futures    = "0.3.31"
 tokio-util = "0.7.17"
-futures = "0.3.31"
