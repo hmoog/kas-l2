@@ -5,8 +5,9 @@ use kas_l2_vm_error::{VmError, VmResult};
 use kas_l2_vm_lock::Lock;
 use kas_l2_vm_object_access::ObjectAccess;
 use kas_l2_vm_object_id::ObjectId;
-use kas_l2_vm_transaction::{Transaction, TransactionEffects};
+use kas_l2_vm_transaction::Transaction;
 use kas_l2_vm_transaction_context::TransactionContext;
+use kas_l2_vm_transaction_effects::TransactionEffects;
 
 #[derive(Clone)]
 pub struct TxRuntime {}

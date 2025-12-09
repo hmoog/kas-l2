@@ -7,7 +7,7 @@ use kas_l2_vm_pubkey::PubKey;
 pub struct SignatureLock(pub PubKey);
 
 impl SignatureLock {
-    pub fn unlock<A: AuthContext>(&self, auth_runtime: &A) -> Option<AccessGranted> {
-        auth_runtime.has_signer(&self.0).then_some(AccessGranted)
+    pub fn unlock<A: AuthContext>(&self, auth_ctx: &A) -> Option<AccessGranted> {
+        auth_ctx.has_signer(&self.0).then_some(AccessGranted)
     }
 }

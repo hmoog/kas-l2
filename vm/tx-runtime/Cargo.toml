@@ -15,3 +15,4 @@ kas-l2-vm-object-access       = { path = "../object-access" }
 kas-l2-vm-object-id           = { path = "../object-id" }
 kas-l2-vm-transaction         = { path = "../transaction" }
 kas-l2-vm-transaction-context = { path = "../transaction-context" }
+kas-l2-vm-transaction-effects = { path = "../transaction-effects" }

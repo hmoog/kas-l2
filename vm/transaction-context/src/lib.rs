@@ -16,7 +16,8 @@ use kas_l2_vm_lock::Lock;
 use kas_l2_vm_object_id::ObjectId;
 use kas_l2_vm_program::Program;
 use kas_l2_vm_pubkey::PubKey;
-use kas_l2_vm_transaction::{Transaction, TransactionEffects};
+use kas_l2_vm_transaction::Transaction;
+use kas_l2_vm_transaction_effects::TransactionEffects;
 
 pub struct TransactionContext<'a, 'b, S, V>
 where
