@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kas-l2-vm-pub-key = { path = "../pub-key" }
+kas-l2-vm-pubkey = { path = "../pubkey" }

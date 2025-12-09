@@ -14,7 +14,7 @@ use kas_l2_vm_interface::AuthContext;
 use kas_l2_vm_lock::Lock;
 use kas_l2_vm_object_id::ObjectId;
 use kas_l2_vm_program::Program;
-use kas_l2_vm_pub_key::PubKey;
+use kas_l2_vm_pubkey::PubKey;
 use kas_l2_vm_transaction::{Transaction, TransactionEffects};
 
 pub struct TransactionContext<'a, 'b, S, V>
