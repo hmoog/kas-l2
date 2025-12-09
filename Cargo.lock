@@ -1301,7 +1301,6 @@ dependencies = [
 name = "kas-l2-vm-authenticated-data"
 version = "0.1.0"
 dependencies = [
- "kas-l2-vm-address",
  "kas-l2-vm-data",
 ]
 

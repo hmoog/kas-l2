@@ -67,8 +67,7 @@ where
                     let data = Data::deserialize(&mut handle.state().data.as_slice())?;
                     let mut_cap = handle.state().owner.unlock(self);
 
-                    self.loaded_data
-                        .insert(address, AuthenticatedData::new(address, data, mut_cap));
+                    self.loaded_data.insert(address, AuthenticatedData::new(data, mut_cap));
                 }
                 // TODO: RETURN CORRECT ERROR
                 ObjectId::Empty => return Err(VmError::Generic),

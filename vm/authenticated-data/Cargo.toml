@@ -4,5 +4,4 @@ name    = "kas-l2-vm-authenticated-data"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-vm-address = { path = "../address" }
-kas-l2-vm-data    = { path = "../data" }
+kas-l2-vm-data = { path = "../data" }
