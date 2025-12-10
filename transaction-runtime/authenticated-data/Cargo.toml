@@ -1,0 +1,7 @@
+[package]
+edition = "2021"
+name    = "kas-l2-transaction-runtime-authenticated-data"
+version = "0.1.0"
+
+[dependencies]
+kas-l2-transaction-runtime-data = { path = "../data" }

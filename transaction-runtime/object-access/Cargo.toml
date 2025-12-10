@@ -1,0 +1,8 @@
+[package]
+edition = "2021"
+name    = "kas-l2-transaction-runtime-object-access"
+version = "0.1.0"
+
+[dependencies]
+kas-l2-runtime-types                 = { path = "../../runtime/types" }
+kas-l2-transaction-runtime-object-id = { path = "../object-id" }
