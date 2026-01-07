@@ -4,7 +4,7 @@ name    = "kas-l2-move-runtime-test-suite"
 version = "0.1.0"
 
 [dependencies]
-anyhow                       = "1.0.99"
+anyhow                       = "1.0.100"
 bcs                          = "0.1.6"
 kas-l2-move-runtime-vm       = { path = "../vm" }
 kas-l2-runtime-manager       = { path = "../../runtime/manager" }

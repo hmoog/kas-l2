@@ -4,10 +4,10 @@ name    = "kas-l2-move-runtime-vm"
 version = "0.1.0"
 
 [dependencies]
-anyhow                 = "1.0.99"
+anyhow                 = "1.0.100"
 bcs                    = "0.1.6"
-borsh                  = "1.5.7"
-indexmap               = "2.11.0"
+borsh                  = "1.6.0"
+indexmap               = "2.12.1"
 kas-l2-runtime-manager = { path = "../../runtime/manager" }
 kas-l2-runtime-state   = { path = "../../runtime/state" }
 kas-l2-runtime-types   = { path = "../../runtime/types" }
