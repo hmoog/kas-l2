@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use kas_l2_runtime_execution_workers::ExecutionWorkers;
 use kas_l2_runtime_state::StateSpace;
@@ -6,6 +6,7 @@ use kas_l2_runtime_types::{AccessMetadata, Transaction};
 use kas_l2_storage_manager::{StorageConfig, StorageManager};
 use kas_l2_storage_types::Store;
 use tap::Tap;
+use tracing::{debug, info};
 
 use crate::{
     ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTxRef,
@@ -44,10 +45,18 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
 
     pub fn schedule(&mut self, txs: Vec<V::Transaction>) -> RuntimeBatch<S, V> {
         self.batch_index += 1;
-        RuntimeBatch::new(self.vm.clone(), self, txs).tap(RuntimeBatch::connect).tap(|batch| {
-            self.worker_loop.push(batch.clone());
-            self.execution_workers.execute(batch.clone())
-        })
+        let num_txs = txs.len();
+        info!(batch_index = self.batch_index, num_txs, "scheduling new batch");
+        let waker = Arc::new(self.execution_workers.waker());
+        RuntimeBatch::new(self.vm.clone(), self, txs, waker)
+            .tap(RuntimeBatch::connect)
+            .tap(|batch| {
+                debug!(batch_index = self.batch_index, "pushing batch to worker loop");
+                self.worker_loop.push(batch.clone());
+                debug!(batch_index = self.batch_index, "executing batch on workers");
+                self.execution_workers.execute(batch.clone());
+                debug!(batch_index = self.batch_index, "batch scheduled");
+            })
     }
 
     pub fn shutdown(self) {

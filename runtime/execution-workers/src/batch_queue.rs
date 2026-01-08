@@ -3,6 +3,7 @@ use std::{marker::PhantomData, sync::Arc};
 use crossbeam_deque::Worker;
 use crossbeam_queue::ArrayQueue;
 use intrusive_collections::LinkedList;
+use tracing::trace;
 
 use crate::{Batch, batch_queue::linked_list::Adapter, task::Task};
 
@@ -24,10 +25,12 @@ impl<T: Task, B: Batch<T>> BatchQueue<T, B> {
 
             while let Some(batch) = queue_element.get() {
                 if let Some(transaction) = batch.steal_available_tasks(worker_queue) {
+                    trace!("stole task from batch");
                     return Some(transaction);
                 }
 
                 if batch.is_depleted() {
+                    trace!("batch depleted, removing");
                     queue_element.remove();
                 } else {
                     queue_element.move_next();
@@ -35,6 +38,7 @@ impl<T: Task, B: Batch<T>> BatchQueue<T, B> {
             }
 
             if !self.try_pull_new_batches() {
+                trace!("no new batches to pull");
                 return None;
             }
         }
@@ -43,6 +47,7 @@ impl<T: Task, B: Batch<T>> BatchQueue<T, B> {
     fn try_pull_new_batches(&mut self) -> bool {
         let mut pulled = false;
         while let Some(batch) = self.new_batches.pop() {
+            trace!("pulled new batch from inbox");
             self.queue.push_back(Box::new(linked_list::Element::new(batch)));
             pulled = true;
         }

@@ -20,9 +20,18 @@ use move_core_types::{
     runtime_value::{MoveStruct, MoveValue},
 };
 use tempfile::TempDir;
+use tracing_subscriber::EnvFilter;
+
+fn init_tracing() {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_test_writer()
+        .try_init();
+}
 
 #[test]
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {
+    init_tracing();
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let mut runtime = RuntimeManager::new(

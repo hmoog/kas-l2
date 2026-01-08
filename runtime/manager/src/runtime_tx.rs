@@ -7,6 +7,7 @@ use kas_l2_core_atomics::AtomicOptionArc;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_types::Store;
+use tracing::{debug, trace};
 
 use crate::{
     AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,
@@ -54,7 +55,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
     }
 
     pub(crate) fn decrease_pending_resources(self) {
-        if self.pending_resources.fetch_sub(1, Ordering::Relaxed) == 1 {
+        let prev = self.pending_resources.fetch_sub(1, Ordering::Relaxed);
+        trace!(remaining = prev - 1, "resource resolved");
+        if prev == 1 {
+            debug!("all resources resolved, tx ready for execution");
             if let Some(batch) = self.batch.upgrade() {
                 batch.push_available_tx(&self)
             }
@@ -63,13 +67,18 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
 
     pub(crate) fn execute(&self) {
         if let Some(batch) = self.batch.upgrade() {
+            trace!(batch_index = batch.index(), "executing transaction");
             let mut handles = self.resources.iter().map(AccessHandle::new).collect::<Vec<_>>();
             match self.vm.process_transaction(&self.tx, &mut handles) {
                 Ok(effects) => {
+                    trace!(batch_index = batch.index(), "transaction succeeded");
                     self.effects.publish(Arc::new(effects));
                     handles.into_iter().for_each(AccessHandle::commit_changes);
                 }
-                Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
+                Err(_) => {
+                    trace!(batch_index = batch.index(), "transaction failed, rolling back");
+                    handles.into_iter().for_each(AccessHandle::rollback_changes);
+                }
             }
 
             batch.decrease_pending_txs();

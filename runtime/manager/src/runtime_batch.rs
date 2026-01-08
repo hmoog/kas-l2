@@ -12,6 +12,7 @@ use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_manager::StorageManager;
 use kas_l2_storage_types::{Store, WriteStore};
+use tracing::{debug, trace};
 
 use crate::{
     Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
@@ -30,6 +31,7 @@ pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     was_processed: AtomicAsyncLatch,
     was_persisted: AtomicAsyncLatch,
     was_committed: AtomicAsyncLatch,
+    waker: Arc<dyn Fn() + Send + Sync>,
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
@@ -96,6 +98,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         vm: V,
         scheduler: &mut RuntimeManager<S, V>,
         txs: Vec<V::Transaction>,
+        waker: Arc<dyn Fn() + Send + Sync>,
     ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
@@ -121,24 +124,39 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                 was_processed: Default::default(),
                 was_persisted: Default::default(),
                 was_committed: Default::default(),
+                waker,
             }
         }))
     }
 
     pub(crate) fn connect(&self) {
+        debug!(batch_index = self.index, num_txs = self.txs.len(), "connecting batch resources");
         for tx in self.txs() {
             for resource in tx.accessed_resources() {
                 resource.connect(&self.storage);
             }
         }
+        debug!(batch_index = self.index, "batch resources connected");
     }
 
     pub(crate) fn push_available_tx(&self, tx: &RuntimeTx<S, V>) {
+        let pending = self.pending_txs.load(Ordering::Relaxed);
+        let available = self.available_txs.len();
+        debug!(
+            batch_index = self.index,
+            pending_txs = pending,
+            available_before = available,
+            "transaction became available"
+        );
         self.available_txs.push(ManagerTask::ExecuteTransaction(tx.clone()));
+        (self.waker)();
     }
 
     pub(crate) fn decrease_pending_txs(&self) {
-        if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
+        let prev = self.pending_txs.fetch_sub(1, Ordering::AcqRel);
+        trace!(batch_index = self.index, remaining = prev - 1, "transaction completed");
+        if prev == 1 {
+            debug!(batch_index = self.index, "all transactions processed");
             self.was_processed.open();
         }
     }
@@ -183,9 +201,20 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface>
     ) -> Option<ManagerTask<S, V>> {
         loop {
             match self.available_txs.steal_batch_and_pop(worker) {
-                Steal::Success(task) => return Some(task),
+                Steal::Success(task) => {
+                    trace!(batch_index = self.index, "task stolen from batch");
+                    return Some(task);
+                }
                 Steal::Retry => continue,
-                Steal::Empty => return None,
+                Steal::Empty => {
+                    trace!(
+                        batch_index = self.index,
+                        pending = self.num_pending(),
+                        available = self.available_txs.len(),
+                        "no tasks available in batch"
+                    );
+                    return None;
+                }
             }
         }
     }

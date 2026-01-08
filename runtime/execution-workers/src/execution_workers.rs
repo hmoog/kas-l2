@@ -17,6 +17,11 @@ impl<T: Task, B: Batch<T>> ExecutionWorkers<T, B> {
         self.workers.push_batch(batch);
     }
 
+    pub fn waker(&self) -> impl Fn() + Clone + Send + Sync + 'static {
+        let workers = self.workers.clone();
+        move || workers.wake_all()
+    }
+
     pub fn shutdown(self) {
         self.workers.shutdown();
         for handle in self.handles {

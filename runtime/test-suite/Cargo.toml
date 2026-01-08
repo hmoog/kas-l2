@@ -11,3 +11,5 @@ kas-l2-runtime-types         = { path = "../types" }
 kas-l2-storage-manager       = { path = "../../storage/manager" }
 kas-l2-storage-types         = { path = "../../storage/types" }
 tempfile                     = "3.23.0"
+tracing                      = "0.1"
+tracing-subscriber           = { version = "0.3", features = ["env-filter"] }

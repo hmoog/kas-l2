@@ -3,6 +3,7 @@ use std::{sync::Arc, thread, thread::JoinHandle, time::Duration};
 use crossbeam_deque::{Stealer, Worker as WorkerQueue};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::{Parker, Unparker};
+use tracing::{debug, trace};
 
 use crate::{Batch, BatchQueue, WorkersApi, task::Task};
 
@@ -40,18 +41,26 @@ impl<T: Task, B: Batch<T>> Worker<T, B> {
     }
 
     fn run(self, workers_api: WorkersApi<T, B>) {
+        debug!(worker_id = self.id, "worker started");
         let mut pending_batches = BatchQueue::new(self.inbox);
 
         while !workers_api.is_shutdown() {
-            match self
-                .local_queue
-                .pop()
-                .or_else(|| pending_batches.steal(&self.local_queue))
-                .or_else(|| workers_api.steal_from_other_workers(self.id))
-            {
-                Some(task) => task.execute(),
-                None => self.parker.park_timeout(Duration::from_millis(100)),
+            let from_local = self.local_queue.pop();
+            let from_batches = from_local.is_none().then(|| pending_batches.steal(&self.local_queue)).flatten();
+            let from_steal = from_batches.is_none().then(|| workers_api.steal_from_other_workers(self.id)).flatten();
+
+            match from_local.or(from_batches).or(from_steal) {
+                Some(task) => {
+                    trace!(worker_id = self.id, "executing task");
+                    task.execute();
+                }
+                None => {
+                    trace!(worker_id = self.id, "no work found, parking");
+                    self.parker.park_timeout(Duration::from_millis(100));
+                    trace!(worker_id = self.id, "worker unparked");
+                }
             }
         }
+        debug!(worker_id = self.id, "worker shutdown");
     }
 }

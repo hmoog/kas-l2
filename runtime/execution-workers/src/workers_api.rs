@@ -6,6 +6,7 @@ use crossbeam_utils::sync::Unparker;
 use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use tap::Tap;
+use tracing::{debug, trace};
 
 use crate::{Batch, Worker, task::Task};
 
@@ -45,17 +46,22 @@ impl<T: Task, B: Batch<T>> WorkersApi<T, B> {
     }
 
     pub fn push_batch(&self, batch: B) {
-        for (inbox, unparker) in self.inboxes.iter().zip(&self.unparkers) {
+        debug!("pushing batch to all workers");
+        for (worker_id, (inbox, unparker)) in self.inboxes.iter().zip(&self.unparkers).enumerate() {
             let mut item = batch.clone();
             loop {
                 match inbox.push(item) {
-                    Ok(()) => break,
+                    Ok(()) => {
+                        trace!(worker_id, "batch pushed to inbox");
+                        break;
+                    }
                     Err(back) => {
                         item = back;
                         spin_loop(); // CPU relax; does NOT yield/park
                     }
                 }
             }
+            trace!(worker_id, "unparking worker");
             unparker.unpark();
         }
     }
@@ -89,5 +95,12 @@ impl<T: Task, B: Batch<T>> WorkersApi<T, B> {
 
     pub fn is_shutdown(&self) -> bool {
         self.shutdown.is_open()
+    }
+
+    pub fn wake_all(&self) {
+        trace!("waking all workers");
+        for unparker in &self.unparkers {
+            unparker.unpark();
+        }
     }
 }

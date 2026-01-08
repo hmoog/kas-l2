@@ -9,6 +9,7 @@ use kas_l2_runtime_state::{StateSpace, VersionedState};
 use kas_l2_runtime_types::{AccessMetadata, AccessType};
 use kas_l2_storage_manager::StorageManager;
 use kas_l2_storage_types::{ReadStore, Store};
+use tracing::trace;
 
 use crate::{Read, RuntimeTxRef, StateDiff, Write, vm_interface::VmInterface};
 
@@ -79,12 +80,19 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
     pub(crate) fn connect(&self, storage: &StorageManager<S, Read<S, V>, Write<S, V>>) {
         match self.prev.load() {
             Some(prev) => {
+                trace!(is_batch_head = self.is_batch_head(), "connecting to previous access");
                 prev.next.store(Arc::downgrade(&self.0));
                 if let Some(written_state) = prev.written_state.load() {
+                    trace!("previous written state available, setting read state immediately");
                     self.set_read_state(written_state);
+                } else {
+                    trace!("previous written state not yet available, will wait");
                 }
             }
-            None => storage.submit_read(Read::LatestData(self.clone())),
+            None => {
+                trace!(is_batch_head = self.is_batch_head(), "no previous access, submitting storage read");
+                storage.submit_read(Read::LatestData(self.clone()));
+            }
         }
     }
 
@@ -102,6 +110,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
 
     pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId, V::Ownership>>) {
         if self.read_state.publish(state.clone()) {
+            trace!(
+                is_batch_head = self.is_batch_head(),
+                access_type = ?self.access_type(),
+                "read state set"
+            );
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
             if self.is_batch_head() {
@@ -113,8 +126,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
             }
 
             if let Some(tx) = self.tx.upgrade() {
+                trace!("notifying tx of resolved resource");
                 tx.decrease_pending_resources();
             }
+        } else {
+            trace!("read state already published, skipping");
         }
     }
 
@@ -123,11 +139,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
         state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
     ) {
         if self.written_state.publish(state.clone()) {
+            trace!(is_batch_tail = self.is_batch_tail(), "written state set");
             if self.is_batch_tail() {
                 self.state_diff.set_written_state(state.clone());
             }
 
             if let Some(next) = self.next.load().upgrade() {
+                trace!("propagating written state to next access in chain");
                 Self(next).set_read_state(state)
             }
         }

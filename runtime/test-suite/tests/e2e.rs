@@ -4,11 +4,20 @@ use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
 use kas_l2_runtime_rocksdb_store::RocksDbStore;
 use kas_l2_storage_manager::StorageConfig;
 use tempfile::TempDir;
+use tracing_subscriber::EnvFilter;
 
 use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
 
+fn init_tracing() {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_test_writer()
+        .try_init();
+}
+
 #[test]
 pub fn test_runtime() {
+    init_tracing();
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());

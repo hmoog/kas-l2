@@ -12,3 +12,4 @@ intrusive-collections = "0.9.7"
 kas-l2-core-atomics   = { path = "../../core/atomics" }
 kas-l2-core-macros    = { path = "../../core/macros" }
 tap                   = "1.0.1"
+tracing               = "0.1"
