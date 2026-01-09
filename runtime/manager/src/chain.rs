@@ -20,7 +20,7 @@ impl Chain {
     }
 
     pub fn next_batch_index(&self) -> u64 {
-        self.last_batch_index.fetch_add(1, Ordering::Relaxed)
+        self.last_batch_index.fetch_add(1, Ordering::Relaxed) + 1
     }
 
     pub fn rollback(&self, threshold: u64) -> Chain {
