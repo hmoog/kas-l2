@@ -14,12 +14,13 @@ use kas_l2_storage_manager::StorageManager;
 use kas_l2_storage_types::{Store, WriteStore};
 
 use crate::{
-    Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
+    Chain, Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
     vm_interface::VmInterface,
 };
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
+    chain: Chain,
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -92,6 +93,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self
     }
 
+    pub fn was_canceled(&self) -> bool {
+        self.index > self.chain.rollback_threshold()
+    }
+
     pub(crate) fn new(
         vm: V,
         scheduler: &mut RuntimeManager<S, V>,
@@ -99,8 +104,9 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     ) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
+            let chain = scheduler.longest_chain().clone();
             RuntimeBatchData {
-                index: scheduler.batch_index(),
+                index: chain.next_batch_index(),
                 storage: scheduler.storage_manager().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
@@ -117,6 +123,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                     })
                     .collect(),
                 state_diffs,
+                chain,
                 available_txs: Injector::new(),
                 was_processed: Default::default(),
                 was_persisted: Default::default(),
@@ -144,8 +151,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub(crate) fn submit_write(&self, write: Write<S, V>) {
-        self.pending_writes.fetch_add(1, Ordering::AcqRel);
-        self.storage.submit_write(write);
+        if !self.was_canceled() {
+            self.pending_writes.fetch_add(1, Ordering::AcqRel);
+            self.storage.submit_write(write);
+        }
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
@@ -156,15 +165,19 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub fn schedule_commit(&self) {
-        self.storage.submit_write(Write::CommitBatch(self.clone()));
+        if !self.was_canceled() {
+            self.storage.submit_write(Write::CommitBatch(self.clone()));
+        }
     }
 
     pub(crate) fn commit<W>(&self, store: &mut W)
     where
         W: WriteStore<StateSpace = StateSpace>,
     {
-        for state_diff in self.state_diffs() {
-            state_diff.written_state().write_latest_ptr(store);
+        if !self.was_canceled() {
+            for state_diff in self.state_diffs() {
+                state_diff.written_state().write_latest_ptr(store);
+            }
         }
     }
 

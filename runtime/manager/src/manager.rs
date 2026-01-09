@@ -8,13 +8,13 @@ use kas_l2_storage_types::Store;
 use tap::Tap;
 
 use crate::{
-    ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef, RuntimeTxRef,
-    StateDiff, WorkerLoop, Write, cpu_task::ManagerTask, vm_interface::VmInterface,
+    Chain, ExecutionConfig, Read, Resource, ResourceAccess, RuntimeBatch, RuntimeBatchRef,
+    RuntimeTxRef, StateDiff, WorkerLoop, Write, cpu_task::ManagerTask, vm_interface::VmInterface,
 };
 
 pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     vm: V,
-    batch_index: u64,
+    longest_chain: Chain,
     storage_manager: StorageManager<S, Read<S, V>, Write<S, V>>,
     resources: HashMap<V::ResourceId, Resource<S, V>>,
     worker_loop: WorkerLoop<S, V>,
@@ -25,17 +25,17 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
     pub fn new(execution_config: ExecutionConfig<V>, storage_config: StorageConfig<S>) -> Self {
         let (worker_count, vm) = execution_config.unpack();
         Self {
+            longest_chain: Chain::new(0),
             worker_loop: WorkerLoop::new(vm.clone()),
             storage_manager: StorageManager::new(storage_config),
             resources: HashMap::new(),
-            batch_index: 0,
             execution_workers: ExecutionWorkers::new(worker_count),
             vm,
         }
     }
 
-    pub fn batch_index(&self) -> u64 {
-        self.batch_index
+    pub fn longest_chain(&self) -> &Chain {
+        &self.longest_chain
     }
 
     pub fn storage_manager(&self) -> &StorageManager<S, Read<S, V>, Write<S, V>> {
@@ -43,11 +43,14 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
     }
 
     pub fn schedule(&mut self, txs: Vec<V::Transaction>) -> RuntimeBatch<S, V> {
-        self.batch_index += 1;
         RuntimeBatch::new(self.vm.clone(), self, txs).tap(RuntimeBatch::connect).tap(|batch| {
             self.worker_loop.push(batch.clone());
             self.execution_workers.execute(batch.clone())
         })
+    }
+
+    pub fn rollback(&mut self, index: u64) {
+        self.longest_chain = self.longest_chain.rollback(index);
     }
 
     pub fn shutdown(self) {

@@ -62,8 +62,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> StateDiff<S, V> {
             panic!("written_state must be known at write time");
         };
 
-        written_state.write_data(store);
-        read_state.write_rollback_ptr(store, batch.index());
+        if !batch.was_canceled() {
+            written_state.write_data(store);
+            read_state.write_rollback_ptr(store, batch.index());
+        }
     }
 
     pub(crate) fn write_done(self) {

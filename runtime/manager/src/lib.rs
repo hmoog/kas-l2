@@ -1,4 +1,5 @@
 mod access_handle;
+mod chain;
 mod config;
 mod cpu_task;
 mod manager;
@@ -12,6 +13,7 @@ mod vm_interface;
 mod worker_loop;
 
 pub use access_handle::AccessHandle;
+pub use chain::Chain;
 pub use config::ExecutionConfig;
 pub use manager::RuntimeManager;
 pub(crate) use resource::Resource;

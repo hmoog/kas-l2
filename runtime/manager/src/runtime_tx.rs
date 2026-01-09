@@ -63,6 +63,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
 
     pub(crate) fn execute(&self) {
         if let Some(batch) = self.batch.upgrade() {
+            if batch.was_canceled() {
+                // TODO: abort execution early
+            }
+
             let mut handles = self.resources.iter().map(AccessHandle::new).collect::<Vec<_>>();
             match self.vm.process_transaction(&self.tx, &mut handles) {
                 Ok(effects) => {
