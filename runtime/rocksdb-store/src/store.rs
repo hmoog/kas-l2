@@ -1,8 +1,8 @@
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
-use rocksdb::DB;
+use kas_l2_storage_types::{PrefixIterator, Store};
+use rocksdb::{DB, DBIteratorWithThreadMode, Direction, IteratorMode};
 
 use crate::{
     config::{Config, DefaultConfig},
@@ -79,6 +79,18 @@ impl<C: Config> Store for RocksDbStore<C> {
             panic!("rocksdb write-batch commit failed: {err}");
         }
     }
+
+    fn prefix_iter(&self, state_space: StateSpace, prefix: &[u8]) -> PrefixIterator<'_> {
+        let cf = self.cf(&state_space);
+
+        let mut read_opts = rocksdb::ReadOptions::default();
+        // Ensure iteration stops when keys no longer share the prefix.
+        read_opts.set_prefix_same_as_start(true);
+
+        let mode = IteratorMode::From(prefix, Direction::Forward);
+        let iter = self.db.iterator_cf_opt(cf, read_opts, mode);
+        Box::new(RocksDbPrefixIter { inner: iter })
+    }
 }
 
 impl<C: Config> Clone for RocksDbStore<C> {
@@ -88,5 +100,21 @@ impl<C: Config> Clone for RocksDbStore<C> {
             write_opts: self.write_opts.clone(),
             _marker: PhantomData,
         }
+    }
+}
+
+/// Wrapper around RocksDB's prefix iterator that unwraps Results into panics.
+struct RocksDbPrefixIter<'a> {
+    inner: DBIteratorWithThreadMode<'a, DB>,
+}
+
+impl Iterator for RocksDbPrefixIter<'_> {
+    type Item = (Vec<u8>, Vec<u8>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|res| match res {
+            Ok((k, v)) => (k.to_vec(), v.to_vec()),
+            Err(e) => panic!("rocksdb prefix iteration failed: {e}"),
+        })
     }
 }
