@@ -46,25 +46,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> WorkerLoop<S, V> {
                 async move {
                     while Arc::strong_count(&queue) != 1 {
                         while let Some(batch) = queue.pop() {
-                            if !batch.was_canceled() {
-                                batch.wait_processed().await;
-                            }
-
-                            if !batch.was_canceled() {
-                                vm.notarize_batch(&batch);
-                            }
-
-                            if !batch.was_canceled() {
-                                batch.wait_persisted().await;
-                            }
-
-                            if !batch.was_canceled() {
-                                batch.schedule_commit();
-                            }
-
-                            if !batch.was_canceled() {
-                                batch.wait_committed().await;
-                            }
+                            batch.wait_processed().await;
+                            vm.notarize_batch(&batch);
+                            batch.wait_persisted().await;
+                            batch.schedule_commit();
+                            batch.wait_committed().await;
                         }
 
                         if Arc::strong_count(&queue) != 1 {

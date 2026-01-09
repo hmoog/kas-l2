@@ -1,9 +1,6 @@
-use std::{
-    future::Future,
-    sync::{
-        Arc,
-        atomic::{AtomicI64, AtomicU64, Ordering},
-    },
+use std::sync::{
+    Arc,
+    atomic::{AtomicI64, AtomicU64, Ordering},
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
@@ -54,12 +51,20 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.pending_txs.load(Ordering::Acquire)
     }
 
+    pub fn was_canceled(&self) -> bool {
+        self.index > self.chain.rollback_threshold()
+    }
+
     pub fn was_processed(&self) -> bool {
         self.was_processed.is_open()
     }
 
-    pub fn wait_processed(&self) -> impl Future<Output = ()> + '_ {
-        self.was_processed.wait()
+    pub async fn wait_processed(&self) {
+        if self.was_canceled() {
+            return;
+        }
+
+        self.was_processed.wait().await
     }
 
     pub fn wait_processed_blocking(&self) -> &Self {
@@ -71,8 +76,12 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_persisted.is_open()
     }
 
-    pub fn wait_persisted(&self) -> impl Future<Output = ()> + '_ {
-        self.was_persisted.wait()
+    pub async fn wait_persisted(&self) {
+        if self.was_canceled() {
+            return;
+        }
+
+        self.was_persisted.wait().await
     }
 
     pub fn wait_persisted_blocking(&self) -> &Self {
@@ -84,17 +93,17 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_committed.is_open()
     }
 
-    pub fn wait_committed(&self) -> impl Future<Output = ()> + '_ {
-        self.was_committed.wait()
+    pub async fn wait_committed(&self) {
+        if self.was_canceled() {
+            return;
+        }
+
+        self.was_committed.wait().await
     }
 
     pub fn wait_committed_blocking(&self) -> &Self {
         self.was_committed.wait_blocking();
         self
-    }
-
-    pub fn was_canceled(&self) -> bool {
-        self.index > self.chain.rollback_threshold()
     }
 
     pub(crate) fn new(
@@ -182,7 +191,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub(crate) fn commit_done(self) {
-        // TODO: EVICT STUFF?
+        // TODO: EVICT STUFF FROM STORAGE MANAGER
         self.was_committed.open();
     }
 }
