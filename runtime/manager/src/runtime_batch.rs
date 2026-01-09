@@ -60,15 +60,15 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub async fn wait_processed(&self) {
-        if self.was_canceled() {
-            return;
+        if !self.was_canceled() {
+            self.was_processed.wait().await
         }
-
-        self.was_processed.wait().await
     }
 
     pub fn wait_processed_blocking(&self) -> &Self {
-        self.was_processed.wait_blocking();
+        if !self.was_canceled() {
+            self.was_processed.wait_blocking();
+        }
         self
     }
 
@@ -77,15 +77,15 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub async fn wait_persisted(&self) {
-        if self.was_canceled() {
-            return;
+        if !self.was_canceled() {
+            self.was_persisted.wait().await
         }
-
-        self.was_persisted.wait().await
     }
 
     pub fn wait_persisted_blocking(&self) -> &Self {
-        self.was_persisted.wait_blocking();
+        if !self.was_canceled() {
+            self.was_persisted.wait_blocking();
+        }
         self
     }
 
@@ -94,15 +94,15 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub async fn wait_committed(&self) {
-        if self.was_canceled() {
-            return;
+        if !self.was_canceled() {
+            self.was_committed.wait().await
         }
-
-        self.was_committed.wait().await
     }
 
     pub fn wait_committed_blocking(&self) -> &Self {
-        self.was_committed.wait_blocking();
+        if !self.was_canceled() {
+            self.was_committed.wait_blocking();
+        }
         self
     }
 
