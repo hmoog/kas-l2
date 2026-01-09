@@ -63,17 +63,19 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
 
     pub(crate) fn execute(&self) {
         if let Some(batch) = self.batch.upgrade() {
+            let handles = self.resources.iter().map(AccessHandle::new);
             if batch.was_canceled() {
-                // TODO: abort execution early
-            }
-
-            let mut handles = self.resources.iter().map(AccessHandle::new).collect::<Vec<_>>();
-            match self.vm.process_transaction(&self.tx, &mut handles) {
-                Ok(effects) => {
-                    self.effects.publish(Arc::new(effects));
-                    handles.into_iter().for_each(AccessHandle::commit_changes);
+                handles.for_each(AccessHandle::rollback_changes);
+            } else {
+                let mut handles = handles.collect::<Vec<_>>();
+                match self.vm.process_transaction(&self.tx, &mut handles) {
+                    Ok(effects) => {
+                        self.effects.publish(Arc::new(effects));
+                        handles.into_iter().for_each(AccessHandle::commit_changes);
+                    }
+                    // TODO: Handle errors (e.g. store with transaction)
+                    Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
                 }
-                Err(_) => handles.into_iter().for_each(AccessHandle::rollback_changes),
             }
 
             batch.decrease_pending_txs();
