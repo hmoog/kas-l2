@@ -42,7 +42,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> WriteCmd<StateSpace> for
         match self {
             Write::StateDiff(state_diff) => state_diff.write_done(),
             Write::CommitBatch(batch) => batch.commit_done(),
-            Write::Rollback(rollback) => rollback.mark_done(),
+            Write::Rollback(rollback) => rollback.done(),
         }
     }
 }
