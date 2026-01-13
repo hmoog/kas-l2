@@ -19,6 +19,10 @@ impl Chain {
         }))
     }
 
+    pub fn last_batch_index(&self) -> u64 {
+        self.last_batch_index.load(Ordering::Acquire)
+    }
+
     pub fn next_batch_index(&self) -> u64 {
         self.last_batch_index.fetch_add(1, Ordering::Relaxed) + 1
     }
