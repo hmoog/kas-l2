@@ -46,7 +46,7 @@ pub fn test_runtime() {
 }
 
 #[test]
-pub fn test_rollback() {
+pub fn test_rollback_committed() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
@@ -55,20 +55,10 @@ pub fn test_rollback() {
             StorageConfig::default().with_store(storage),
         );
 
-        // Batch 0: Write to resources 1 and 2
-        let batch0 =
-            runtime.schedule(vec![Tx(0, vec![Access::Write(1)]), Tx(1, vec![Access::Write(2)])]);
-        batch0.wait_committed_blocking();
-
-        // Batch 1: Write to resources 1 and 3
-        let batch1 =
-            runtime.schedule(vec![Tx(2, vec![Access::Write(1)]), Tx(3, vec![Access::Write(3)])]);
-        batch1.wait_committed_blocking();
-
-        // Batch 2: Write to resources 1 and 4
-        let batch2 =
-            runtime.schedule(vec![Tx(4, vec![Access::Write(1)]), Tx(5, vec![Access::Write(4)])]);
-        batch2.wait_committed_blocking();
+        runtime.schedule(vec![Tx(0, vec![Access::Write(1)]), Tx(1, vec![Access::Write(2)])]);
+        runtime.schedule(vec![Tx(2, vec![Access::Write(1)]), Tx(3, vec![Access::Write(3)])]);
+        let last_batch = runtime.schedule(vec![Tx(4, vec![Access::Write(1)]), Tx(5, vec![Access::Write(4)])]);
+        last_batch.wait_committed_blocking();
 
         // Verify state before rollback
         for assertion in [
