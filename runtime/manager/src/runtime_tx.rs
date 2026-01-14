@@ -68,12 +68,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
 
             // If the batch was canceled, roll back all changes and exit early.
             if batch.was_canceled() {
-                // Roll back all changes.
                 handles.for_each(AccessHandle::rollback_changes);
-
-                // Notify the batch that this transaction has been processed.
                 batch.decrease_pending_txs();
-
                 return;
             }
 
