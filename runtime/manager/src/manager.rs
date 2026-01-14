@@ -43,6 +43,10 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         &self.storage_manager
     }
 
+    /// Schedules a batch of transactions for execution.
+    ///
+    /// This creates a new `RuntimeBatch`, connects it to the manager, pushes it to the worker loop,
+    /// and submits it to the execution workers for processing.
     pub fn schedule(&mut self, txs: Vec<V::Transaction>) -> RuntimeBatch<S, V> {
         RuntimeBatch::new(self.vm.clone(), self, txs).tap(RuntimeBatch::connect).tap(|batch| {
             self.worker_loop.push(batch.clone());
@@ -50,27 +54,21 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         })
     }
 
-    /// Roll back the runtime state to the specified target batch index, if the
-    /// current state is ahead of it.
+    /// Rolls back the runtime state to `target_index` if the current state is ahead of it.
     ///
-    /// This function updates the longest chain to reflect the rollback and submits a rollback
-    /// command to the storage manager. It waits for the rollback operation to complete before
-    /// clearing all in-memory resource pointers, as their state may have changed due to the
-    /// rollback.
-    ///
-    /// # Arguments
-    ///
-    /// * `target_index`: The batch index to which the runtime state should be rolled back.
+    /// This updates the longest chain to reflect the rollback and submits a rollback command to the
+    /// storage manager. The call blocks until the rollback completes, after which all in-memory
+    /// resource pointers are cleared, as their state may have changed.
     pub fn rollback_to(&mut self, target_index: u64) {
-        // Get the current last batch index before updating the chain.
+        // Capture the current tip before modifying the chain.
         let upper_bound = self.longest_chain.last_batch_index();
 
-        // Only submit a rollback if there are batches to roll back.
+        // Only perform a rollback if there is state to revert.
         if upper_bound > target_index {
-            // Update the chain - this sets the rollback threshold which cancels in-flight batches.
+            // Update the chain; this sets the rollback threshold and cancels in-flight batches.
             self.longest_chain = self.longest_chain.rollback(target_index);
 
-            // Create rollback command and latch to wait for completion.
+            // Create the rollback command and retrieve done signal.
             let rollback = Rollback::new(target_index + 1, upper_bound);
             let rollback_done = rollback.done_latch();
 
@@ -78,7 +76,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
             self.storage_manager.submit_write(Write::Rollback(rollback));
             rollback_done.wait_blocking();
 
-            // Clear all in-memory resource pointers since their state may have changed.
+            // Clear in-memory resource pointers, as their state may no longer be valid.
             self.resources.clear();
         }
     }
