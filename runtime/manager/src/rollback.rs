@@ -30,7 +30,12 @@ pub struct Rollback<V: VmInterface> {
 impl<V: VmInterface> Rollback<V> {
     /// Creates a new rollback operation for the given inclusive batch range.
     pub fn new(lower_bound: u64, upper_bound: u64, done_signal: &Arc<AtomicAsyncLatch>) -> Self {
-        Rollback { lower_bound, upper_bound, done_signal: done_signal.clone(), _marker: PhantomData }
+        Rollback {
+            lower_bound,
+            upper_bound,
+            done_signal: done_signal.clone(),
+            _marker: PhantomData,
+        }
     }
 
     /// Executes the rollback on `store`.
@@ -52,7 +57,6 @@ impl<V: VmInterface> Rollback<V> {
         // Return a new empty write batch for further operations.
         store.write_batch()
     }
-
 
     /// Signals that the rollback operation has completed.
     pub fn done(&self) {

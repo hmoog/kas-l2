@@ -52,7 +52,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub fn was_canceled(&self) -> bool {
-        self.index > self.runtime_context.rollback_threshold()
+        self.index > self.runtime_context.cancel_threshold()
     }
 
     pub fn was_processed(&self) -> bool {

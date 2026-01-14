@@ -1,6 +1,5 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap};
 
-use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_runtime_execution_workers::ExecutionWorkers;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_runtime_types::{AccessMetadata, Transaction};
