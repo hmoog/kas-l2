@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use kas_l2_runtime_execution_workers::ExecutionWorkers;
 use kas_l2_runtime_state::StateSpace;
@@ -13,16 +13,28 @@ use crate::{
     vm_interface::VmInterface,
 };
 
+/// Orchestrates transaction execution, state management, and storage coordination.
+///
+/// The runtime manager is the main entry point for batch processing. It schedules transactions,
+/// manages resource dependency chains, coordinates parallel execution via worker threads, and
+/// handles rollbacks when chain reorganization occurs.
 pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
+    /// The VM implementation used to execute transactions.
     vm: V,
+    /// Tracks runtime state such as batch indices and cancellation states.
     context: RuntimeContext,
+    /// Handles persistence of state diffs and rollback operations.
     storage_manager: StorageManager<S, Read<S, V>, Write<S, V>>,
+    /// Maps resource IDs to their in-memory dependency chain heads.
     resources: HashMap<V::ResourceId, Resource<S, V>>,
+    /// Background loop that processes batches through their lifecycle stages.
     worker_loop: WorkerLoop<S, V>,
+    /// Thread pool for parallel transaction execution.
     execution_workers: ExecutionWorkers<ManagerTask<S, V>, RuntimeBatch<S, V>>,
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
+    /// Creates a new runtime manager with the given execution and storage configurations.
     pub fn new(execution_config: ExecutionConfig<V>, storage_config: StorageConfig<S>) -> Self {
         let (worker_count, vm) = execution_config.unpack();
         Self {
@@ -35,23 +47,31 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         }
     }
 
+    /// Returns a reference to the runtime context.
     pub fn context(&self) -> &RuntimeContext {
         &self.context
     }
 
+    /// Returns a reference to the storage manager.
     pub fn storage_manager(&self) -> &StorageManager<S, Read<S, V>, Write<S, V>> {
         &self.storage_manager
     }
 
     /// Schedules a batch of transactions for execution.
     ///
-    /// This creates a new `RuntimeBatch`, connects it to the manager, pushes it to the worker loop,
-    /// and submits it to the execution workers for processing.
+    /// Creates a new `RuntimeBatch`, connects its transactions to resource dependency chains,
+    /// pushes it to the worker loop for lifecycle management, and submits it to execution workers
+    /// for parallel processing.
     pub fn schedule(&mut self, txs: Vec<V::Transaction>) -> RuntimeBatch<S, V> {
-        RuntimeBatch::new(self.vm.clone(), self, txs).tap(RuntimeBatch::connect).tap(|batch| {
-            self.worker_loop.push(batch.clone());
-            self.execution_workers.execute(batch.clone())
-        })
+        RuntimeBatch::new(self.vm.clone(), self, txs)
+            // Connect transactions to resource dependency chains.
+            .tap(RuntimeBatch::connect)
+            .tap(|batch| {
+                // Push to the worker loop for lifecycle progression.
+                self.worker_loop.push(batch.clone());
+                // Submit to execution workers for parallel processing.
+                self.execution_workers.execute(batch.clone())
+            })
     }
 
     /// Rolls back the runtime state to `target_index` if the current state is ahead of it.
@@ -66,7 +86,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
 
         // Only perform a rollback if there is state to revert.
         if upper_bound >= lower_bound {
-            // Update the chain; this sets the rollback threshold and cancels in-flight batches.
+            // Update the context and cancels in-flight batches.
             self.context.rollback(target_index);
 
             // Submit the rollback command and wait for its completion.
@@ -83,12 +103,20 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         }
     }
 
+    /// Shuts down the runtime manager and all its components.
+    ///
+    /// This stops the worker loop, execution workers, and storage manager in order.
     pub fn shutdown(self) {
         self.worker_loop.shutdown();
         self.execution_workers.shutdown();
         self.storage_manager.shutdown();
     }
 
+    /// Builds resource accesses for a transaction by linking it into dependency chains.
+    ///
+    /// For each resource the transaction accesses, this either creates a new dependency chain or
+    /// appends the transaction to an existing one. When a transaction is the first in its batch to
+    /// access a resource, a new state diff is created and added to `state_diffs`.
     pub(crate) fn resources(
         &mut self,
         tx: &V::Transaction,
@@ -99,11 +127,13 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         tx.accessed_resources()
             .iter()
             .map(|access| {
+                // Get or create the resource entry and link this transaction into its chain.
                 self.resources
                     .entry(access.id())
                     .or_default()
                     .access(access, &runtime_tx, batch)
                     .tap(|access| {
+                        // If this is the first access in the batch, create a state diff.
                         if access.is_batch_head() {
                             state_diffs.push(access.state_diff());
                         }
