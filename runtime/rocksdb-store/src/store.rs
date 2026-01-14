@@ -6,7 +6,7 @@ use rocksdb::{DB, DBIteratorWithThreadMode, Direction, IteratorMode};
 
 use crate::{
     config::{Config, DefaultConfig},
-    runtime_state_ext::RuntimeStateExt,
+    state_space_ext::StateSpaceExt,
     write_batch::WriteBatch,
 };
 
@@ -27,7 +27,7 @@ impl<C: Config> RocksDbStore<C> {
                 match DB::open_cf_descriptors(
                     &db_opts,
                     path,
-                    <StateSpace as RuntimeStateExt<C>>::all_descriptors(),
+                    <StateSpace as StateSpaceExt<C>>::all_descriptors(),
                 ) {
                     Ok(db) => db,
                     Err(e) => panic!("failed to open RocksDB: {e}"),
@@ -39,7 +39,7 @@ impl<C: Config> RocksDbStore<C> {
     }
 
     fn cf(&self, ns: &StateSpace) -> &rocksdb::ColumnFamily {
-        let cf_name = <StateSpace as RuntimeStateExt<C>>::cf_name;
+        let cf_name = <StateSpace as StateSpaceExt<C>>::cf_name;
         match self.db.cf_handle(cf_name(ns)) {
             Some(cf) => cf,
             None => panic!("missing column family '{}'", cf_name(ns)),

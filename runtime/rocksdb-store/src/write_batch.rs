@@ -6,7 +6,7 @@ use rocksdb::DB;
 
 use crate::{
     config::{Config, DefaultConfig},
-    runtime_state_ext::RuntimeStateExt,
+    state_space_ext::StateSpaceExt,
 };
 
 pub struct WriteBatch<C: Config = DefaultConfig> {
@@ -25,7 +25,7 @@ impl<C: Config> WriteStore for WriteBatch<C> {
     type StateSpace = StateSpace;
 
     fn put(&mut self, ns: StateSpace, key: &[u8], value: &[u8]) {
-        let cf_handle = <StateSpace as RuntimeStateExt<C>>::cf_name(&ns);
+        let cf_handle = <StateSpace as StateSpaceExt<C>>::cf_name(&ns);
         let Some(cf) = self.db.cf_handle(cf_handle) else {
             panic!("missing column family '{}'", cf_handle)
         };
@@ -33,7 +33,7 @@ impl<C: Config> WriteStore for WriteBatch<C> {
     }
 
     fn delete(&mut self, ns: StateSpace, key: &[u8]) {
-        let cf_handle = <StateSpace as RuntimeStateExt<C>>::cf_name(&ns);
+        let cf_handle = <StateSpace as StateSpaceExt<C>>::cf_name(&ns);
         let Some(cf) = self.db.cf_handle(cf_handle) else {
             panic!("missing column family '{}'", cf_handle)
         };

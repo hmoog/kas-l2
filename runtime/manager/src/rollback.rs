@@ -21,31 +21,16 @@ pub struct Rollback<V: VmInterface> {
     lower_bound: u64,
     /// Upper bound of the batch index range to roll back (inclusive).
     upper_bound: u64,
-    /// Latch that is opened once the rollback operation completes.
-    done_latch: Arc<AtomicAsyncLatch>,
+    /// Signal that resolves when the rollback operation is complete.
+    done_signal: Arc<AtomicAsyncLatch>,
     /// Marker for the VM interface type.
     _marker: PhantomData<V>,
 }
 
 impl<V: VmInterface> Rollback<V> {
     /// Creates a new rollback operation for the given inclusive batch range.
-    pub fn new(lower_bound: u64, upper_bound: u64) -> Self {
-        Rollback {
-            lower_bound,
-            upper_bound,
-            done_latch: Arc::new(AtomicAsyncLatch::default()),
-            _marker: PhantomData,
-        }
-    }
-
-    /// Returns a latch that resolves when the rollback operation completes.
-    pub fn done_latch(&self) -> Arc<AtomicAsyncLatch> {
-        self.done_latch.clone()
-    }
-
-    /// Signals that the rollback operation has completed.
-    pub fn done(&self) {
-        self.done_latch.open()
+    pub fn new(lower_bound: u64, upper_bound: u64, done_signal: &Arc<AtomicAsyncLatch>) -> Self {
+        Rollback { lower_bound, upper_bound, done_signal: done_signal.clone(), _marker: PhantomData }
     }
 
     /// Executes the rollback on `store`.
@@ -66,6 +51,12 @@ impl<V: VmInterface> Rollback<V> {
 
         // Return a new empty write batch for further operations.
         store.write_batch()
+    }
+
+
+    /// Signals that the rollback operation has completed.
+    pub fn done(&self) {
+        self.done_signal.open()
     }
 
     /// Builds a write batch containing all rollback operations.

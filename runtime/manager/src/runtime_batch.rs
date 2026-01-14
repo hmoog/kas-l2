@@ -11,13 +11,13 @@ use kas_l2_storage_manager::StorageManager;
 use kas_l2_storage_types::{Store, WriteStore};
 
 use crate::{
-    Chain, Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
+    Read, RuntimeContext, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
     vm_interface::VmInterface,
 };
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
-    chain: Chain,
+    runtime_context: RuntimeContext,
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -52,7 +52,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub fn was_canceled(&self) -> bool {
-        self.index > self.chain.rollback_threshold()
+        self.index > self.runtime_context.rollback_threshold()
     }
 
     pub fn was_processed(&self) -> bool {
@@ -106,17 +106,14 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self
     }
 
-    pub(crate) fn new(
-        vm: V,
-        scheduler: &mut RuntimeManager<S, V>,
-        txs: Vec<V::Transaction>,
-    ) -> Self {
+    pub(crate) fn new(vm: V, manager: &mut RuntimeManager<S, V>, txs: Vec<V::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
-            let chain = scheduler.longest_chain().clone();
+            let runtime_context = manager.context().clone();
+
             RuntimeBatchData {
-                index: chain.next_batch_index(),
-                storage: scheduler.storage_manager().clone(),
+                index: runtime_context.next_batch_index(),
+                storage: manager.storage_manager().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs
@@ -124,7 +121,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                     .map(|tx| {
                         RuntimeTx::new(
                             &vm,
-                            scheduler,
+                            manager,
                             &mut state_diffs,
                             RuntimeBatchRef(this.clone()),
                             tx,
@@ -132,7 +129,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                     })
                     .collect(),
                 state_diffs,
-                chain,
+                runtime_context,
                 available_txs: Injector::new(),
                 was_processed: Default::default(),
                 was_persisted: Default::default(),

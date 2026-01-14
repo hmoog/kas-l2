@@ -3,12 +3,12 @@ use rocksdb::ColumnFamilyDescriptor;
 
 use crate::config::{Config, DefaultConfig};
 
-pub trait RuntimeStateExt<C: Config = DefaultConfig> {
+pub trait StateSpaceExt<C: Config = DefaultConfig> {
     fn cf_name(&self) -> &'static str;
     fn all_descriptors() -> Vec<ColumnFamilyDescriptor>;
 }
 
-impl<C: Config> RuntimeStateExt<C> for StateSpace {
+impl<C: Config> StateSpaceExt<C> for StateSpace {
     fn cf_name(&self) -> &'static str {
         match self {
             StateSpace::Data => "data",
@@ -20,7 +20,7 @@ impl<C: Config> RuntimeStateExt<C> for StateSpace {
 
     fn all_descriptors() -> Vec<ColumnFamilyDescriptor> {
         use StateSpace::*;
-        let cf_name = <StateSpace as RuntimeStateExt<C>>::cf_name;
+        let cf_name = <StateSpace as StateSpaceExt<C>>::cf_name;
         vec![
             ColumnFamilyDescriptor::new(cf_name(&Data), C::cf_data_opts()),
             ColumnFamilyDescriptor::new(cf_name(&LatestPtr), C::cf_latest_ptr_opts()),

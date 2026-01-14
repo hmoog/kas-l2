@@ -1,5 +1,5 @@
 mod config;
-mod runtime_state_ext;
+mod state_space_ext;
 mod store;
 mod write_batch;
 
