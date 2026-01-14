@@ -50,38 +50,35 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         })
     }
 
-    /// Rolls back the chain to the given index, reverting all state changes
-    /// from batches after the target index.
+    /// Roll back the runtime state to the specified target batch index, if the
+    /// current state is ahead of it.
     ///
-    /// This method:
-    /// 1. Updates the chain's rollback threshold to cancel in-flight batches
-    /// 2. Submits a rollback write command to revert persisted state changes
-    /// 3. Waits for the rollback to complete
-    /// 4. Clears in-memory resource pointers
+    /// This function updates the longest chain to reflect the rollback and submits a rollback
+    /// command to the storage manager. It waits for the rollback operation to complete before
+    /// clearing all in-memory resource pointers, as their state may have changed due to the
+    /// rollback.
     ///
-    /// After rollback, the chain will continue from the given index.
-    pub fn rollback(&mut self, target_index: u64) {
-        // Get the current last batch index before updating the chain
-        let last_batch_index = self.longest_chain.last_batch_index();
+    /// # Arguments
+    ///
+    /// * `target_index`: The batch index to which the runtime state should be rolled back.
+    pub fn rollback_to(&mut self, target_index: u64) {
+        // Get the current last batch index before updating the chain.
+        let upper_bound = self.longest_chain.last_batch_index();
 
-        // Only submit rollback if there are batches to roll back
-        if last_batch_index > target_index {
-            // Update the chain - this sets the rollback threshold which cancels in-flight batches
+        // Only submit a rollback if there are batches to roll back.
+        if upper_bound > target_index {
+            // Update the chain - this sets the rollback threshold which cancels in-flight batches.
             self.longest_chain = self.longest_chain.rollback(target_index);
 
-            // Create rollback command
-            let rollback = Rollback::new(last_batch_index, target_index);
+            // Create rollback command and latch to wait for completion.
+            let rollback = Rollback::new(target_index + 1, upper_bound);
+            let rollback_done = rollback.done_latch();
 
-            // Retrieve latch to be able to wait for rollback completion
-            let done_latch = rollback.done_latch();
-
-            // Submit the rollback command
+            // Submit the rollback command and wait for it to complete.
             self.storage_manager.submit_write(Write::Rollback(rollback));
+            rollback_done.wait_blocking();
 
-            // Wait for rollback to complete
-            done_latch.wait_blocking();
-
-            // Clear all in-memory resource pointers since their state may have changed
+            // Clear all in-memory resource pointers since their state may have changed.
             self.resources.clear();
         }
     }

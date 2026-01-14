@@ -5,7 +5,7 @@ use kas_l2_runtime_rocksdb_store::RocksDbStore;
 use kas_l2_storage_manager::StorageConfig;
 use tempfile::TempDir;
 
-use crate::test_framework::{Access, AssertWrittenState, TestVM, Tx};
+use crate::test_framework::{Access, AssertResourceDeleted, AssertWrittenState, TestVM, Tx};
 
 #[test]
 pub fn test_runtime() {
@@ -40,6 +40,60 @@ pub fn test_runtime() {
         ] {
             assertion.assert(runtime.storage_manager().store());
         }
+
+        runtime.shutdown();
+    }
+}
+
+#[test]
+pub fn test_rollback() {
+    let temp_dir = TempDir::new().expect("failed to create temp dir");
+    {
+        let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
+        let mut runtime = RuntimeManager::new(
+            ExecutionConfig::default().with_vm(TestVM),
+            StorageConfig::default().with_store(storage),
+        );
+
+        // Batch 0: Write to resources 1 and 2
+        let batch0 =
+            runtime.schedule(vec![Tx(0, vec![Access::Write(1)]), Tx(1, vec![Access::Write(2)])]);
+        batch0.wait_committed_blocking();
+
+        // Batch 1: Write to resources 1 and 3
+        let batch1 =
+            runtime.schedule(vec![Tx(2, vec![Access::Write(1)]), Tx(3, vec![Access::Write(3)])]);
+        batch1.wait_committed_blocking();
+
+        // Batch 2: Write to resources 1 and 4
+        let batch2 =
+            runtime.schedule(vec![Tx(4, vec![Access::Write(1)]), Tx(5, vec![Access::Write(4)])]);
+        batch2.wait_committed_blocking();
+
+        // Verify state before rollback
+        for assertion in [
+            AssertWrittenState(1, vec![0, 2, 4]), // Written by tx 0, 2, 4
+            AssertWrittenState(2, vec![1]),       // Written by tx 1
+            AssertWrittenState(3, vec![3]),       // Written by tx 3
+            AssertWrittenState(4, vec![5]),       // Written by tx 5
+        ] {
+            assertion.assert(runtime.storage_manager().store());
+        }
+
+        // Rollback to index 1 (revert batches with index 1 and 2, keep batch with index 0)
+        runtime.rollback_to(1);
+
+        // Verify state after rollback - only batch0 effects should remain
+        for assertion in [
+            AssertWrittenState(1, vec![0]), // Only tx 0's write remains
+            AssertWrittenState(2, vec![1]), // tx 1's write remains (in batch0)
+        ] {
+            assertion.assert(runtime.storage_manager().store());
+        }
+
+        // Resources 3 and 4 should no longer exist (created in rolled-back batches)
+        AssertResourceDeleted(3).assert(runtime.storage_manager().store());
+        AssertResourceDeleted(4).assert(runtime.storage_manager().store());
 
         runtime.shutdown();
     }
@@ -124,6 +178,19 @@ mod test_framework {
             let versioned_state = VersionedState::<usize, usize>::from_latest_data(store, self.0);
             assert_eq!(versioned_state.version(), writer_count as u64);
             assert_eq!(versioned_state.state().data, writer_log);
+        }
+    }
+
+    pub struct AssertResourceDeleted(pub usize);
+
+    impl AssertResourceDeleted {
+        pub fn assert<S: ReadStore<StateSpace = StateSpace>>(&self, store: &S) {
+            let id_bytes = self.0.to_be_bytes();
+            assert!(
+                store.get(StateSpace::LatestPtr, &id_bytes).is_none(),
+                "Resource {} should have been deleted but still exists",
+                self.0
+            );
         }
     }
 }
