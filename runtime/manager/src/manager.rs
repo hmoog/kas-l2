@@ -47,16 +47,6 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         }
     }
 
-    /// Returns a reference to the runtime context.
-    pub fn context(&self) -> &RuntimeContext {
-        &self.context
-    }
-
-    /// Returns a reference to the storage manager.
-    pub fn storage_manager(&self) -> &StorageManager<S, Read<S, V>, Write<S, V>> {
-        &self.storage_manager
-    }
-
     /// Schedules a batch of transactions for execution.
     ///
     /// Creates a new `RuntimeBatch`, connects its transactions to resource dependency chains,
@@ -76,8 +66,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
 
     /// Rolls back the runtime state to `target_index` if the current state is ahead of it.
     ///
-    /// This updates the longest chain to reflect the rollback and submits a rollback command to the
-    /// storage manager. The call blocks until the rollback completes, after which all in-memory
+    /// This updates the runtime context to reflect the rollback and submits a rollback command to
+    /// the storage manager. The call blocks until the rollback completes, after which all in-memory
     /// resource pointers are cleared, as their state may have changed.
     pub fn rollback_to(&mut self, target_index: u64) {
         // Determine the range of batches to roll back.
@@ -101,6 +91,16 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
             // Clear in-memory resource pointers, as their state may no longer be valid.
             self.resources.clear();
         }
+    }
+
+    /// Returns a reference to the runtime context.
+    pub fn context(&self) -> &RuntimeContext {
+        &self.context
+    }
+
+    /// Returns a reference to the storage manager.
+    pub fn storage_manager(&self) -> &StorageManager<S, Read<S, V>, Write<S, V>> {
+        &self.storage_manager
     }
 
     /// Shuts down the runtime manager and all its components.
