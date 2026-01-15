@@ -57,7 +57,8 @@ pub fn test_rollback_committed() {
 
         runtime.schedule(vec![Tx(0, vec![Access::Write(1)]), Tx(1, vec![Access::Write(2)])]);
         runtime.schedule(vec![Tx(2, vec![Access::Write(1)]), Tx(3, vec![Access::Write(3)])]);
-        let last_batch = runtime.schedule(vec![Tx(4, vec![Access::Write(1)]), Tx(5, vec![Access::Write(4)])]);
+        let last_batch =
+            runtime.schedule(vec![Tx(4, vec![Access::Write(1)]), Tx(5, vec![Access::Write(4)])]);
         last_batch.wait_committed_blocking();
 
         // Verify state before rollback
@@ -440,7 +441,8 @@ pub fn test_cancellation_skips_writes() {
         let batch1 = runtime.schedule(vec![Tx(1, vec![Access::Write(1)])]);
         batch1.wait_committed_blocking();
 
-        // Schedule batches that access different resources (to avoid dependency chain timing issues)
+        // Schedule batches that access different resources (to avoid dependency chain timing
+        // issues)
         let batch2 = runtime.schedule(vec![Tx(2, vec![Access::Write(100)])]);
         let batch3 = runtime.schedule(vec![Tx(3, vec![Access::Write(200)])]);
 
@@ -479,22 +481,13 @@ pub fn test_rollback_interleaved_multi_resource() {
         );
 
         // Batch 1: Write to resources 1 and 2
-        runtime.schedule(vec![
-            Tx(10, vec![Access::Write(1)]),
-            Tx(11, vec![Access::Write(2)]),
-        ]);
+        runtime.schedule(vec![Tx(10, vec![Access::Write(1)]), Tx(11, vec![Access::Write(2)])]);
 
         // Batch 2: Write to resources 2 and 3
-        runtime.schedule(vec![
-            Tx(20, vec![Access::Write(2)]),
-            Tx(21, vec![Access::Write(3)]),
-        ]);
+        runtime.schedule(vec![Tx(20, vec![Access::Write(2)]), Tx(21, vec![Access::Write(3)])]);
 
         // Batch 3: Write to resources 1 and 3
-        runtime.schedule(vec![
-            Tx(30, vec![Access::Write(1)]),
-            Tx(31, vec![Access::Write(3)]),
-        ]);
+        runtime.schedule(vec![Tx(30, vec![Access::Write(1)]), Tx(31, vec![Access::Write(3)])]);
 
         // Batch 4: Write to all resources
         let batch4 = runtime.schedule(vec![
