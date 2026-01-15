@@ -170,8 +170,8 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
 
     pub(crate) fn decrease_pending_writes(&self) {
         if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 {
-            // Double-check: once pending_txs == 0, no new writes can be submitted,
-            // so if pending_writes is still 0, it will stay 0.
+            // Double-check: once pending_txs == 0, no new writes can be submitted, so if
+            // pending_writes is still 0, it will stay 0.
             if self.num_pending() == 0 && self.pending_writes.load(Ordering::Acquire) == 0 {
                 self.was_persisted.open();
             }
