@@ -45,6 +45,7 @@ pub fn test_runtime() {
     }
 }
 
+/// Tests rollback of committed batches.
 #[test]
 pub fn test_rollback_committed() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");

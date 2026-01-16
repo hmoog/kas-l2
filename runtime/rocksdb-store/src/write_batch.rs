@@ -1,7 +1,6 @@
 use std::{marker::PhantomData, sync::Arc};
 
 use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::WriteStore;
 use rocksdb::DB;
 
 use crate::{
@@ -21,7 +20,7 @@ impl<C: Config> WriteBatch<C> {
     }
 }
 
-impl<C: Config> WriteStore for WriteBatch<C> {
+impl<C: Config> kas_l2_storage_types::WriteBatch for WriteBatch<C> {
     type StateSpace = StateSpace;
 
     fn put(&mut self, ns: StateSpace, key: &[u8], value: &[u8]) {

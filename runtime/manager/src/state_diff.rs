@@ -3,7 +3,7 @@ use std::sync::Arc;
 use kas_l2_core_atomics::AtomicOptionArc;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::{StateSpace, VersionedState};
-use kas_l2_storage_types::{Store, WriteStore};
+use kas_l2_storage_types::{Store, WriteBatch};
 
 use crate::{RuntimeBatchRef, Write, vm_interface::VmInterface};
 
@@ -51,7 +51,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> StateDiff<S, V> {
         }
     }
 
-    pub(crate) fn write<WS: WriteStore<StateSpace = StateSpace>>(&self, store: &mut WS) {
+    pub(crate) fn write<W: WriteBatch<StateSpace = StateSpace>>(&self, store: &mut W) {
         let Some(batch) = self.batch.upgrade() else {
             panic!("batch must be known at write time");
         };

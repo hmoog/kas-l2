@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kas_l2_runtime_types::{Owner, ResourceId};
 use kas_l2_storage_manager::concat_bytes;
-use kas_l2_storage_types::{ReadStore, WriteStore};
+use kas_l2_storage_types::{ReadStore, WriteBatch};
 use tap::Tap;
 
 use crate::{
@@ -52,27 +52,27 @@ impl<R: ResourceId, O: Owner> VersionedState<R, O> {
         &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
     }
 
-    pub fn write_data<S>(&self, store: &mut S)
+    pub fn write_data<W>(&self, store: &mut W)
     where
-        S: WriteStore<StateSpace = StateSpace>,
+        W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
         let state_data = self.state.to_bytes();
         store.put(Data, &key, &state_data);
     }
 
-    pub fn write_latest_ptr<S>(&self, store: &mut S)
+    pub fn write_latest_ptr<W>(&self, store: &mut W)
     where
-        S: WriteStore<StateSpace = StateSpace>,
+        W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = self.resource_id.to_bytes();
         let version = self.version.to_be_bytes();
         store.put(LatestPtr, &key, &version);
     }
 
-    pub fn write_rollback_ptr<S>(&self, store: &mut S, batch_index: u64)
+    pub fn write_rollback_ptr<W>(&self, store: &mut W, batch_index: u64)
     where
-        S: WriteStore<StateSpace = StateSpace>,
+        W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&batch_index.to_be_bytes(), &self.resource_id.to_bytes());
         let version = self.version.to_be_bytes();

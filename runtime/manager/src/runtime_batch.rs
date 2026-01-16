@@ -8,7 +8,7 @@ use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_manager::StorageManager;
-use kas_l2_storage_types::{Store, WriteStore};
+use kas_l2_storage_types::{Store, WriteBatch};
 
 use crate::{
     Read, RuntimeContext, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
@@ -178,7 +178,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
 
     pub(crate) fn commit<W>(&self, store: &mut W)
     where
-        W: WriteStore<StateSpace = StateSpace>,
+        W: WriteBatch<StateSpace = StateSpace>,
     {
         if !self.was_canceled() {
             for state_diff in self.state_diffs() {

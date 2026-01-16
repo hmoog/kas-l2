@@ -7,7 +7,7 @@ use kas_l2_runtime_state::{
 };
 use kas_l2_runtime_types::ResourceId;
 use kas_l2_storage_manager::concat_bytes;
-use kas_l2_storage_types::{Store, WriteStore};
+use kas_l2_storage_types::{Store, WriteBatch};
 
 use crate::VmInterface;
 

@@ -58,18 +58,6 @@ impl<C: Config> Store for RocksDbStore<C> {
         }
     }
 
-    fn put(&self, state_space: StateSpace, key: &[u8], value: &[u8]) {
-        if let Err(err) = self.db.put_cf(self.cf(&state_space), key, value) {
-            panic!("rocksdb put failed: {err}");
-        }
-    }
-
-    fn delete(&self, state_space: StateSpace, key: &[u8]) {
-        if let Err(err) = self.db.delete_cf(self.cf(&state_space), key) {
-            panic!("rocksdb delete failed: {err}");
-        }
-    }
-
     fn write_batch(&self) -> WriteBatch<C> {
         WriteBatch::new(self.db.clone())
     }
