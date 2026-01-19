@@ -4,19 +4,19 @@ resolver = "3"
 members = [
   "core/*",
   "move-runtime/*",
+  "node/*",
   "runtime/*",
   "storage/*",
   "transaction-runtime/*",
-  "vm/*",
 ]
 
 default-members = [
   "core/*",
   "move-runtime/*",
+  "node/*",
   "runtime/*",
   "storage/*",
   "transaction-runtime/*",
-  "vm/*",
 ]
 
 exclude = []
