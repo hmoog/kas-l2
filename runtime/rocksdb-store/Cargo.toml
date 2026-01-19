@@ -1,11 +1,9 @@
 [package]
 edition = "2021"
-name    = "kas-l2-runtime-rocksdb-store"
+name    = "vprogs-runtime-rocksdb-store"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-runtime-state = { path = "../state" }
-kas-l2-storage-types = { path = "../../storage/types" }
 num_cpus = "1.17.0"
 rocksdb = { version = "0.24.0", default-features = false, features = [
   "lz4",
@@ -17,3 +15,5 @@ rocksdb = { version = "0.24.0", default-features = false, features = [
   "mt_static",
 ] }
 tap = "1.0.1"
+vprogs-runtime-state = { path = "../state" }
+vprogs-storage-types = { path = "../../storage/types" }

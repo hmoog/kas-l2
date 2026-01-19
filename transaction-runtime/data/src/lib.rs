@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_transaction_runtime_address::Address;
+use vprogs_transaction_runtime_address::Address;
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct Data {

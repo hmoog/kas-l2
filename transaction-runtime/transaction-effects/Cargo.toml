@@ -1,4 +1,4 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-transaction-effects"
+name    = "vprogs-transaction-runtime-transaction-effects"
 version = "0.1.0"

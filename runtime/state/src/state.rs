@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_runtime_types::Owner;
+use vprogs_runtime_types::Owner;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, Hash, PartialEq)]
 pub struct State<O: Owner> {

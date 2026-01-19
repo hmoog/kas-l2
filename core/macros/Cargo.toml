@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name    = "kas-l2-core-macros"
+name    = "vprogs-core-macros"
 version = "0.1.0"
 
 [lib]

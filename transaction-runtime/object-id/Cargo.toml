@@ -1,8 +1,8 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-object-id"
+name    = "vprogs-transaction-runtime-object-id"
 version = "0.1.0"
 
 [dependencies]
 borsh                              = "1.6.0"
-kas-l2-transaction-runtime-address = { path = "../address" }
+vprogs-transaction-runtime-address = { path = "../address" }

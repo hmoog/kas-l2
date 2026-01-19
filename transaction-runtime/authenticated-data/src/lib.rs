@@ -1,4 +1,4 @@
-use kas_l2_transaction_runtime_data::Data;
+use vprogs_transaction_runtime_data::Data;
 
 pub struct AuthenticatedData {
     data: Data,

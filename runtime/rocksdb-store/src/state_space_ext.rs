@@ -1,5 +1,5 @@
-use kas_l2_runtime_state::StateSpace;
 use rocksdb::ColumnFamilyDescriptor;
+use vprogs_runtime_state::StateSpace;
 
 use crate::config::{Config, DefaultConfig};
 

@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name    = "kas-l2-runtime-execution-workers"
+name    = "vprogs-runtime-execution-workers"
 version = "0.1.0"
 
 [dependencies]
@@ -9,6 +9,6 @@ crossbeam-queue       = "0.3.12"
 crossbeam-utils       = "0.8.21"
 fastrand              = "2.3.0"
 intrusive-collections = "0.9.7"
-kas-l2-core-atomics   = { path = "../../core/atomics" }
-kas-l2-core-macros    = { path = "../../core/macros" }
 tap                   = "1.0.1"
+vprogs-core-atomics   = { path = "../../core/atomics" }
+vprogs-core-macros    = { path = "../../core/macros" }

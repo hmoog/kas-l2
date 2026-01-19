@@ -3,12 +3,12 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use kas_l2_core_atomics::{AtomicOptionArc, AtomicWeak};
-use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state::{StateSpace, VersionedState};
-use kas_l2_runtime_types::{AccessMetadata, AccessType};
-use kas_l2_storage_manager::StorageManager;
-use kas_l2_storage_types::{ReadStore, Store};
+use vprogs_core_atomics::{AtomicOptionArc, AtomicWeak};
+use vprogs_core_macros::smart_pointer;
+use vprogs_runtime_state::{StateSpace, VersionedState};
+use vprogs_runtime_types::{AccessMetadata, AccessType};
+use vprogs_storage_manager::StorageManager;
+use vprogs_storage_types::{ReadStore, Store};
 
 use crate::{Read, RuntimeTxRef, StateDiff, Write, vm_interface::VmInterface};
 

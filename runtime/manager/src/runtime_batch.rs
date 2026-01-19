@@ -4,11 +4,11 @@ use std::sync::{
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
-use kas_l2_core_atomics::AtomicAsyncLatch;
-use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_manager::StorageManager;
-use kas_l2_storage_types::{Store, WriteBatch};
+use vprogs_core_atomics::AtomicAsyncLatch;
+use vprogs_core_macros::smart_pointer;
+use vprogs_runtime_state::StateSpace;
+use vprogs_storage_manager::StorageManager;
+use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::{
     Read, RuntimeContext, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
@@ -202,7 +202,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface>
-    kas_l2_runtime_execution_workers::Batch<ManagerTask<S, V>> for RuntimeBatch<S, V>
+    vprogs_runtime_execution_workers::Batch<ManagerTask<S, V>> for RuntimeBatch<S, V>
 {
     fn steal_available_tasks(
         &self,

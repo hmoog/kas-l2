@@ -1,8 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_transaction_runtime_auth_context::AuthContext;
-use kas_l2_transaction_runtime_builtin_capabilities::AccessGranted;
-use kas_l2_transaction_runtime_data::Data;
-use kas_l2_transaction_runtime_signature_lock::SignatureLock;
+use vprogs_transaction_runtime_auth_context::AuthContext;
+use vprogs_transaction_runtime_builtin_capabilities::AccessGranted;
+use vprogs_transaction_runtime_data::Data;
+use vprogs_transaction_runtime_signature_lock::SignatureLock;
 
 #[derive(Default, Clone, Hash, Eq, PartialEq, Debug, BorshSerialize, BorshDeserialize)]
 pub enum Lock {

@@ -1,8 +1,8 @@
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::{PrefixIterator, Store};
 use rocksdb::{DB, DBIteratorWithThreadMode, Direction, IteratorMode};
+use vprogs_runtime_state::StateSpace;
+use vprogs_storage_types::{PrefixIterator, Store};
 
 use crate::{
     config::{Config, DefaultConfig},

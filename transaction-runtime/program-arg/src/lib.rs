@@ -1,4 +1,4 @@
-use kas_l2_transaction_runtime_address::Address;
+use vprogs_transaction_runtime_address::Address;
 
 pub enum ProgramArg {
     StoredData(Address),

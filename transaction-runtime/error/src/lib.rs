@@ -1,6 +1,6 @@
 use std::io::Error;
 
-use kas_l2_transaction_runtime_address::Address;
+use vprogs_transaction_runtime_address::Address;
 
 use crate::VmError::SerializationError;
 

@@ -1,13 +1,13 @@
 use std::{marker::PhantomData, sync::Arc};
 
-use kas_l2_core_atomics::AtomicAsyncLatch;
-use kas_l2_runtime_state::{
+use vprogs_core_atomics::AtomicAsyncLatch;
+use vprogs_runtime_state::{
     StateSpace,
     StateSpace::{Data, LatestPtr, RollbackPtr},
 };
-use kas_l2_runtime_types::ResourceId;
-use kas_l2_storage_manager::concat_bytes;
-use kas_l2_storage_types::{Store, WriteBatch};
+use vprogs_runtime_types::ResourceId;
+use vprogs_storage_manager::concat_bytes;
+use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::VmInterface;
 

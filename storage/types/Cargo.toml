@@ -1,4 +1,4 @@
 [package]
 edition = "2021"
-name    = "kas-l2-storage-types"
+name    = "vprogs-storage-types"
 version = "0.1.0"

@@ -8,7 +8,7 @@ use std::{
 };
 
 use crossbeam_utils::{CachePadded, sync::Parker};
-use kas_l2_storage_types::Store;
+use vprogs_storage_types::Store;
 
 use crate::{
     WriteCmd,

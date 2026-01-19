@@ -1,10 +1,10 @@
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
 use move_binary_format::errors::VMResult;
 use move_core_types::{
     account_address::AccountAddress, identifier::Identifier, runtime_value::MoveValue,
 };
 use move_vm_types::{gas::UnmeteredGasMeter, loaded_data::runtime_types::Type};
+use vprogs_runtime_state::StateSpace;
+use vprogs_storage_types::Store;
 
 use crate::{TransactionEffects, execution_context::ExecutionContext};
 

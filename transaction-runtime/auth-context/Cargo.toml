@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-auth-context"
+name    = "vprogs-transaction-runtime-auth-context"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-transaction-runtime-pubkey = { path = "../pubkey" }
+vprogs-transaction-runtime-pubkey = { path = "../pubkey" }

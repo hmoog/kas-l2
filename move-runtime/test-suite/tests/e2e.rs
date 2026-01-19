@@ -2,17 +2,6 @@ extern crate core;
 
 use std::{str::FromStr, sync::Arc};
 
-use kas_l2_move_runtime_test_suite::{
-    AssertTx, AssertTxEffect, AssertTxExt, SerializePreCompiledProgramInfoExt, compile_source_code,
-};
-use kas_l2_move_runtime_vm::{
-    Instruction,
-    ObjectAccess::{Read, Write},
-    ObjectId, Transaction, Vm,
-};
-use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
-use kas_l2_runtime_rocksdb_store::{DefaultConfig, RocksDbStore};
-use kas_l2_storage_manager::StorageConfig;
 use move_compiler::PreCompiledProgramInfo;
 use move_core_types::{
     account_address::AccountAddress,
@@ -20,6 +9,17 @@ use move_core_types::{
     runtime_value::{MoveStruct, MoveValue},
 };
 use tempfile::TempDir;
+use vprogs_move_runtime_test_suite::{
+    AssertTx, AssertTxEffect, AssertTxExt, SerializePreCompiledProgramInfoExt, compile_source_code,
+};
+use vprogs_move_runtime_vm::{
+    Instruction,
+    ObjectAccess::{Read, Write},
+    ObjectId, Transaction, Vm,
+};
+use vprogs_runtime_manager::{ExecutionConfig, RuntimeManager};
+use vprogs_runtime_rocksdb_store::{DefaultConfig, RocksDbStore};
+use vprogs_storage_manager::StorageConfig;
 
 #[test]
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {

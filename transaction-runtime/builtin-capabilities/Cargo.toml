@@ -1,8 +1,8 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-builtin-capabilities"
+name    = "vprogs-transaction-runtime-builtin-capabilities"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-transaction-runtime-address = { path = "../address" }
-kas-l2-transaction-runtime-data    = { path = "../data" }
+vprogs-transaction-runtime-address = { path = "../address" }
+vprogs-transaction-runtime-data    = { path = "../data" }

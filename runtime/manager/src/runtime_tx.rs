@@ -3,10 +3,10 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
-use kas_l2_core_atomics::AtomicOptionArc;
-use kas_l2_core_macros::smart_pointer;
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
+use vprogs_core_atomics::AtomicOptionArc;
+use vprogs_core_macros::smart_pointer;
+use vprogs_runtime_state::StateSpace;
+use vprogs_storage_types::Store;
 
 use crate::{
     AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,

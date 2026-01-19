@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use kas_l2_move_runtime_vm::TransactionEffects;
 use move_core_types::runtime_value::MoveValue;
+use vprogs_move_runtime_vm::TransactionEffects;
 
 use crate::AssertRetValRef;
 

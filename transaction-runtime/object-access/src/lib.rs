@@ -1,5 +1,5 @@
-use kas_l2_runtime_types::{AccessMetadata, AccessType};
-use kas_l2_transaction_runtime_object_id::ObjectId;
+use vprogs_runtime_types::{AccessMetadata, AccessType};
+use vprogs_transaction_runtime_object_id::ObjectId;
 
 #[derive(Clone)]
 pub enum ObjectAccess {

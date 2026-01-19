@@ -1,6 +1,6 @@
-use kas_l2_transaction_runtime_instruction::Instruction;
-use kas_l2_transaction_runtime_object_access::ObjectAccess;
-use kas_l2_transaction_runtime_object_id::ObjectId;
+use vprogs_transaction_runtime_instruction::Instruction;
+use vprogs_transaction_runtime_object_access::ObjectAccess;
+use vprogs_transaction_runtime_object_id::ObjectId;
 
 pub struct Transaction {
     accessed_objects: Vec<ObjectAccess>,
@@ -21,7 +21,7 @@ impl Transaction {
     }
 }
 
-impl kas_l2_runtime_types::Transaction<ObjectId, ObjectAccess> for Transaction {
+impl vprogs_runtime_types::Transaction<ObjectId, ObjectAccess> for Transaction {
     fn accessed_resources(&self) -> &[ObjectAccess] {
         self.accessed_objects()
     }

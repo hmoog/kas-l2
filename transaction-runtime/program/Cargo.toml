@@ -1,8 +1,8 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-program"
+name    = "vprogs-transaction-runtime-program"
 version = "0.1.0"
 
 [dependencies]
 borsh                                   = "1.6.0"
-kas-l2-transaction-runtime-program-type = { path = "../program-type" }
+vprogs-transaction-runtime-program-type = { path = "../program-type" }

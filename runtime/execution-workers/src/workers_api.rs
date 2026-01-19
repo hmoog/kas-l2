@@ -3,9 +3,9 @@ use std::{hint::spin_loop, sync::Arc, thread::JoinHandle};
 use crossbeam_deque::{Steal, Stealer};
 use crossbeam_queue::ArrayQueue;
 use crossbeam_utils::sync::Unparker;
-use kas_l2_core_atomics::AtomicAsyncLatch;
-use kas_l2_core_macros::smart_pointer;
 use tap::Tap;
+use vprogs_core_atomics::AtomicAsyncLatch;
+use vprogs_core_macros::smart_pointer;
 
 use crate::{Batch, Worker, task::Task};
 

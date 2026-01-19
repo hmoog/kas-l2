@@ -1,9 +1,9 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-data-context"
+name    = "vprogs-transaction-runtime-data-context"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-transaction-runtime-address            = { path = "../address" }
-kas-l2-transaction-runtime-authenticated-data = { path = "../authenticated-data" }
-kas-l2-transaction-runtime-error              = { path = "../error" }
+vprogs-transaction-runtime-address            = { path = "../address" }
+vprogs-transaction-runtime-authenticated-data = { path = "../authenticated-data" }
+vprogs-transaction-runtime-error              = { path = "../error" }

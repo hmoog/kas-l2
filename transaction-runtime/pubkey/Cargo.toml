@@ -1,4 +1,4 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-pubkey"
+name    = "vprogs-transaction-runtime-pubkey"
 version = "0.1.0"

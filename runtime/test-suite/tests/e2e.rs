@@ -1,9 +1,9 @@
 extern crate core;
 
-use kas_l2_runtime_manager::{ExecutionConfig, RuntimeManager};
-use kas_l2_runtime_rocksdb_store::RocksDbStore;
-use kas_l2_storage_manager::StorageConfig;
 use tempfile::TempDir;
+use vprogs_runtime_manager::{ExecutionConfig, RuntimeManager};
+use vprogs_runtime_rocksdb_store::RocksDbStore;
+use vprogs_storage_manager::StorageConfig;
 
 use crate::test_framework::{Access, AssertResourceDeleted, AssertWrittenState, TestVM, Tx};
 
@@ -531,10 +531,10 @@ pub fn test_rollback_interleaved_multi_resource() {
 }
 
 mod test_framework {
-    use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
-    use kas_l2_runtime_state::{StateSpace, VersionedState};
-    use kas_l2_runtime_types::{AccessMetadata, AccessType, Transaction};
-    use kas_l2_storage_types::{ReadStore, Store};
+    use vprogs_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
+    use vprogs_runtime_state::{StateSpace, VersionedState};
+    use vprogs_runtime_types::{AccessMetadata, AccessType, Transaction};
+    use vprogs_storage_types::{ReadStore, Store};
 
     #[derive(Clone)]
     pub struct TestVM;

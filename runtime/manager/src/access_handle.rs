@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_state::{State, StateSpace, VersionedState};
-use kas_l2_runtime_types::{AccessMetadata, AccessType};
-use kas_l2_storage_types::Store;
+use vprogs_runtime_state::{State, StateSpace, VersionedState};
+use vprogs_runtime_types::{AccessMetadata, AccessType};
+use vprogs_storage_types::Store;
 
 use crate::{ResourceAccess, vm_interface::VmInterface};
 

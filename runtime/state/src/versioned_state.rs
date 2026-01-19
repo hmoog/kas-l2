@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_types::{Owner, ResourceId};
-use kas_l2_storage_manager::concat_bytes;
-use kas_l2_storage_types::{ReadStore, WriteBatch};
 use tap::Tap;
+use vprogs_runtime_types::{Owner, ResourceId};
+use vprogs_storage_manager::concat_bytes;
+use vprogs_storage_types::{ReadStore, WriteBatch};
 
 use crate::{
     State, StateSpace,

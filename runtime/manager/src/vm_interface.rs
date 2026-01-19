@@ -1,6 +1,6 @@
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_runtime_types::{AccessMetadata, Owner, ResourceId, Transaction};
-use kas_l2_storage_types::Store;
+use vprogs_runtime_state::StateSpace;
+use vprogs_runtime_types::{AccessMetadata, Owner, ResourceId, Transaction};
+use vprogs_storage_types::Store;
 
 use crate::{AccessHandle, RuntimeBatch};
 

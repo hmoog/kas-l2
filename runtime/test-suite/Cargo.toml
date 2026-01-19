@@ -1,13 +1,13 @@
 [package]
 edition = "2021"
-name    = "kas-l2-runtime-test-suite"
+name    = "vprogs-runtime-test-suite"
 version = "0.1.0"
 
 [dependencies]
-kas-l2-runtime-manager       = { path = "../manager" }
-kas-l2-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
-kas-l2-runtime-state         = { path = "../state" }
-kas-l2-runtime-types         = { path = "../types" }
-kas-l2-storage-manager       = { path = "../../storage/manager" }
-kas-l2-storage-types         = { path = "../../storage/types" }
 tempfile                     = "3.23.0"
+vprogs-runtime-manager       = { path = "../manager" }
+vprogs-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
+vprogs-runtime-state         = { path = "../state" }
+vprogs-runtime-types         = { path = "../types" }
+vprogs-storage-manager       = { path = "../../storage/manager" }
+vprogs-storage-types         = { path = "../../storage/types" }

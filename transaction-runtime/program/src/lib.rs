@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use kas_l2_transaction_runtime_program_type::ProgramType;
+use vprogs_transaction_runtime_program_type::ProgramType;
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct Program {

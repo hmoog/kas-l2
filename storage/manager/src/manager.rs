@@ -3,8 +3,8 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use kas_l2_core_macros::smart_pointer;
-use kas_l2_storage_types::Store;
+use vprogs_core_macros::smart_pointer;
+use vprogs_storage_types::Store;
 
 use crate::{ReadCmd, StorageConfig, WriteCmd, read::ReadManager, write::WriteManager};
 

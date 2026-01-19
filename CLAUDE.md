@@ -30,7 +30,7 @@ cargo fmt
 
 ## Architecture Overview
 
-KAS-L2 is a Layer 2 execution runtime implemented as a modular Rust workspace with generic, pluggable components.
+vprogs is a Layer 2 execution runtime implemented as a modular Rust workspace with generic, pluggable components.
 
 ### Workspace Structure
 

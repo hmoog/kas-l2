@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name    = "kas-l2-transaction-runtime-program-type"
+name    = "vprogs-transaction-runtime-program-type"
 version = "0.1.0"
 
 [dependencies]

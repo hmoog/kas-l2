@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use kas_l2_runtime_manager::{AccessHandle, RuntimeBatch};
-use kas_l2_runtime_state::StateSpace;
-use kas_l2_storage_types::Store;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
+use vprogs_runtime_manager::{AccessHandle, RuntimeBatch};
+use vprogs_runtime_state::StateSpace;
+use vprogs_storage_types::Store;
 
 use crate::{
     ObjectAccess, ObjectId,
@@ -41,7 +41,7 @@ impl Clone for Vm {
     }
 }
 
-impl kas_l2_runtime_manager::VmInterface for Vm {
+impl vprogs_runtime_manager::VmInterface for Vm {
     type Transaction = Transaction;
     type TransactionEffects = TransactionEffects;
     type ResourceId = ObjectId;

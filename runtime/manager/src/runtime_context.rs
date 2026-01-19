@@ -3,7 +3,7 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
-use kas_l2_core_macros::smart_pointer;
+use vprogs_core_macros::smart_pointer;
 
 /// Tracks the execution context for a sequence of batches, supporting rollback operations.
 ///
