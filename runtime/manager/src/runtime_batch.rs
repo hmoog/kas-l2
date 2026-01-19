@@ -153,6 +153,11 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     pub(crate) fn decrease_pending_txs(&self) {
         if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.was_processed.open();
+
+            // Also check if was_persisted should open (handles case where last TX has no writes)
+            if self.pending_writes.load(Ordering::Acquire) == 0 {
+                self.was_persisted.open();
+            }
         }
     }
 
@@ -164,9 +169,12 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
-        // TODO: CHECK IF THERE CAN BE A RACE BETWEEN PENDING_TXS AND PENDING_WRITES
-        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
-            self.was_persisted.open();
+        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 {
+            // Double-check: once pending_txs == 0, no new writes can be submitted, so if
+            // pending_writes is still 0, it will stay 0.
+            if self.num_pending() == 0 && self.pending_writes.load(Ordering::Acquire) == 0 {
+                self.was_persisted.open();
+            }
         }
     }
 
