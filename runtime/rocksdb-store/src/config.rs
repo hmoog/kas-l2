@@ -1,5 +1,8 @@
-use rocksdb::{Options, WriteOptions};
+use rocksdb::{Options, SliceTransform, WriteOptions};
 use tap::Tap;
+
+/// Prefix length for keys that start with a u64 (batch_index or version).
+const U64_PREFIX_LEN: usize = size_of::<u64>();
 
 pub trait Config: Send + Sync + 'static {
     fn db_opts() -> Options {
@@ -48,7 +51,11 @@ pub trait Config: Send + Sync + 'static {
     }
 
     fn cf_data_opts() -> Options {
-        Options::default()
+        Options::default().tap_mut(|o| {
+            // Data keys are: version (u64 big-endian) || resource_id
+            // Enable prefix iteration by version.
+            o.set_prefix_extractor(SliceTransform::create_fixed_prefix(U64_PREFIX_LEN));
+        })
     }
 
     fn cf_latest_ptr_opts() -> Options {
@@ -56,7 +63,11 @@ pub trait Config: Send + Sync + 'static {
     }
 
     fn cf_rollback_ptr_opts() -> Options {
-        Options::default()
+        Options::default().tap_mut(|o| {
+            // RollbackPtr keys are: batch_index (u64 big-endian) || resource_id
+            // Enable prefix iteration by batch_index for reorg rollback.
+            o.set_prefix_extractor(SliceTransform::create_fixed_prefix(U64_PREFIX_LEN));
+        })
     }
 
     fn cf_metas_opts() -> Options {

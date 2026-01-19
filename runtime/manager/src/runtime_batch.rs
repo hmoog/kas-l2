@@ -1,9 +1,6 @@
-use std::{
-    future::Future,
-    sync::{
-        Arc,
-        atomic::{AtomicI64, AtomicU64, Ordering},
-    },
+use std::sync::{
+    Arc,
+    atomic::{AtomicI64, AtomicU64, Ordering},
 };
 
 use crossbeam_deque::{Injector, Steal, Worker};
@@ -11,15 +8,16 @@ use kas_l2_core_atomics::AtomicAsyncLatch;
 use kas_l2_core_macros::smart_pointer;
 use kas_l2_runtime_state::StateSpace;
 use kas_l2_storage_manager::StorageManager;
-use kas_l2_storage_types::{Store, WriteStore};
+use kas_l2_storage_types::{Store, WriteBatch};
 
 use crate::{
-    Read, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
+    Read, RuntimeContext, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
     vm_interface::VmInterface,
 };
 
 #[smart_pointer]
 pub struct RuntimeBatch<S: Store<StateSpace = StateSpace>, V: VmInterface> {
+    runtime_context: RuntimeContext,
     index: u64,
     storage: StorageManager<S, Read<S, V>, Write<S, V>>,
     txs: Vec<RuntimeTx<S, V>>,
@@ -53,16 +51,24 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.pending_txs.load(Ordering::Acquire)
     }
 
+    pub fn was_canceled(&self) -> bool {
+        self.index > self.runtime_context.cancel_threshold()
+    }
+
     pub fn was_processed(&self) -> bool {
         self.was_processed.is_open()
     }
 
-    pub fn wait_processed(&self) -> impl Future<Output = ()> + '_ {
-        self.was_processed.wait()
+    pub async fn wait_processed(&self) {
+        if !self.was_canceled() {
+            self.was_processed.wait().await
+        }
     }
 
     pub fn wait_processed_blocking(&self) -> &Self {
-        self.was_processed.wait_blocking();
+        if !self.was_canceled() {
+            self.was_processed.wait_blocking();
+        }
         self
     }
 
@@ -70,12 +76,16 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_persisted.is_open()
     }
 
-    pub fn wait_persisted(&self) -> impl Future<Output = ()> + '_ {
-        self.was_persisted.wait()
+    pub async fn wait_persisted(&self) {
+        if !self.was_canceled() {
+            self.was_persisted.wait().await
+        }
     }
 
     pub fn wait_persisted_blocking(&self) -> &Self {
-        self.was_persisted.wait_blocking();
+        if !self.was_canceled() {
+            self.was_persisted.wait_blocking();
+        }
         self
     }
 
@@ -83,25 +93,27 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self.was_committed.is_open()
     }
 
-    pub fn wait_committed(&self) -> impl Future<Output = ()> + '_ {
-        self.was_committed.wait()
+    pub async fn wait_committed(&self) {
+        if !self.was_canceled() {
+            self.was_committed.wait().await
+        }
     }
 
     pub fn wait_committed_blocking(&self) -> &Self {
-        self.was_committed.wait_blocking();
+        if !self.was_canceled() {
+            self.was_committed.wait_blocking();
+        }
         self
     }
 
-    pub(crate) fn new(
-        vm: V,
-        scheduler: &mut RuntimeManager<S, V>,
-        txs: Vec<V::Transaction>,
-    ) -> Self {
+    pub(crate) fn new(vm: V, manager: &mut RuntimeManager<S, V>, txs: Vec<V::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
+            let runtime_context = manager.context().clone();
+
             RuntimeBatchData {
-                index: scheduler.batch_index(),
-                storage: scheduler.storage_manager().clone(),
+                index: runtime_context.next_batch_index(),
+                storage: manager.storage_manager().clone(),
                 pending_txs: AtomicU64::new(txs.len() as u64),
                 pending_writes: AtomicI64::new(0),
                 txs: txs
@@ -109,7 +121,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                     .map(|tx| {
                         RuntimeTx::new(
                             &vm,
-                            scheduler,
+                            manager,
                             &mut state_diffs,
                             RuntimeBatchRef(this.clone()),
                             tx,
@@ -117,6 +129,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
                     })
                     .collect(),
                 state_diffs,
+                runtime_context,
                 available_txs: Injector::new(),
                 was_processed: Default::default(),
                 was_persisted: Default::default(),
@@ -140,36 +153,50 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
     pub(crate) fn decrease_pending_txs(&self) {
         if self.pending_txs.fetch_sub(1, Ordering::AcqRel) == 1 {
             self.was_processed.open();
+
+            // Also check if was_persisted should open (handles case where last TX has no writes)
+            if self.pending_writes.load(Ordering::Acquire) == 0 {
+                self.was_persisted.open();
+            }
         }
     }
 
     pub(crate) fn submit_write(&self, write: Write<S, V>) {
-        self.pending_writes.fetch_add(1, Ordering::AcqRel);
-        self.storage.submit_write(write);
+        if !self.was_canceled() {
+            self.pending_writes.fetch_add(1, Ordering::AcqRel);
+            self.storage.submit_write(write);
+        }
     }
 
     pub(crate) fn decrease_pending_writes(&self) {
-        // TODO: CHECK IF THERE CAN BE A RACE BETWEEN PENDING_TXS AND PENDING_WRITES
-        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 && self.num_pending() == 0 {
-            self.was_persisted.open();
+        if self.pending_writes.fetch_sub(1, Ordering::AcqRel) == 1 {
+            // Double-check: once pending_txs == 0, no new writes can be submitted, so if
+            // pending_writes is still 0, it will stay 0.
+            if self.num_pending() == 0 && self.pending_writes.load(Ordering::Acquire) == 0 {
+                self.was_persisted.open();
+            }
         }
     }
 
     pub fn schedule_commit(&self) {
-        self.storage.submit_write(Write::CommitBatch(self.clone()));
+        if !self.was_canceled() {
+            self.storage.submit_write(Write::CommitBatch(self.clone()));
+        }
     }
 
     pub(crate) fn commit<W>(&self, store: &mut W)
     where
-        W: WriteStore<StateSpace = StateSpace>,
+        W: WriteBatch<StateSpace = StateSpace>,
     {
-        for state_diff in self.state_diffs() {
-            state_diff.written_state().write_latest_ptr(store);
+        if !self.was_canceled() {
+            for state_diff in self.state_diffs() {
+                state_diff.written_state().write_latest_ptr(store);
+            }
         }
     }
 
     pub(crate) fn commit_done(self) {
-        // TODO: EVICT STUFF?
+        // TODO: EVICT STUFF FROM STORAGE MANAGER
         self.was_committed.open();
     }
 }
