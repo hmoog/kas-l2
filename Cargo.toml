@@ -1,8 +1,22 @@
 [workspace]
 resolver = "3"
 
-members = ["core/*", "move-runtime/*", "runtime/*", "storage/*"]
+members = [
+  "core/*",
+  "move-runtime/*",
+  "node/*",
+  "runtime/*",
+  "storage/*",
+  "transaction-runtime/*",
+]
 
-default-members = ["core/*", "move-runtime/*", "runtime/*", "storage/*"]
+default-members = [
+  "core/*",
+  "move-runtime/*",
+  "node/*",
+  "runtime/*",
+  "storage/*",
+  "transaction-runtime/*",
+]
 
 exclude = []

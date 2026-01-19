@@ -1252,6 +1252,194 @@ name = "kas-l2-storage-types"
 version = "0.1.0"
 
 [[package]]
+name = "kas-l2-transaction-runtime"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-runtime-manager",
+ "kas-l2-runtime-state",
+ "kas-l2-runtime-types",
+ "kas-l2-storage-types",
+ "kas-l2-transaction-runtime-address",
+ "kas-l2-transaction-runtime-auth-context",
+ "kas-l2-transaction-runtime-authenticated-data",
+ "kas-l2-transaction-runtime-data",
+ "kas-l2-transaction-runtime-data-context",
+ "kas-l2-transaction-runtime-error",
+ "kas-l2-transaction-runtime-instruction",
+ "kas-l2-transaction-runtime-lock",
+ "kas-l2-transaction-runtime-object-id",
+ "kas-l2-transaction-runtime-program",
+ "kas-l2-transaction-runtime-pubkey",
+ "kas-l2-transaction-runtime-transaction",
+ "kas-l2-transaction-runtime-transaction-effects",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-address"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-auth-context"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-pubkey",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-authenticated-data"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-data",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-builtin-capabilities"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+ "kas-l2-transaction-runtime-data",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-data"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-transaction-runtime-address",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-data-context"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+ "kas-l2-transaction-runtime-authenticated-data",
+ "kas-l2-transaction-runtime-error",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-error"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-instruction"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+ "kas-l2-transaction-runtime-program-arg",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-lock"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-transaction-runtime-auth-context",
+ "kas-l2-transaction-runtime-builtin-capabilities",
+ "kas-l2-transaction-runtime-data",
+ "kas-l2-transaction-runtime-signature-lock",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-object-access"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-types",
+ "kas-l2-transaction-runtime-object-id",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-object-id"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-transaction-runtime-address",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-program"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-transaction-runtime-program-type",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-program-arg"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-program-context"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-transaction-runtime-address",
+ "kas-l2-transaction-runtime-authenticated-data",
+ "kas-l2-transaction-runtime-data-context",
+ "kas-l2-transaction-runtime-error",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-program-type"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-pubkey"
+version = "0.1.0"
+
+[[package]]
+name = "kas-l2-transaction-runtime-signature-lock"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "kas-l2-transaction-runtime-auth-context",
+ "kas-l2-transaction-runtime-builtin-capabilities",
+ "kas-l2-transaction-runtime-pubkey",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-transaction"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-types",
+ "kas-l2-transaction-runtime-instruction",
+ "kas-l2-transaction-runtime-object-access",
+ "kas-l2-transaction-runtime-object-id",
+]
+
+[[package]]
+name = "kas-l2-transaction-runtime-transaction-effects"
+version = "0.1.0"
+
+[[package]]
+name = "kas-l2-vm"
+version = "0.1.0"
+dependencies = [
+ "kas-l2-runtime-manager",
+ "kas-l2-runtime-state",
+ "kas-l2-storage-types",
+ "kas-l2-transaction-runtime",
+ "kas-l2-transaction-runtime-error",
+ "kas-l2-transaction-runtime-lock",
+ "kas-l2-transaction-runtime-object-access",
+ "kas-l2-transaction-runtime-object-id",
+ "kas-l2-transaction-runtime-transaction",
+ "kas-l2-transaction-runtime-transaction-effects",
+]
+
+[[package]]
 name = "keccak"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

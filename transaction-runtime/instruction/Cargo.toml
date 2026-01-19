@@ -1,0 +1,8 @@
+[package]
+edition = "2021"
+name    = "kas-l2-transaction-runtime-instruction"
+version = "0.1.0"
+
+[dependencies]
+kas-l2-transaction-runtime-address     = { path = "../address" }
+kas-l2-transaction-runtime-program-arg = { path = "../program-arg" }

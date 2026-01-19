@@ -1,0 +1,10 @@
+[package]
+edition = "2021"
+name    = "kas-l2-transaction-runtime-signature-lock"
+version = "0.1.0"
+
+[dependencies]
+borsh                                           = "1.6.0"
+kas-l2-transaction-runtime-auth-context         = { path = "../auth-context" }
+kas-l2-transaction-runtime-builtin-capabilities = { path = "../builtin-capabilities" }
+kas-l2-transaction-runtime-pubkey               = { path = "../pubkey" }
