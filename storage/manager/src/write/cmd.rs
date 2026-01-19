@@ -1,7 +1,7 @@
-use kas_l2_storage_types::WriteStore;
+use kas_l2_storage_types::Store;
 
 pub trait WriteCmd<T>: Send + Sync + 'static {
-    fn exec<S: WriteStore<StateSpace = T>>(&self, store: &mut S);
+    fn exec<S: Store<StateSpace = T>>(&self, store: &S, batch: S::WriteBatch) -> S::WriteBatch;
 
     fn done(self);
 }
