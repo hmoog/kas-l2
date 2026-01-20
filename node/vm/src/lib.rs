@@ -1,4 +1,4 @@
-use vprogs_scheduling_manager::{AccessHandle, RuntimeBatch, VmInterface};
+use vprogs_scheduling_scheduler::{AccessHandle, RuntimeBatch, VmInterface};
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime::TransactionRuntime;

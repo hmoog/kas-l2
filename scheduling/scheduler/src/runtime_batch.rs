@@ -11,7 +11,7 @@ use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::{
-    Read, RuntimeContext, RuntimeManager, RuntimeTx, StateDiff, Write, cpu_task::ManagerTask,
+    Read, RuntimeContext, RuntimeTx, Scheduler, StateDiff, Write, cpu_task::ManagerTask,
     vm_interface::VmInterface,
 };
 
@@ -106,7 +106,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeBatch<S, V> {
         self
     }
 
-    pub(crate) fn new(vm: V, manager: &mut RuntimeManager<S, V>, txs: Vec<V::Transaction>) -> Self {
+    pub(crate) fn new(vm: V, manager: &mut Scheduler<S, V>, txs: Vec<V::Transaction>) -> Self {
         Self(Arc::new_cyclic(|this| {
             let mut state_diffs = Vec::new();
             let runtime_context = manager.context().clone();

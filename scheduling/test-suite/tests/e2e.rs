@@ -1,7 +1,7 @@
 extern crate core;
 
 use tempfile::TempDir;
-use vprogs_scheduling_manager::{ExecutionConfig, RuntimeManager};
+use vprogs_scheduling_scheduler::{ExecutionConfig, Scheduler};
 use vprogs_storage_manager::StorageConfig;
 use vprogs_storage_rocksdb_store::RocksDbStore;
 
@@ -12,7 +12,7 @@ pub fn test_runtime() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -51,7 +51,7 @@ pub fn test_rollback_committed() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -98,7 +98,7 @@ pub fn test_add_batches_after_rollback() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -153,7 +153,7 @@ pub fn test_inflight_cancellation_without_waiting() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -202,7 +202,7 @@ pub fn test_rollback_multiple_contexts() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -291,7 +291,7 @@ pub fn test_rollback_to_zero() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -333,7 +333,7 @@ pub fn test_consecutive_rollbacks() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -388,7 +388,7 @@ pub fn test_rollback_same_resource_multiple_writes() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -433,7 +433,7 @@ pub fn test_cancellation_skips_writes() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -476,7 +476,7 @@ pub fn test_rollback_interleaved_multi_resource() {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
         let storage: RocksDbStore = RocksDbStore::open(temp_dir.path());
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(TestVM),
             StorageConfig::default().with_store(storage),
         );
@@ -531,7 +531,7 @@ pub fn test_rollback_interleaved_multi_resource() {
 }
 
 mod test_framework {
-    use vprogs_scheduling_manager::{AccessHandle, RuntimeBatch, VmInterface};
+    use vprogs_scheduling_scheduler::{AccessHandle, RuntimeBatch, VmInterface};
     use vprogs_scheduling_types::{AccessMetadata, AccessType, Transaction};
     use vprogs_storage_state::{StateSpace, VersionedState};
     use vprogs_storage_types::{ReadStore, Store};

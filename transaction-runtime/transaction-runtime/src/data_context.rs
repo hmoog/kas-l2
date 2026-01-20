@@ -1,4 +1,4 @@
-use vprogs_scheduling_manager::VmInterface;
+use vprogs_scheduling_scheduler::VmInterface;
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime_address::Address;

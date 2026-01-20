@@ -3,7 +3,7 @@ use std::sync::Arc;
 use move_binary_format::errors::{VMError, VMResult};
 use move_core_types::account_address::AccountAddress;
 use move_vm_runtime::move_vm::MoveVM;
-use vprogs_scheduling_manager::{AccessHandle, RuntimeBatch};
+use vprogs_scheduling_scheduler::{AccessHandle, RuntimeBatch};
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 
@@ -41,7 +41,7 @@ impl Clone for Vm {
     }
 }
 
-impl vprogs_scheduling_manager::VmInterface for Vm {
+impl vprogs_scheduling_scheduler::VmInterface for Vm {
     type Transaction = Transaction;
     type TransactionEffects = TransactionEffects;
     type ResourceId = ObjectId;

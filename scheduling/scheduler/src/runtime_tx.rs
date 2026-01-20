@@ -9,8 +9,7 @@ use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 
 use crate::{
-    AccessHandle, ResourceAccess, RuntimeBatchRef, RuntimeManager, StateDiff,
-    vm_interface::VmInterface,
+    AccessHandle, ResourceAccess, RuntimeBatchRef, Scheduler, StateDiff, vm_interface::VmInterface,
 };
 
 #[smart_pointer(deref(tx))]
@@ -34,7 +33,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeTx<S, V> {
 
     pub(crate) fn new(
         vm: &V,
-        scheduler: &mut RuntimeManager<S, V>,
+        scheduler: &mut Scheduler<S, V>,
         state_diffs: &mut Vec<StateDiff<S, V>>,
         batch: RuntimeBatchRef<S, V>,
         tx: V::Transaction,

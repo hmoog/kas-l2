@@ -17,7 +17,7 @@ use vprogs_move_runtime_vm::{
     ObjectAccess::{Read, Write},
     ObjectId, Transaction, Vm,
 };
-use vprogs_scheduling_manager::{ExecutionConfig, RuntimeManager};
+use vprogs_scheduling_scheduler::{ExecutionConfig, Scheduler};
 use vprogs_storage_manager::StorageConfig;
 use vprogs_storage_rocksdb_store::{DefaultConfig, RocksDbStore};
 
@@ -25,7 +25,7 @@ use vprogs_storage_rocksdb_store::{DefaultConfig, RocksDbStore};
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     {
-        let mut runtime = RuntimeManager::new(
+        let mut runtime = Scheduler::new(
             ExecutionConfig::default().with_vm(Vm::default()),
             StorageConfig::default()
                 .with_store(RocksDbStore::<DefaultConfig>::open(temp_dir.path())),

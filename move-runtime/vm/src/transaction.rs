@@ -10,7 +10,7 @@ pub struct Transaction {
 pub type TransactionEffects = Vec<Vec<(Vec<u8>, MoveTypeLayout)>>;
 
 mod foreign_traits {
-    use vprogs_scheduling_manager::VmInterface;
+    use vprogs_scheduling_scheduler::VmInterface;
 
     use crate::{ObjectAccess, ObjectId, Transaction, Vm};
 

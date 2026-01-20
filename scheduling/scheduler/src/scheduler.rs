@@ -15,10 +15,10 @@ use crate::{
 
 /// Orchestrates transaction execution, state management, and storage coordination.
 ///
-/// The runtime manager is the main entry point for batch processing. It schedules transactions,
-/// manages resource dependency chains, coordinates parallel execution via worker threads, and
-/// handles rollbacks when chain reorganization occurs.
-pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
+/// The scheduler is the main entry point for batch processing. It schedules transactions, manages
+/// resource dependency chains, coordinates parallel execution via worker threads, and handles
+/// rollbacks when chain reorganization occurs.
+pub struct Scheduler<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     /// The VM implementation used to execute transactions.
     vm: V,
     /// Tracks runtime state such as batch indices and cancellation states.
@@ -33,8 +33,8 @@ pub struct RuntimeManager<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     execution_workers: ExecutionWorkers<ManagerTask<S, V>, RuntimeBatch<S, V>>,
 }
 
-impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
-    /// Creates a new runtime manager with the given execution and storage configurations.
+impl<S: Store<StateSpace = StateSpace>, V: VmInterface> Scheduler<S, V> {
+    /// Creates a new scheduler with the given execution and storage configurations.
     pub fn new(execution_config: ExecutionConfig<V>, storage_config: StorageConfig<S>) -> Self {
         let (worker_count, vm) = execution_config.unpack();
         Self {
@@ -103,7 +103,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> RuntimeManager<S, V> {
         &self.storage_manager
     }
 
-    /// Shuts down the runtime manager and all its components.
+    /// Shuts down the scheduler and all its components.
     ///
     /// This stops the worker loop, execution workers, and storage manager in order.
     pub fn shutdown(self) {

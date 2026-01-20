@@ -4,7 +4,7 @@ name    = "vprogs-node-vm"
 version = "0.1.0"
 
 [dependencies]
-vprogs-scheduling-manager                      = { path = "../../scheduling/manager" }
+vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
 vprogs-storage-state                           = { path = "../../storage/state" }
 vprogs-storage-types                           = { path = "../../storage/types" }
 vprogs-transaction-runtime                     = { path = "../../transaction-runtime/transaction-runtime" }

@@ -2761,7 +2761,7 @@ dependencies = [
  "tempfile",
  "vfs",
  "vprogs-move-runtime-vm",
- "vprogs-scheduling-manager",
+ "vprogs-scheduling-scheduler",
  "vprogs-storage-manager",
  "vprogs-storage-rocksdb-store",
  "vprogs-storage-state",
@@ -2781,7 +2781,7 @@ dependencies = [
  "move-stdlib-natives",
  "move-vm-runtime",
  "move-vm-types",
- "vprogs-scheduling-manager",
+ "vprogs-scheduling-scheduler",
  "vprogs-scheduling-types",
  "vprogs-storage-state",
  "vprogs-storage-types",
@@ -2791,7 +2791,7 @@ dependencies = [
 name = "vprogs-node-vm"
 version = "0.1.0"
 dependencies = [
- "vprogs-scheduling-manager",
+ "vprogs-scheduling-scheduler",
  "vprogs-storage-state",
  "vprogs-storage-types",
  "vprogs-transaction-runtime",
@@ -2818,7 +2818,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vprogs-scheduling-manager"
+name = "vprogs-scheduling-scheduler"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
@@ -2840,7 +2840,7 @@ name = "vprogs-scheduling-test-suite"
 version = "0.1.0"
 dependencies = [
  "tempfile",
- "vprogs-scheduling-manager",
+ "vprogs-scheduling-scheduler",
  "vprogs-scheduling-types",
  "vprogs-storage-manager",
  "vprogs-storage-rocksdb-store",
@@ -2896,7 +2896,7 @@ name = "vprogs-transaction-runtime"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "vprogs-scheduling-manager",
+ "vprogs-scheduling-scheduler",
  "vprogs-scheduling-types",
  "vprogs-storage-state",
  "vprogs-storage-types",

@@ -1,5 +1,5 @@
 use vprogs_move_runtime_vm::TransactionEffects;
-use vprogs_scheduling_manager::{RuntimeTx, VmInterface};
+use vprogs_scheduling_scheduler::{RuntimeTx, VmInterface};
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 

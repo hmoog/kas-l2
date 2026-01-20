@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use borsh::BorshDeserialize;
-use vprogs_scheduling_manager::{AccessHandle, VmInterface};
+use vprogs_scheduling_scheduler::{AccessHandle, VmInterface};
 use vprogs_scheduling_types::AccessMetadata;
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
