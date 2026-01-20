@@ -20,7 +20,7 @@ use vprogs_transaction_runtime_transaction_effects::TransactionEffects;
 pub struct TransactionRuntime<'a, 'b, S, V>
 where
     S: Store<StateSpace = StateSpace>,
-    V: VmInterface<ResourceId = ObjectId, Ownership = Lock>,
+    V: VmInterface<ResourceId = ObjectId>,
 {
     handles: &'a mut [AccessHandle<'b, S, V>],
     signers: HashSet<PubKey>,
@@ -31,7 +31,7 @@ where
 impl<'a, 'b, S, V> TransactionRuntime<'a, 'b, S, V>
 where
     S: Store<StateSpace = StateSpace>,
-    V: VmInterface<ResourceId = ObjectId, Ownership = Lock>,
+    V: VmInterface<ResourceId = ObjectId>,
 {
     pub fn execute(
         tx: &'a Transaction,
@@ -56,14 +56,17 @@ where
             match handle.access_metadata().id() {
                 // TODO: VALIDATE PROGRAM WITH VM?
                 ObjectId::Program(address) => {
-                    let program = Program::deserialize(&mut handle.state().data.as_slice())?;
+                    let program = Program::deserialize(&mut handle.data().as_slice())?;
 
                     self.loaded_programs.insert(address, program);
                 }
                 // TODO: VERIFY CHECKSUMS, ETC.
                 ObjectId::Data(address) => {
-                    let data = Data::deserialize(&mut handle.state().data.as_slice())?;
-                    let mut_cap = handle.state().owner.unlock(self);
+                    // Storage format: Lock | Data (serialized sequentially with Borsh)
+                    let mut reader = handle.data().as_slice();
+                    let lock = Lock::deserialize(&mut reader)?;
+                    let data = Data::deserialize(&mut reader)?;
+                    let mut_cap = lock.unlock(self);
 
                     self.loaded_data.insert(address, AuthenticatedData::new(data, mut_cap));
                 }

@@ -1,4 +1,4 @@
-use vprogs_scheduling_types::{AccessMetadata, Owner, ResourceId, Transaction};
+use vprogs_scheduling_types::{AccessMetadata, ResourceId, Transaction};
 use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 
@@ -20,7 +20,6 @@ pub trait VmInterface: Clone + Sized + Send + Sync + 'static {
     type Transaction: Transaction<Self::ResourceId, Self::AccessMetadata>;
     type TransactionEffects: Send + Sync + 'static;
     type ResourceId: ResourceId;
-    type Ownership: Owner;
     type AccessMetadata: AccessMetadata<Self::ResourceId>;
     type Error;
 }

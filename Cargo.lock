@@ -799,7 +799,6 @@ dependencies = [
 name = "vprogs-storage-state"
 version = "0.1.0"
 dependencies = [
- "borsh",
  "tap",
  "vprogs-scheduling-types",
  "vprogs-storage-manager",

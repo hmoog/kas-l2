@@ -3,7 +3,6 @@ use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime::TransactionRuntime;
 use vprogs_transaction_runtime_error::{VmError, VmResult};
-use vprogs_transaction_runtime_lock::Lock;
 use vprogs_transaction_runtime_object_access::ObjectAccess;
 use vprogs_transaction_runtime_object_id::ObjectId;
 use vprogs_transaction_runtime_transaction::Transaction;
@@ -26,7 +25,6 @@ impl VmInterface for VM {
     type Transaction = Transaction;
     type TransactionEffects = TransactionEffects;
     type ResourceId = ObjectId;
-    type Ownership = Lock;
     type AccessMetadata = ObjectAccess;
     type Error = VmError;
 }

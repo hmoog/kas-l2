@@ -11,8 +11,8 @@ use crate::{RuntimeBatchRef, Write, vm_interface::VmInterface};
 pub struct StateDiff<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     batch: RuntimeBatchRef<S, V>,
     resource_id: V::ResourceId,
-    read_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
-    written_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
+    read_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
+    written_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
 }
 
 impl<S: Store<StateSpace = StateSpace>, V: VmInterface> StateDiff<S, V> {
@@ -29,22 +29,19 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> StateDiff<S, V> {
         &self.resource_id
     }
 
-    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
+    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId>> {
         self.read_state.load().expect("read state unknown")
     }
 
-    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
+    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId>> {
         self.written_state.load().expect("written state unknown")
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId, V::Ownership>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
         self.read_state.store(Some(state))
     }
 
-    pub(crate) fn set_written_state(
-        &self,
-        state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
-    ) {
+    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
         self.written_state.store(Some(state));
         if let Some(batch) = self.batch.upgrade() {
             batch.submit_write(Write::StateDiff(self.clone()));

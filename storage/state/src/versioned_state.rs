@@ -1,25 +1,25 @@
 use std::sync::Arc;
 
 use tap::Tap;
-use vprogs_scheduling_types::{Owner, ResourceId};
+use vprogs_scheduling_types::ResourceId;
 use vprogs_storage_manager::concat_bytes;
 use vprogs_storage_types::{ReadStore, WriteBatch};
 
 use crate::{
-    State, StateSpace,
+    StateSpace,
     StateSpace::{Data, LatestPtr, RollbackPtr},
 };
 
 #[derive(Debug, Eq, Hash, PartialEq)]
-pub struct VersionedState<R: ResourceId, O: Owner> {
+pub struct VersionedState<R: ResourceId> {
     resource_id: R,
     version: u64,
-    state: State<O>,
+    data: Vec<u8>,
 }
 
-impl<R: ResourceId, O: Owner> VersionedState<R, O> {
+impl<R: ResourceId> VersionedState<R> {
     pub fn empty(id: R) -> Self {
-        Self { resource_id: id, version: 0, state: State::default() }
+        Self { resource_id: id, version: 0, data: Vec::new() }
     }
 
     pub fn from_latest_data<S>(store: &S, id: R) -> Self
@@ -34,7 +34,7 @@ impl<R: ResourceId, O: Owner> VersionedState<R, O> {
                 Some(data) => Self {
                     resource_id: id,
                     version: u64::from_be_bytes(version[..8].try_into().unwrap()),
-                    state: borsh::from_slice(&data).expect("failed to deserialize State"),
+                    data,
                 },
             },
         }
@@ -44,12 +44,12 @@ impl<R: ResourceId, O: Owner> VersionedState<R, O> {
         self.version
     }
 
-    pub fn state(&self) -> &State<O> {
-        &self.state
+    pub fn data(&self) -> &Vec<u8> {
+        &self.data
     }
 
-    pub fn state_mut(self: &mut Arc<Self>) -> &mut State<O> {
-        &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).state
+    pub fn data_mut(self: &mut Arc<Self>) -> &mut Vec<u8> {
+        &mut Arc::make_mut(self).tap_mut(|s| s.version += 1).data
     }
 
     pub fn write_data<W>(&self, store: &mut W)
@@ -57,8 +57,7 @@ impl<R: ResourceId, O: Owner> VersionedState<R, O> {
         W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
-        let state_data = self.state.to_bytes();
-        store.put(Data, &key, &state_data);
+        store.put(Data, &key, &self.data);
     }
 
     pub fn write_latest_ptr<W>(&self, store: &mut W)
@@ -80,12 +79,12 @@ impl<R: ResourceId, O: Owner> VersionedState<R, O> {
     }
 }
 
-impl<R: ResourceId, O: Owner> Clone for VersionedState<R, O> {
+impl<R: ResourceId> Clone for VersionedState<R> {
     fn clone(&self) -> Self {
         Self {
             resource_id: self.resource_id.clone(),
             version: self.version,
-            state: self.state.clone(),
+            data: self.data.clone(),
         }
     }
 }

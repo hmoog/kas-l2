@@ -543,7 +543,6 @@ mod test_framework {
         type Transaction = Tx;
         type TransactionEffects = ();
         type ResourceId = usize;
-        type Ownership = usize;
         type AccessMetadata = Access;
         type Error = ();
 
@@ -554,7 +553,7 @@ mod test_framework {
         ) -> Result<(), Self::Error> {
             for resource in resources {
                 if resource.access_metadata().access_type() == AccessType::Write {
-                    resource.state_mut().data.extend_from_slice(&tx.0.to_be_bytes());
+                    resource.data_mut().extend_from_slice(&tx.0.to_be_bytes());
                 }
             }
             Ok::<(), ()>(())
@@ -606,9 +605,9 @@ mod test_framework {
             let writer_count = self.1.len();
             let writer_log: Vec<u8> = self.1.iter().flat_map(|id| id.to_be_bytes()).collect();
 
-            let versioned_state = VersionedState::<usize, usize>::from_latest_data(store, self.0);
+            let versioned_state = VersionedState::<usize>::from_latest_data(store, self.0);
             assert_eq!(versioned_state.version(), writer_count as u64);
-            assert_eq!(versioned_state.state().data, writer_log);
+            assert_eq!(*versioned_state.data(), writer_log);
         }
     }
 

@@ -19,8 +19,8 @@ pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     is_batch_tail: AtomicBool,
     tx: RuntimeTxRef<S, V>,
     state_diff: StateDiff<S, V>,
-    read_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
-    written_state: AtomicOptionArc<VersionedState<V::ResourceId, V::Ownership>>,
+    read_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
+    written_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
 }
@@ -32,12 +32,12 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
     }
 
     #[inline(always)]
-    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
+    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId>> {
         self.read_state.load().expect("read state unknown")
     }
 
     #[inline(always)]
-    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId, V::Ownership>> {
+    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId>> {
         self.written_state.load().expect("written state unknown")
     }
 
@@ -100,7 +100,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
         self.state_diff.clone()
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId, V::Ownership>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
@@ -118,10 +118,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
         }
     }
 
-    pub(crate) fn set_written_state(
-        &self,
-        state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
-    ) {
+    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
         if self.written_state.publish(state.clone()) {
             if self.is_batch_tail() {
                 self.state_diff.set_written_state(state.clone());

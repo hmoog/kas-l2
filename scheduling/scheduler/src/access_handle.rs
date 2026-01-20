@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use vprogs_scheduling_types::{AccessMetadata, AccessType};
-use vprogs_storage_state::{State, StateSpace, VersionedState};
+use vprogs_storage_state::{StateSpace, VersionedState};
 use vprogs_storage_types::Store;
 
 use crate::{ResourceAccess, vm_interface::VmInterface};
 
 pub struct AccessHandle<'a, S: Store<StateSpace = StateSpace>, V: VmInterface> {
-    versioned_state: Arc<VersionedState<V::ResourceId, V::Ownership>>,
+    versioned_state: Arc<VersionedState<V::ResourceId>>,
     access: &'a ResourceAccess<S, V>,
 }
 
@@ -22,13 +22,13 @@ impl<'a, S: Store<StateSpace = StateSpace>, V: VmInterface> AccessHandle<'a, S, 
     }
 
     #[inline]
-    pub fn state(&self) -> &State<V::Ownership> {
-        self.versioned_state.state()
+    pub fn data(&self) -> &Vec<u8> {
+        self.versioned_state.data()
     }
 
     #[inline]
-    pub fn state_mut(&mut self) -> &mut State<V::Ownership> {
-        self.versioned_state.state_mut()
+    pub fn data_mut(&mut self) -> &mut Vec<u8> {
+        self.versioned_state.data_mut()
     }
 
     #[inline]
