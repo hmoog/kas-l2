@@ -3,7 +3,6 @@ resolver = "3"
 
 members = [
   "core/*",
-  "move-runtime/*",
   "node/*",
   "scheduling/*",
   "storage/*",
@@ -12,7 +11,6 @@ members = [
 
 default-members = [
   "core/*",
-  "move-runtime/*",
   "node/*",
   "scheduling/*",
   "storage/*",
