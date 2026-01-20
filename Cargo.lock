@@ -2761,10 +2761,10 @@ dependencies = [
  "tempfile",
  "vfs",
  "vprogs-move-runtime-vm",
- "vprogs-runtime-manager",
- "vprogs-runtime-rocksdb-store",
- "vprogs-runtime-state",
+ "vprogs-scheduling-manager",
  "vprogs-storage-manager",
+ "vprogs-storage-rocksdb-store",
+ "vprogs-storage-state",
  "vprogs-storage-types",
 ]
 
@@ -2781,9 +2781,9 @@ dependencies = [
  "move-stdlib-natives",
  "move-vm-runtime",
  "move-vm-types",
- "vprogs-runtime-manager",
- "vprogs-runtime-state",
- "vprogs-runtime-types",
+ "vprogs-scheduling-manager",
+ "vprogs-scheduling-types",
+ "vprogs-storage-state",
  "vprogs-storage-types",
 ]
 
@@ -2791,8 +2791,8 @@ dependencies = [
 name = "vprogs-node-vm"
 version = "0.1.0"
 dependencies = [
- "vprogs-runtime-manager",
- "vprogs-runtime-state",
+ "vprogs-scheduling-manager",
+ "vprogs-storage-state",
  "vprogs-storage-types",
  "vprogs-transaction-runtime",
  "vprogs-transaction-runtime-error",
@@ -2804,7 +2804,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vprogs-runtime-execution-workers"
+name = "vprogs-scheduling-execution-workers"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
@@ -2818,7 +2818,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vprogs-runtime-manager"
+name = "vprogs-scheduling-manager"
 version = "0.1.0"
 dependencies = [
  "crossbeam-deque",
@@ -2828,50 +2828,28 @@ dependencies = [
  "tokio",
  "vprogs-core-atomics",
  "vprogs-core-macros",
- "vprogs-runtime-execution-workers",
- "vprogs-runtime-state",
- "vprogs-runtime-types",
+ "vprogs-scheduling-execution-workers",
+ "vprogs-scheduling-types",
  "vprogs-storage-manager",
+ "vprogs-storage-state",
  "vprogs-storage-types",
 ]
 
 [[package]]
-name = "vprogs-runtime-rocksdb-store"
-version = "0.1.0"
-dependencies = [
- "num_cpus",
- "rocksdb",
- "tap",
- "vprogs-runtime-state",
- "vprogs-storage-types",
-]
-
-[[package]]
-name = "vprogs-runtime-state"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "tap",
- "vprogs-runtime-types",
- "vprogs-storage-manager",
- "vprogs-storage-types",
-]
-
-[[package]]
-name = "vprogs-runtime-test-suite"
+name = "vprogs-scheduling-test-suite"
 version = "0.1.0"
 dependencies = [
  "tempfile",
- "vprogs-runtime-manager",
- "vprogs-runtime-rocksdb-store",
- "vprogs-runtime-state",
- "vprogs-runtime-types",
+ "vprogs-scheduling-manager",
+ "vprogs-scheduling-types",
  "vprogs-storage-manager",
+ "vprogs-storage-rocksdb-store",
+ "vprogs-storage-state",
  "vprogs-storage-types",
 ]
 
 [[package]]
-name = "vprogs-runtime-types"
+name = "vprogs-scheduling-types"
 version = "0.1.0"
 dependencies = [
  "borsh",
@@ -2888,6 +2866,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "vprogs-storage-rocksdb-store"
+version = "0.1.0"
+dependencies = [
+ "num_cpus",
+ "rocksdb",
+ "tap",
+ "vprogs-storage-state",
+ "vprogs-storage-types",
+]
+
+[[package]]
+name = "vprogs-storage-state"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "tap",
+ "vprogs-scheduling-types",
+ "vprogs-storage-manager",
+ "vprogs-storage-types",
+]
+
+[[package]]
 name = "vprogs-storage-types"
 version = "0.1.0"
 
@@ -2896,9 +2896,9 @@ name = "vprogs-transaction-runtime"
 version = "0.1.0"
 dependencies = [
  "borsh",
- "vprogs-runtime-manager",
- "vprogs-runtime-state",
- "vprogs-runtime-types",
+ "vprogs-scheduling-manager",
+ "vprogs-scheduling-types",
+ "vprogs-storage-state",
  "vprogs-storage-types",
  "vprogs-transaction-runtime-address",
  "vprogs-transaction-runtime-auth-context",
@@ -2991,7 +2991,7 @@ dependencies = [
 name = "vprogs-transaction-runtime-object-access"
 version = "0.1.0"
 dependencies = [
- "vprogs-runtime-types",
+ "vprogs-scheduling-types",
  "vprogs-transaction-runtime-object-id",
 ]
 
@@ -3053,7 +3053,7 @@ dependencies = [
 name = "vprogs-transaction-runtime-transaction"
 version = "0.1.0"
 dependencies = [
- "vprogs-runtime-types",
+ "vprogs-scheduling-types",
  "vprogs-transaction-runtime-instruction",
  "vprogs-transaction-runtime-object-access",
  "vprogs-transaction-runtime-object-id",

@@ -1,7 +1,0 @@
-[package]
-edition = "2021"
-name    = "vprogs-runtime-types"
-version = "0.1.0"
-
-[dependencies]
-borsh = { version = "1.6.0", features = ["derive"] }

@@ -12,8 +12,8 @@ move-symbol-pool             = { git = "https://github.com/MystenLabs/sui.git", 
 tempfile                     = "3.23.0"
 vfs                          = "0.10.0"
 vprogs-move-runtime-vm       = { path = "../vm" }
-vprogs-runtime-manager       = { path = "../../runtime/manager" }
-vprogs-runtime-rocksdb-store = { path = "../../runtime/rocksdb-store" }
-vprogs-runtime-state         = { path = "../../runtime/state" }
+vprogs-scheduling-manager    = { path = "../../scheduling/manager" }
 vprogs-storage-manager       = { path = "../../storage/manager" }
+vprogs-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+vprogs-storage-state         = { path = "../../storage/state" }
 vprogs-storage-types         = { path = "../../storage/types" }

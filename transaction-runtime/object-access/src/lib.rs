@@ -1,4 +1,4 @@
-use vprogs_runtime_types::{AccessMetadata, AccessType};
+use vprogs_scheduling_types::{AccessMetadata, AccessType};
 use vprogs_transaction_runtime_object_id::ObjectId;
 
 #[derive(Clone)]

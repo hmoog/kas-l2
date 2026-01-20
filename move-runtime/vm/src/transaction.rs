@@ -10,11 +10,11 @@ pub struct Transaction {
 pub type TransactionEffects = Vec<Vec<(Vec<u8>, MoveTypeLayout)>>;
 
 mod foreign_traits {
-    use vprogs_runtime_manager::VmInterface;
+    use vprogs_scheduling_manager::VmInterface;
 
     use crate::{ObjectAccess, ObjectId, Transaction, Vm};
 
-    impl vprogs_runtime_types::Transaction<ObjectId, ObjectAccess> for Transaction {
+    impl vprogs_scheduling_types::Transaction<ObjectId, ObjectAccess> for Transaction {
         fn accessed_resources(&self) -> &[<Vm as VmInterface>::AccessMetadata] {
             &self.accessed_resources
         }

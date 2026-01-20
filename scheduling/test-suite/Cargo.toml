@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name    = "vprogs-scheduling-test-suite"
+version = "0.1.0"
+
+[dependencies]
+tempfile                     = "3.23.0"
+vprogs-scheduling-manager    = { path = "../manager" }
+vprogs-scheduling-types      = { path = "../types" }
+vprogs-storage-manager       = { path = "../../storage/manager" }
+vprogs-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
+vprogs-storage-state         = { path = "../../storage/state" }
+vprogs-storage-types         = { path = "../../storage/types" }

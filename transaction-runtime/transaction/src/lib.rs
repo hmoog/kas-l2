@@ -21,7 +21,7 @@ impl Transaction {
     }
 }
 
-impl vprogs_runtime_types::Transaction<ObjectId, ObjectAccess> for Transaction {
+impl vprogs_scheduling_types::Transaction<ObjectId, ObjectAccess> for Transaction {
     fn accessed_resources(&self) -> &[ObjectAccess] {
         self.accessed_objects()
     }

@@ -1,5 +1,5 @@
-use vprogs_runtime_manager::{AccessHandle, RuntimeBatch, VmInterface};
-use vprogs_runtime_state::StateSpace;
+use vprogs_scheduling_manager::{AccessHandle, RuntimeBatch, VmInterface};
+use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime::TransactionRuntime;
 use vprogs_transaction_runtime_error::{VmError, VmResult};

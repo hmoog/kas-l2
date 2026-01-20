@@ -1,5 +1,5 @@
-use vprogs_runtime_manager::VmInterface;
-use vprogs_runtime_state::StateSpace;
+use vprogs_scheduling_manager::VmInterface;
+use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime_address::Address;
 use vprogs_transaction_runtime_authenticated_data::AuthenticatedData;

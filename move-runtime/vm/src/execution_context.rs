@@ -6,9 +6,9 @@ use move_vm_runtime::{
     move_vm::MoveVM,
     session::{SerializedReturnValues, Session},
 };
-use vprogs_runtime_manager::AccessHandle;
-use vprogs_runtime_state::StateSpace;
-use vprogs_runtime_types::{AccessMetadata, AccessType};
+use vprogs_scheduling_manager::AccessHandle;
+use vprogs_scheduling_types::{AccessMetadata, AccessType};
+use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 
 use crate::{MethodCallArg, Modules, ObjectId, TransactionEffects, Vm};

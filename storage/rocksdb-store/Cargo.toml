@@ -1,0 +1,19 @@
+[package]
+edition = "2021"
+name    = "vprogs-storage-rocksdb-store"
+version = "0.1.0"
+
+[dependencies]
+num_cpus = "1.17.0"
+rocksdb = { version = "0.24.0", default-features = false, features = [
+  "lz4",
+  "zstd",
+  "snappy",
+  "zlib",
+  "bzip2",
+  "jemalloc",
+  "mt_static",
+] }
+tap = "1.0.1"
+vprogs-storage-state = { path = "../state" }
+vprogs-storage-types = { path = "../types" }

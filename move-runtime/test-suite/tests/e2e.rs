@@ -17,9 +17,9 @@ use vprogs_move_runtime_vm::{
     ObjectAccess::{Read, Write},
     ObjectId, Transaction, Vm,
 };
-use vprogs_runtime_manager::{ExecutionConfig, RuntimeManager};
-use vprogs_runtime_rocksdb_store::{DefaultConfig, RocksDbStore};
+use vprogs_scheduling_manager::{ExecutionConfig, RuntimeManager};
 use vprogs_storage_manager::StorageConfig;
+use vprogs_storage_rocksdb_store::{DefaultConfig, RocksDbStore};
 
 #[test]
 pub fn test_move_runtime() -> Result<(), anyhow::Error> {

@@ -4,5 +4,5 @@ name    = "vprogs-transaction-runtime-object-access"
 version = "0.1.0"
 
 [dependencies]
-vprogs-runtime-types                 = { path = "../../runtime/types" }
+vprogs-scheduling-types              = { path = "../../scheduling/types" }
 vprogs-transaction-runtime-object-id = { path = "../object-id" }
