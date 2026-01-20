@@ -1,6 +1,6 @@
 use tap::Tap;
 use vprogs_scheduling_types::AccessMetadata;
-use vprogs_storage_state::StateSpace;
+use vprogs_state_space::StateSpace;
 use vprogs_storage_types::Store;
 
 use crate::{ResourceAccess, RuntimeBatchRef, RuntimeTxRef, StateDiff, vm_interface::VmInterface};

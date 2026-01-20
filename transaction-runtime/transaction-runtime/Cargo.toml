@@ -7,7 +7,7 @@ version = "0.1.0"
 borsh                                          = "1.6.0"
 vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
 vprogs-scheduling-types                        = { path = "../../scheduling/types" }
-vprogs-storage-state                           = { path = "../../storage/state" }
+vprogs-state-space                             = { path = "../../state/state-space" }
 vprogs-storage-types                           = { path = "../../storage/types" }
 vprogs-transaction-runtime-address             = { path = "../address" }
 vprogs-transaction-runtime-auth-context        = { path = "../auth-context" }

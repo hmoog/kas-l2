@@ -1,5 +1,5 @@
 use rocksdb::ColumnFamilyDescriptor;
-use vprogs_storage_state::StateSpace;
+use vprogs_state_space::StateSpace;
 
 use crate::config::{Config, DefaultConfig};
 

@@ -6,8 +6,8 @@ use std::sync::{
 use crossbeam_deque::{Injector, Steal, Worker};
 use vprogs_core_atomics::AtomicAsyncLatch;
 use vprogs_core_macros::smart_pointer;
+use vprogs_state_space::StateSpace;
 use vprogs_storage_manager::StorageManager;
-use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::{

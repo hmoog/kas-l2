@@ -1,5 +1,5 @@
+use vprogs_state_space::StateSpace;
 use vprogs_storage_manager::{ReadCmd, WriteCmd};
-use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::{ReadStore, Store};
 
 use crate::{

@@ -5,6 +5,7 @@ members = [
   "core/*",
   "node/*",
   "scheduling/*",
+  "state/*",
   "storage/*",
   "transaction-runtime/*",
 ]
@@ -13,6 +14,7 @@ default-members = [
   "core/*",
   "node/*",
   "scheduling/*",
+  "state/*",
   "storage/*",
   "transaction-runtime/*",
 ]

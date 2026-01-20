@@ -2,11 +2,11 @@ use std::{marker::PhantomData, sync::Arc};
 
 use vprogs_core_atomics::AtomicAsyncLatch;
 use vprogs_scheduling_types::ResourceId;
-use vprogs_storage_manager::concat_bytes;
-use vprogs_storage_state::{
+use vprogs_state_space::{
     StateSpace,
     StateSpace::{Data, LatestPtr, RollbackPtr},
 };
+use vprogs_storage_manager::concat_bytes;
 use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::VmInterface;

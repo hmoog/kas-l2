@@ -7,7 +7,8 @@ version = "0.1.0"
 tempfile                     = "3.23.0"
 vprogs-scheduling-scheduler  = { path = "../scheduler" }
 vprogs-scheduling-types      = { path = "../types" }
+vprogs-state-space           = { path = "../../state/state-space" }
+vprogs-state-versioned-state = { path = "../../state/versioned-state" }
 vprogs-storage-manager       = { path = "../../storage/manager" }
 vprogs-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
-vprogs-storage-state         = { path = "../../storage/state" }
 vprogs-storage-types         = { path = "../../storage/types" }

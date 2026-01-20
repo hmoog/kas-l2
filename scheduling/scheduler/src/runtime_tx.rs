@@ -5,7 +5,7 @@ use std::sync::{
 
 use vprogs_core_atomics::AtomicOptionArc;
 use vprogs_core_macros::smart_pointer;
-use vprogs_storage_state::StateSpace;
+use vprogs_state_space::StateSpace;
 use vprogs_storage_types::Store;
 
 use crate::{

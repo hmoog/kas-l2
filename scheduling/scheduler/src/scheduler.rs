@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use tap::Tap;
 use vprogs_scheduling_execution_workers::ExecutionWorkers;
 use vprogs_scheduling_types::{AccessMetadata, Transaction};
+use vprogs_state_space::StateSpace;
 use vprogs_storage_manager::{StorageConfig, StorageManager};
-use vprogs_storage_state::StateSpace;
 use vprogs_storage_types::Store;
 
 use crate::{

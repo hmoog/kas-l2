@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use tap::Tap;
 use vprogs_scheduling_types::ResourceId;
-use vprogs_storage_manager::concat_bytes;
-use vprogs_storage_types::{ReadStore, WriteBatch};
-
-use crate::{
+use vprogs_state_space::{
     StateSpace,
     StateSpace::{Data, LatestPtr, RollbackPtr},
 };
+use vprogs_storage_manager::concat_bytes;
+use vprogs_storage_types::{ReadStore, WriteBatch};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct VersionedState<R: ResourceId> {

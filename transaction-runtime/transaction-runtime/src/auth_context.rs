@@ -1,5 +1,5 @@
 use vprogs_scheduling_scheduler::VmInterface;
-use vprogs_storage_state::StateSpace;
+use vprogs_state_space::StateSpace;
 use vprogs_storage_types::Store;
 use vprogs_transaction_runtime_auth_context::AuthContext;
 use vprogs_transaction_runtime_object_id::ObjectId;

@@ -533,7 +533,8 @@ pub fn test_rollback_interleaved_multi_resource() {
 mod test_framework {
     use vprogs_scheduling_scheduler::{AccessHandle, RuntimeBatch, VmInterface};
     use vprogs_scheduling_types::{AccessMetadata, AccessType, Transaction};
-    use vprogs_storage_state::{StateSpace, VersionedState};
+    use vprogs_state_space::StateSpace;
+    use vprogs_state_versioned_state::VersionedState;
     use vprogs_storage_types::{ReadStore, Store};
 
     #[derive(Clone)]

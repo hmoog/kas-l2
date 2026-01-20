@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use vprogs_core_atomics::AtomicOptionArc;
 use vprogs_core_macros::smart_pointer;
-use vprogs_storage_state::{StateSpace, VersionedState};
+use vprogs_state_space::StateSpace;
+use vprogs_state_versioned_state::VersionedState;
 use vprogs_storage_types::{Store, WriteBatch};
 
 use crate::{RuntimeBatchRef, Write, vm_interface::VmInterface};

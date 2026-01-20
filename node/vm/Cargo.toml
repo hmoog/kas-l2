@@ -5,11 +5,10 @@ version = "0.1.0"
 
 [dependencies]
 vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
-vprogs-storage-state                           = { path = "../../storage/state" }
+vprogs-state-space                             = { path = "../../state/state-space" }
 vprogs-storage-types                           = { path = "../../storage/types" }
 vprogs-transaction-runtime                     = { path = "../../transaction-runtime/transaction-runtime" }
 vprogs-transaction-runtime-error               = { path = "../../transaction-runtime/error" }
-vprogs-transaction-runtime-lock                = { path = "../../transaction-runtime/lock" }
 vprogs-transaction-runtime-object-access       = { path = "../../transaction-runtime/object-access" }
 vprogs-transaction-runtime-object-id           = { path = "../../transaction-runtime/object-id" }
 vprogs-transaction-runtime-transaction         = { path = "../../transaction-runtime/transaction" }

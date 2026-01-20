@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use vprogs_scheduling_types::{AccessMetadata, AccessType};
-use vprogs_storage_state::{StateSpace, VersionedState};
+use vprogs_state_space::StateSpace;
+use vprogs_state_versioned_state::VersionedState;
 use vprogs_storage_types::Store;
 
 use crate::{ResourceAccess, vm_interface::VmInterface};
