@@ -1,6 +1,6 @@
 # scheduling/
 
-Defines **how we provide access** to state. This domain orchestrates transaction execution, manages resource dependencies, and coordinates parallel processing.
+Defines **how we provide access** to state. This layer orchestrates transaction execution, manages resource dependencies, and coordinates parallel processing.
 
 ## Crates
 
@@ -48,18 +48,19 @@ Integration tests in `tests/e2e.rs`:
 
 ```
 ┌─────────────────────────────────────────┐
-│  node                                   │
+│  Layer 4: transaction-runtime           │
 ├─────────────────────────────────────────┤
-│  scheduling ◄── You are here            │
-│  transaction-runtime                    │
+│  Layer 3: scheduling  ◄── You are here  │
 ├─────────────────────────────────────────┤
-│  storage / state                        │
+│  Layer 2: state                         │
 ├─────────────────────────────────────────┤
-│  core                                   │
+│  Layer 1: storage                       │
+├─────────────────────────────────────────┤
+│  Layer 0: core                          │
 └─────────────────────────────────────────┘
 ```
 
-The scheduling domain coordinates execution. It uses storage for persistence and is used by the node domain for the complete VM implementation.
+The scheduling layer coordinates execution. It uses state and storage for persistence and is used by the transaction-runtime and node layers above.
 
 ## Key Abstractions
 
@@ -80,7 +81,7 @@ pub trait VmInterface: Clone + Send + Sync + 'static {
 }
 ```
 
-This trait is implemented by the node domain to define transaction processing semantics.
+This trait is implemented by the node layer to define transaction processing semantics.
 
 ## Design Philosophy
 

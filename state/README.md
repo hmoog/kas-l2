@@ -1,6 +1,6 @@
 # state/
 
-Defines **what** we store. This domain establishes the semantic meaning of state without concern for how it is persisted.
+Defines **what** we store. This layer establishes the semantic meaning of state without concern for how it is persisted.
 
 ## Crates
 
@@ -11,17 +11,17 @@ Defines the logical partitions of state:
 
 ```rust
 pub enum StateSpace {
-    Data,        // Versioned resource data
-    LatestPtr,   // Points to current version of each resource
-    RollbackPtr, // Points to previous version for rollback support
-    Metas,       // Metadata storage
+    StateVersion,      // Versioned resource data
+    StatePtrLatest,    // Points to current version of each resource
+    StatePtrRollback,  // Points to previous version for rollback support
+    Metadata,          // Metadata storage
 }
 ```
 
 ### ptr-latest/
 `vprogs-state-ptr-latest`
 
-Type-safe operations for the LatestPtr column family:
+Type-safe operations for the StatePtrLatest column family:
 
 - **Key**: `resource_id.to_bytes()`
 - **Value**: `version.to_be_bytes()` (u64)
@@ -31,7 +31,7 @@ Provides `get`, `put`, `delete` operations with proper type constraints.
 ### ptr-rollback/
 `vprogs-state-ptr-rollback`
 
-Type-safe operations for the RollbackPtr column family:
+Type-safe operations for the StatePtrRollback column family:
 
 - **Key**: `batch_index.to_be_bytes() || resource_id.to_bytes()`
 - **Value**: `old_version.to_be_bytes()` (u64)
@@ -61,16 +61,17 @@ Key operations:
 
 ```
 ┌─────────────────────────────────────────┐
-│  scheduling / transaction-runtime       │
+│  Layer 3: scheduling                    │
 ├─────────────────────────────────────────┤
-│  storage ◄── uses state definitions     │
-│  state   ◄── You are here               │
+│  Layer 2: state  ◄── You are here       │
 ├─────────────────────────────────────────┤
-│  core                                   │
+│  Layer 1: storage                       │
+├─────────────────────────────────────────┤
+│  Layer 0: core                          │
 └─────────────────────────────────────────┘
 ```
 
-The state domain defines the data model. The storage domain implements persistence using these definitions.
+The state layer defines the data model. The storage layer below implements persistence using these definitions. The scheduling layer above uses state abstractions to track resource versions.
 
 ## Design Philosophy
 

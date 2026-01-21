@@ -1,6 +1,6 @@
 # transaction-runtime/
 
-Defines **what we do with access**. This domain specifies the execution semantics for transactions, including programs, contexts, and effects.
+Defines **what we do with access**. This layer specifies the execution semantics for transactions, including programs, contexts, and effects.
 
 ## Crates
 
@@ -55,18 +55,22 @@ The transaction-runtime is decomposed into fine-grained crates for modularity:
 
 ```
 ┌─────────────────────────────────────────┐
-│  node                                   │
+│  Layer 5: node                          │
 ├─────────────────────────────────────────┤
-│  scheduling                             │
-│  transaction-runtime ◄── You are here   │
+│  Layer 4: transaction-runtime           │
+│           ◄── You are here              │
 ├─────────────────────────────────────────┤
-│  storage / state                        │
+│  Layer 3: scheduling                    │
 ├─────────────────────────────────────────┤
-│  core                                   │
+│  Layer 2: state                         │
+├─────────────────────────────────────────┤
+│  Layer 1: storage                       │
+├─────────────────────────────────────────┤
+│  Layer 0: core                          │
 └─────────────────────────────────────────┘
 ```
 
-The transaction-runtime domain defines execution semantics. It is used by the node domain to implement the VmInterface trait.
+The transaction-runtime layer defines execution semantics. It is used by the node layer to implement the VmInterface trait.
 
 ## Design Philosophy
 

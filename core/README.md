@@ -1,8 +1,20 @@
 # core/
 
-Foundation utilities used throughout the vprogs codebase. This domain has zero dependencies on other vprogs domains.
+Foundation layer used throughout the vprogs codebase. This layer has zero dependencies on other vprogs domains.
 
 ## Crates
+
+### types/
+`vprogs-core-types`
+
+Foundational trait definitions that enable the scheduling system's genericity:
+
+- **ResourceId** - Trait for resource identifiers (serialization to/from bytes)
+- **Transaction** - Trait for transactions (provides accessed resources)
+- **AccessMetadata** - Trait for access metadata (id + access type)
+- **AccessType** - Enum for read/write access classification
+
+These traits allow the scheduling layer to work with any concrete types that implement them.
 
 ### atomics/
 `vprogs-core-atomics`
@@ -24,12 +36,14 @@ Procedural macros for code generation:
 
 ```
 ┌─────────────────────────────────────────┐
-│  scheduling / transaction-runtime       │
+│  Layer 3: scheduling                    │
 ├─────────────────────────────────────────┤
-│  storage / state                        │
+│  Layer 2: state                         │
 ├─────────────────────────────────────────┤
-│  core  ◄── You are here                 │
+│  Layer 1: storage                       │
+├─────────────────────────────────────────┤
+│  Layer 0: core  ◄── You are here        │
 └─────────────────────────────────────────┘
 ```
 
-The core domain is the foundation layer. All other domains may depend on core, but core depends on no other vprogs domains.
+The core layer is the foundation. All other layers may depend on core, but core depends on no other vprogs domains.

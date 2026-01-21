@@ -1,6 +1,6 @@
 # node/
 
-Defines **how we connect to the real world**. This domain provides the concrete VM implementation that integrates all other domains.
+Defines **how we connect to the real world**. This layer provides the concrete VM implementation that integrates all other layers.
 
 ## Crates
 
@@ -24,7 +24,7 @@ impl VmInterface for VM {
         tx: &Self::Transaction,
         resources: &mut [AccessHandle<S, Self>],
     ) -> Result<Self::TransactionEffects, Self::Error> {
-        // Uses TransactionRuntime from transaction-runtime domain
+        // Uses TransactionRuntime from transaction-runtime layer
     }
 }
 ```
@@ -39,18 +39,21 @@ This implementation:
 
 ```
 ┌─────────────────────────────────────────┐
-│  node ◄── You are here                  │
+│  Layer 5: node  ◄── You are here        │
 ├─────────────────────────────────────────┤
-│  scheduling                             │
-│  transaction-runtime                    │
+│  Layer 4: transaction-runtime           │
 ├─────────────────────────────────────────┤
-│  storage / state                        │
+│  Layer 3: scheduling                    │
 ├─────────────────────────────────────────┤
-│  core                                   │
+│  Layer 2: state                         │
+├─────────────────────────────────────────┤
+│  Layer 1: storage                       │
+├─────────────────────────────────────────┤
+│  Layer 0: core                          │
 └─────────────────────────────────────────┘
 ```
 
-The node domain is the top layer. It integrates all domains into a working system.
+The node layer is the top layer. It integrates all layers into a working system.
 
 ## Usage
 
@@ -76,8 +79,8 @@ batch.wait_committed_blocking();
 
 ## Design Philosophy
 
-The node domain:
-1. Is the only domain that knows about all other domains
+The node layer:
+1. Is the only layer that knows about all other layers
 2. Provides the concrete types for the abstract traits
 3. Can be replaced with alternative VM implementations
 4. Serves as the integration point for the complete system

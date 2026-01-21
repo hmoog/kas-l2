@@ -1,6 +1,6 @@
 # storage/
 
-Defines **how** we store. This domain implements the persistence layer using the state definitions from the state domain.
+Defines **how** we store. This layer implements the persistence mechanisms using the state definitions from the state layer.
 
 ## Crates
 
@@ -52,16 +52,17 @@ RocksDB implementation of the Store trait:
 
 ```
 ┌─────────────────────────────────────────┐
-│  scheduling / transaction-runtime       │
+│  Layer 3: scheduling                    │
 ├─────────────────────────────────────────┤
-│  storage ◄── You are here               │
-│  state   ◄── uses these definitions     │
+│  Layer 2: state                         │
 ├─────────────────────────────────────────┤
-│  core                                   │
+│  Layer 1: storage  ◄── You are here     │
+├─────────────────────────────────────────┤
+│  Layer 0: core                          │
 └─────────────────────────────────────────┘
 ```
 
-The storage domain implements persistence. The scheduling domain uses storage to coordinate state access.
+The storage layer implements persistence. The state layer above defines what gets stored. The scheduling layer uses storage to coordinate state access.
 
 ## Design Philosophy
 
