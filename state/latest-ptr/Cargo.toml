@@ -1,0 +1,9 @@
+[package]
+edition = "2021"
+name    = "vprogs-state-latest-ptr"
+version = "0.1.0"
+
+[dependencies]
+vprogs-scheduling-types = { path = "../../scheduling/types" }
+vprogs-state-space      = { path = "../state-space" }
+vprogs-storage-types    = { path = "../../storage/types" }

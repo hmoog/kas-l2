@@ -13,6 +13,8 @@ vprogs-core-atomics                 = { path = "../../core/atomics" }
 vprogs-core-macros                  = { path = "../../core/macros" }
 vprogs-scheduling-execution-workers = { path = "../execution-workers" }
 vprogs-scheduling-types             = { path = "../types" }
+vprogs-state-latest-ptr             = { path = "../../state/latest-ptr" }
+vprogs-state-rollback-ptr           = { path = "../../state/rollback-ptr" }
 vprogs-state-space                  = { path = "../../state/state-space" }
 vprogs-state-versioned-state        = { path = "../../state/versioned-state" }
 vprogs-storage-manager              = { path = "../../storage/manager" }

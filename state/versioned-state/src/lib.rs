@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use tap::Tap;
 use vprogs_scheduling_types::ResourceId;
-use vprogs_state_space::{
-    StateSpace,
-    StateSpace::{Data, LatestPtr, RollbackPtr},
-};
+use vprogs_state_latest_ptr::LatestPtr;
+use vprogs_state_rollback_ptr::RollbackPtr;
+use vprogs_state_space::StateSpace;
 use vprogs_storage_manager::concat_bytes;
 use vprogs_storage_types::{ReadStore, WriteBatch};
 
@@ -25,16 +24,11 @@ impl<R: ResourceId> VersionedState<R> {
     where
         S: ReadStore<StateSpace = StateSpace>,
     {
-        let id_bytes: Vec<u8> = id.to_bytes();
-        match store.get(LatestPtr, &id_bytes) {
+        match LatestPtr::get(store, &id) {
             None => Self::empty(id),
-            Some(version) => match store.get(Data, &concat_bytes!(&version, &id_bytes)) {
+            Some(version) => match Self::get(store, version, &id) {
                 None => panic!("missing data for resource_{:?}@v{:?}", id, version),
-                Some(data) => Self {
-                    resource_id: id,
-                    version: u64::from_be_bytes(version[..8].try_into().unwrap()),
-                    data,
-                },
+                Some(data) => Self { resource_id: id, version, data },
             },
         }
     }
@@ -55,26 +49,54 @@ impl<R: ResourceId> VersionedState<R> {
     where
         W: WriteBatch<StateSpace = StateSpace>,
     {
-        let key = concat_bytes!(&self.version.to_be_bytes(), &self.resource_id.to_bytes());
-        store.put(Data, &key, &self.data);
+        Self::put(store, self.version, &self.resource_id, &self.data);
     }
 
     pub fn write_latest_ptr<W>(&self, store: &mut W)
     where
         W: WriteBatch<StateSpace = StateSpace>,
     {
-        let key = self.resource_id.to_bytes();
-        let version = self.version.to_be_bytes();
-        store.put(LatestPtr, &key, &version);
+        LatestPtr::put(store, &self.resource_id, self.version);
     }
 
     pub fn write_rollback_ptr<W>(&self, store: &mut W, batch_index: u64)
     where
         W: WriteBatch<StateSpace = StateSpace>,
     {
-        let key = concat_bytes!(&batch_index.to_be_bytes(), &self.resource_id.to_bytes());
-        let version = self.version.to_be_bytes();
-        store.put(RollbackPtr, &key, &version);
+        RollbackPtr::put(store, batch_index, &self.resource_id, self.version);
+    }
+
+    /// Gets the data for a specific version of a resource.
+    ///
+    /// Key layout: `version.to_be_bytes() || resource_id.to_bytes()`
+    pub fn get<S>(store: &S, version: u64, resource_id: &R) -> Option<Vec<u8>>
+    where
+        S: ReadStore<StateSpace = StateSpace>,
+    {
+        let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
+        store.get(StateSpace::Data, &key)
+    }
+
+    /// Stores data for a specific version of a resource.
+    ///
+    /// Key layout: `version.to_be_bytes() || resource_id.to_bytes()`
+    pub fn put<W>(store: &mut W, version: u64, resource_id: &R, data: &[u8])
+    where
+        W: WriteBatch<StateSpace = StateSpace>,
+    {
+        let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
+        store.put(StateSpace::Data, &key, data);
+    }
+
+    /// Deletes data for a specific version of a resource.
+    ///
+    /// Key layout: `version.to_be_bytes() || resource_id.to_bytes()`
+    pub fn delete<W>(store: &mut W, version: u64, resource_id: &R)
+    where
+        W: WriteBatch<StateSpace = StateSpace>,
+    {
+        let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
+        store.delete(StateSpace::Data, &key);
     }
 }
 

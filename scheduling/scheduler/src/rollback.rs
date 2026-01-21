@@ -2,12 +2,11 @@ use std::{marker::PhantomData, sync::Arc};
 
 use vprogs_core_atomics::AtomicAsyncLatch;
 use vprogs_scheduling_types::ResourceId;
-use vprogs_state_space::{
-    StateSpace,
-    StateSpace::{Data, LatestPtr, RollbackPtr},
-};
-use vprogs_storage_manager::concat_bytes;
-use vprogs_storage_types::{Store, WriteBatch};
+use vprogs_state_latest_ptr::LatestPtr;
+use vprogs_state_rollback_ptr::RollbackPtr;
+use vprogs_state_space::StateSpace;
+use vprogs_state_versioned_state::VersionedState;
+use vprogs_storage_types::Store;
 
 use crate::VmInterface;
 
@@ -70,13 +69,8 @@ impl<V: VmInterface> Rollback<V> {
         // Walk batches from newest to oldest.
         for index in (self.lower_bound..=self.upper_bound).rev() {
             // Apply all rollback pointers associated with this batch.
-            for (key, value) in store.prefix_iter(RollbackPtr, &index.to_be_bytes()) {
-                // Key layout: batch_index (8 bytes) || resource_id
-                let resource_id = V::ResourceId::from_bytes(&key[8..]);
-
-                // Value layout: old_version (8 bytes)
-                let old_version = u64::from_be_bytes(value[..8].try_into().unwrap());
-
+            for (resource_id_bytes, old_version) in RollbackPtr::iter_batch(store, index) {
+                let resource_id = V::ResourceId::from_bytes(&resource_id_bytes);
                 self.apply_rollback_ptr(store, &mut write_batch, index, resource_id, old_version);
             }
         }
@@ -97,28 +91,19 @@ impl<V: VmInterface> Rollback<V> {
         old_version: u64,
     ) {
         // Remove the currently live version, if present.
-        if let Some(current_version_bytes) = store.get(LatestPtr, &resource_id.to_bytes()) {
-            let current_version =
-                u64::from_be_bytes(current_version_bytes[..8].try_into().unwrap());
-
-            write_batch.delete(
-                Data,
-                &concat_bytes!(&current_version.to_be_bytes(), &resource_id.to_bytes()),
-            );
+        if let Some(current_version) = LatestPtr::get(store, &resource_id) {
+            VersionedState::delete(write_batch, current_version, &resource_id);
         }
 
         if old_version == 0 {
             // The resource did not exist before this batch.
-            write_batch.delete(LatestPtr, &resource_id.to_bytes());
+            LatestPtr::delete(write_batch, &resource_id);
         } else {
             // Restore the resource to its previous version.
-            write_batch.put(LatestPtr, &resource_id.to_bytes(), &old_version.to_be_bytes());
+            LatestPtr::put(write_batch, &resource_id, old_version);
         }
 
         // Remove the rollback pointer itself.
-        write_batch.delete(
-            RollbackPtr,
-            &concat_bytes!(&batch_index.to_be_bytes(), &resource_id.to_bytes()),
-        );
+        RollbackPtr::delete(write_batch, batch_index, &resource_id);
     }
 }
