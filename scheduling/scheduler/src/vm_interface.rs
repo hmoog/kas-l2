@@ -1,4 +1,4 @@
-use vprogs_scheduling_types::{AccessMetadata, ResourceId, Transaction};
+use vprogs_core_types::{AccessMetadata, ResourceId, Transaction};
 use vprogs_state_space::StateSpace;
 use vprogs_storage_types::Store;
 

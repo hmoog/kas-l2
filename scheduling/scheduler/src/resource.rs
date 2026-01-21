@@ -1,5 +1,5 @@
 use tap::Tap;
-use vprogs_scheduling_types::AccessMetadata;
+use vprogs_core_types::AccessMetadata;
 use vprogs_state_space::StateSpace;
 use vprogs_storage_types::Store;
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use tap::Tap;
-use vprogs_scheduling_types::ResourceId;
+use vprogs_core_types::ResourceId;
 use vprogs_state_latest_ptr::LatestPtr;
 use vprogs_state_rollback_ptr::RollbackPtr;
 use vprogs_state_space::StateSpace;

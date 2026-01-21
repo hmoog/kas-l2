@@ -707,6 +707,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "vprogs-core-types"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+]
+
+[[package]]
 name = "vprogs-node-vm"
 version = "0.1.0"
 dependencies = [
@@ -746,8 +753,8 @@ dependencies = [
  "tokio",
  "vprogs-core-atomics",
  "vprogs-core-macros",
+ "vprogs-core-types",
  "vprogs-scheduling-execution-workers",
- "vprogs-scheduling-types",
  "vprogs-state-latest-ptr",
  "vprogs-state-rollback-ptr",
  "vprogs-state-space",
@@ -761,8 +768,8 @@ name = "vprogs-scheduling-test-suite"
 version = "0.1.0"
 dependencies = [
  "tempfile",
+ "vprogs-core-types",
  "vprogs-scheduling-scheduler",
- "vprogs-scheduling-types",
  "vprogs-state-space",
  "vprogs-state-versioned-state",
  "vprogs-storage-manager",
@@ -771,17 +778,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "vprogs-scheduling-types"
-version = "0.1.0"
-dependencies = [
- "borsh",
-]
-
-[[package]]
 name = "vprogs-state-latest-ptr"
 version = "0.1.0"
 dependencies = [
- "vprogs-scheduling-types",
+ "vprogs-core-types",
  "vprogs-state-space",
  "vprogs-storage-types",
 ]
@@ -790,7 +790,7 @@ dependencies = [
 name = "vprogs-state-rollback-ptr"
 version = "0.1.0"
 dependencies = [
- "vprogs-scheduling-types",
+ "vprogs-core-types",
  "vprogs-state-space",
  "vprogs-storage-manager",
  "vprogs-storage-types",
@@ -805,7 +805,7 @@ name = "vprogs-state-versioned-state"
 version = "0.1.0"
 dependencies = [
  "tap",
- "vprogs-scheduling-types",
+ "vprogs-core-types",
  "vprogs-state-latest-ptr",
  "vprogs-state-rollback-ptr",
  "vprogs-state-space",
@@ -843,8 +843,8 @@ name = "vprogs-transaction-runtime"
 version = "0.1.0"
 dependencies = [
  "borsh",
+ "vprogs-core-types",
  "vprogs-scheduling-scheduler",
- "vprogs-scheduling-types",
  "vprogs-state-space",
  "vprogs-storage-types",
  "vprogs-transaction-runtime-address",
@@ -938,7 +938,7 @@ dependencies = [
 name = "vprogs-transaction-runtime-object-access"
 version = "0.1.0"
 dependencies = [
- "vprogs-scheduling-types",
+ "vprogs-core-types",
  "vprogs-transaction-runtime-object-id",
 ]
 
@@ -1000,7 +1000,7 @@ dependencies = [
 name = "vprogs-transaction-runtime-transaction"
 version = "0.1.0"
 dependencies = [
- "vprogs-scheduling-types",
+ "vprogs-core-types",
  "vprogs-transaction-runtime-instruction",
  "vprogs-transaction-runtime-object-access",
  "vprogs-transaction-runtime-object-id",

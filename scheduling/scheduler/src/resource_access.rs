@@ -5,7 +5,7 @@ use std::sync::{
 
 use vprogs_core_atomics::{AtomicOptionArc, AtomicWeak};
 use vprogs_core_macros::smart_pointer;
-use vprogs_scheduling_types::{AccessMetadata, AccessType};
+use vprogs_core_types::{AccessMetadata, AccessType};
 use vprogs_state_space::StateSpace;
 use vprogs_state_versioned_state::VersionedState;
 use vprogs_storage_manager::StorageManager;

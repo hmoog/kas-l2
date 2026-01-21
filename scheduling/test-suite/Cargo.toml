@@ -6,7 +6,7 @@ version = "0.1.0"
 [dependencies]
 tempfile                     = "3.23.0"
 vprogs-scheduling-scheduler  = { path = "../scheduler" }
-vprogs-scheduling-types      = { path = "../types" }
+vprogs-core-types            = { path = "../../core/types" }
 vprogs-state-space           = { path = "../../state/state-space" }
 vprogs-state-versioned-state = { path = "../../state/versioned-state" }
 vprogs-storage-manager       = { path = "../../storage/manager" }

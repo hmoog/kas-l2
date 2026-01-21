@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 tap                       = "1.0.1"
-vprogs-scheduling-types   = { path = "../../scheduling/types" }
+vprogs-core-types         = { path = "../../core/types" }
 vprogs-state-latest-ptr   = { path = "../latest-ptr" }
 vprogs-state-rollback-ptr = { path = "../rollback-ptr" }
 vprogs-state-space        = { path = "../state-space" }

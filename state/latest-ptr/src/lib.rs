@@ -1,4 +1,4 @@
-use vprogs_scheduling_types::ResourceId;
+use vprogs_core_types::ResourceId;
 use vprogs_state_space::StateSpace;
 use vprogs_storage_types::{ReadStore, WriteBatch};
 

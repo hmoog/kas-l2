@@ -4,26 +4,6 @@ Defines **how we provide access** to state. This domain orchestrates transaction
 
 ## Crates
 
-### types/
-`vprogs-scheduling-types`
-
-Shared type traits for scheduling:
-
-```rust
-pub trait ResourceId: Clone + Debug + Eq + Hash + Send + Sync + 'static {
-    fn to_bytes(&self) -> Vec<u8>;
-    fn from_bytes(bytes: &[u8]) -> Self;
-}
-
-pub trait AccessMetadata<R: ResourceId> {
-    fn id(&self) -> R;
-}
-
-pub trait Transaction<R: ResourceId, A: AccessMetadata<R>> {
-    fn accessed_resources(&self) -> &[A];
-}
-```
-
 ### scheduler/
 `vprogs-scheduling-scheduler`
 
