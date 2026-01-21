@@ -1,8 +1,83 @@
-./target/release/kaspad --testnet --utxoindex
+# node/
+
+Defines **how we connect to the real world**. This domain provides the concrete VM implementation that integrates all other domains.
+
+## Crates
+
+### vm/
+`vprogs-node-vm`
+
+Reference implementation of the VmInterface trait:
+
+```rust
+pub struct VM { /* ... */ }
+
+impl VmInterface for VM {
+    type Transaction = Transaction;
+    type TransactionEffects = TransactionEffects;
+    type ResourceId = ObjectId;
+    type AccessMetadata = ObjectAccess;
+    type Error = VmError;
+
+    fn process_transaction<S: Store>(
+        &self,
+        tx: &Self::Transaction,
+        resources: &mut [AccessHandle<S, Self>],
+    ) -> Result<Self::TransactionEffects, Self::Error> {
+        // Uses TransactionRuntime from transaction-runtime domain
+    }
+}
+```
+
+This implementation:
+- Bridges the abstract scheduling types to concrete transaction-runtime types
+- Uses `TransactionRuntime` for actual transaction execution
+- Handles program loading and capability management
+- Produces `TransactionEffects` as execution results
+
+## Layer Position
 
 ```
-...
-2026-01-19 15:34:21.698+01:00 [INFO ] Received 209484 UTXO set chunks so far, totaling in 209484000 UTXOs
-2026-01-19 15:34:22.041+01:00 [INFO ] Finished receiving the UTXO set. Total UTXOs: 209512362
-2026-01-19 15:34:22.041+01:00 [INFO ] Importing the UTXO set of the pruning point daef8e016040e53d702300a823b071d32f4da16eeb669fb35452c53e25e07c53
+┌─────────────────────────────────────────┐
+│  node ◄── You are here                  │
+├─────────────────────────────────────────┤
+│  scheduling                             │
+│  transaction-runtime                    │
+├─────────────────────────────────────────┤
+│  storage / state                        │
+├─────────────────────────────────────────┤
+│  core                                   │
+└─────────────────────────────────────────┘
 ```
+
+The node domain is the top layer. It integrates all domains into a working system.
+
+## Usage
+
+```rust
+use vprogs_node_vm::VM;
+use vprogs_scheduling_scheduler::{Scheduler, ExecutionConfig, StorageConfig};
+
+// Create the VM
+let vm = VM::new();
+
+// Create the scheduler with the VM
+let scheduler = Scheduler::new(
+    ExecutionConfig::new(num_workers, vm),
+    StorageConfig::new(store),
+);
+
+// Schedule transactions
+let batch = scheduler.schedule(transactions);
+
+// Wait for completion
+batch.wait_committed_blocking();
+```
+
+## Design Philosophy
+
+The node domain:
+1. Is the only domain that knows about all other domains
+2. Provides the concrete types for the abstract traits
+3. Can be replaced with alternative VM implementations
+4. Serves as the integration point for the complete system
