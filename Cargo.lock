@@ -755,10 +755,10 @@ dependencies = [
  "vprogs-core-macros",
  "vprogs-core-types",
  "vprogs-scheduling-execution-workers",
- "vprogs-state-latest-ptr",
- "vprogs-state-rollback-ptr",
+ "vprogs-state-ptr-latest",
+ "vprogs-state-ptr-rollback",
  "vprogs-state-space",
- "vprogs-state-versioned-state",
+ "vprogs-state-version",
  "vprogs-storage-manager",
  "vprogs-storage-types",
 ]
@@ -771,14 +771,14 @@ dependencies = [
  "vprogs-core-types",
  "vprogs-scheduling-scheduler",
  "vprogs-state-space",
- "vprogs-state-versioned-state",
+ "vprogs-state-version",
  "vprogs-storage-manager",
  "vprogs-storage-rocksdb-store",
  "vprogs-storage-types",
 ]
 
 [[package]]
-name = "vprogs-state-latest-ptr"
+name = "vprogs-state-ptr-latest"
 version = "0.1.0"
 dependencies = [
  "vprogs-core-types",
@@ -787,7 +787,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vprogs-state-rollback-ptr"
+name = "vprogs-state-ptr-rollback"
 version = "0.1.0"
 dependencies = [
  "vprogs-core-types",
@@ -801,13 +801,13 @@ name = "vprogs-state-space"
 version = "0.1.0"
 
 [[package]]
-name = "vprogs-state-versioned-state"
+name = "vprogs-state-version"
 version = "0.1.0"
 dependencies = [
  "tap",
  "vprogs-core-types",
- "vprogs-state-latest-ptr",
- "vprogs-state-rollback-ptr",
+ "vprogs-state-ptr-latest",
+ "vprogs-state-ptr-rollback",
  "vprogs-state-space",
  "vprogs-storage-manager",
  "vprogs-storage-types",

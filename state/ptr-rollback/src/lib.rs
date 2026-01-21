@@ -5,14 +5,14 @@ use vprogs_storage_types::{Store, WriteBatch};
 
 /// Provides type-safe operations for the RollbackPtr column family.
 ///
-/// RollbackPtr stores the version a resource had before a batch was applied,
+/// StatePtrRollback stores the version a resource had before a batch was applied,
 /// allowing state to be reverted during chain reorganization.
 ///
 /// Key layout: `batch_index.to_be_bytes() || resource_id.to_bytes()`
 /// Value layout: `old_version.to_be_bytes()` (u64)
-pub struct RollbackPtr;
+pub struct StatePtrRollback;
 
-impl RollbackPtr {
+impl StatePtrRollback {
     /// Stores the version a resource had before a batch was applied.
     pub fn put<W, R>(store: &mut W, batch_index: u64, resource_id: &R, old_version: u64)
     where
@@ -20,7 +20,7 @@ impl RollbackPtr {
         R: ResourceId,
     {
         let key = concat_bytes!(&batch_index.to_be_bytes(), &resource_id.to_bytes());
-        store.put(StateSpace::RollbackPtr, &key, &old_version.to_be_bytes());
+        store.put(StateSpace::StatePtrRollback, &key, &old_version.to_be_bytes());
     }
 
     /// Deletes a rollback pointer entry.
@@ -30,7 +30,7 @@ impl RollbackPtr {
         R: ResourceId,
     {
         let key = concat_bytes!(&batch_index.to_be_bytes(), &resource_id.to_bytes());
-        store.delete(StateSpace::RollbackPtr, &key);
+        store.delete(StateSpace::StatePtrRollback, &key);
     }
 
     /// Iterates all rollback pointers for a given batch index.
@@ -41,7 +41,7 @@ impl RollbackPtr {
     where
         S: Store<StateSpace = StateSpace>,
     {
-        store.prefix_iter(StateSpace::RollbackPtr, &batch_index.to_be_bytes()).map(
+        store.prefix_iter(StateSpace::StatePtrRollback, &batch_index.to_be_bytes()).map(
             |(key, value)| {
                 let resource_id_bytes = key[8..].to_vec();
                 let old_version = u64::from_be_bytes(value[..8].try_into().unwrap());

@@ -15,5 +15,5 @@ rocksdb = { version = "0.24.0", default-features = false, features = [
   "mt_static",
 ] }
 tap = "1.0.1"
-vprogs-state-space = { path = "../../state/state-space" }
+vprogs-state-space = { path = "../../state/space" }
 vprogs-storage-types = { path = "../types" }

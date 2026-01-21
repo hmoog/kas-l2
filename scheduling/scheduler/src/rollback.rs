@@ -2,10 +2,10 @@ use std::{marker::PhantomData, sync::Arc};
 
 use vprogs_core_atomics::AtomicAsyncLatch;
 use vprogs_core_types::ResourceId;
-use vprogs_state_latest_ptr::LatestPtr;
-use vprogs_state_rollback_ptr::RollbackPtr;
+use vprogs_state_ptr_latest::StatePtrLatest;
+use vprogs_state_ptr_rollback::StatePtrRollback;
 use vprogs_state_space::StateSpace;
-use vprogs_state_versioned_state::VersionedState;
+use vprogs_state_version::StateVersion;
 use vprogs_storage_types::Store;
 
 use crate::VmInterface;
@@ -69,7 +69,7 @@ impl<V: VmInterface> Rollback<V> {
         // Walk batches from newest to oldest.
         for index in (self.lower_bound..=self.upper_bound).rev() {
             // Apply all rollback pointers associated with this batch.
-            for (resource_id_bytes, old_version) in RollbackPtr::iter_batch(store, index) {
+            for (resource_id_bytes, old_version) in StatePtrRollback::iter_batch(store, index) {
                 let resource_id = V::ResourceId::from_bytes(&resource_id_bytes);
                 self.apply_rollback_ptr(store, &mut write_batch, index, resource_id, old_version);
             }
@@ -91,19 +91,19 @@ impl<V: VmInterface> Rollback<V> {
         old_version: u64,
     ) {
         // Remove the currently live version, if present.
-        if let Some(current_version) = LatestPtr::get(store, &resource_id) {
-            VersionedState::delete(write_batch, current_version, &resource_id);
+        if let Some(current_version) = StatePtrLatest::get(store, &resource_id) {
+            StateVersion::delete(write_batch, current_version, &resource_id);
         }
 
         if old_version == 0 {
             // The resource did not exist before this batch.
-            LatestPtr::delete(write_batch, &resource_id);
+            StatePtrLatest::delete(write_batch, &resource_id);
         } else {
             // Restore the resource to its previous version.
-            LatestPtr::put(write_batch, &resource_id, old_version);
+            StatePtrLatest::put(write_batch, &resource_id, old_version);
         }
 
         // Remove the rollback pointer itself.
-        RollbackPtr::delete(write_batch, batch_index, &resource_id);
+        StatePtrRollback::delete(write_batch, batch_index, &resource_id);
     }
 }

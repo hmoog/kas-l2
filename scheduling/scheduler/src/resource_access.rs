@@ -7,7 +7,7 @@ use vprogs_core_atomics::{AtomicOptionArc, AtomicWeak};
 use vprogs_core_macros::smart_pointer;
 use vprogs_core_types::{AccessMetadata, AccessType};
 use vprogs_state_space::StateSpace;
-use vprogs_state_versioned_state::VersionedState;
+use vprogs_state_version::StateVersion;
 use vprogs_storage_manager::StorageManager;
 use vprogs_storage_types::{ReadStore, Store};
 
@@ -20,8 +20,8 @@ pub struct ResourceAccess<S: Store<StateSpace = StateSpace>, V: VmInterface> {
     is_batch_tail: AtomicBool,
     tx: RuntimeTxRef<S, V>,
     state_diff: StateDiff<S, V>,
-    read_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
-    written_state: AtomicOptionArc<VersionedState<V::ResourceId>>,
+    read_state: AtomicOptionArc<StateVersion<V::ResourceId>>,
+    written_state: AtomicOptionArc<StateVersion<V::ResourceId>>,
     prev: AtomicOptionArc<Self>,
     next: AtomicWeak<Self>,
 }
@@ -33,12 +33,12 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
     }
 
     #[inline(always)]
-    pub fn read_state(&self) -> Arc<VersionedState<V::ResourceId>> {
+    pub fn read_state(&self) -> Arc<StateVersion<V::ResourceId>> {
         self.read_state.load().expect("read state unknown")
     }
 
     #[inline(always)]
-    pub fn written_state(&self) -> Arc<VersionedState<V::ResourceId>> {
+    pub fn written_state(&self) -> Arc<StateVersion<V::ResourceId>> {
         self.written_state.load().expect("written state unknown")
     }
 
@@ -90,7 +90,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
     }
 
     pub(crate) fn read_latest_data<R: ReadStore<StateSpace = StateSpace>>(&self, store: &R) {
-        self.set_read_state(Arc::new(VersionedState::from_latest_data(store, self.metadata.id())));
+        self.set_read_state(Arc::new(StateVersion::from_latest_data(store, self.metadata.id())));
     }
 
     pub(crate) fn tx(&self) -> &RuntimeTxRef<S, V> {
@@ -101,7 +101,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
         self.state_diff.clone()
     }
 
-    pub(crate) fn set_read_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
+    pub(crate) fn set_read_state(&self, state: Arc<StateVersion<V::ResourceId>>) {
         if self.read_state.publish(state.clone()) {
             drop(self.prev.take()); // drop the previous reference to allow cleanup
 
@@ -119,7 +119,7 @@ impl<S: Store<StateSpace = StateSpace>, V: VmInterface> ResourceAccess<S, V> {
         }
     }
 
-    pub(crate) fn set_written_state(&self, state: Arc<VersionedState<V::ResourceId>>) {
+    pub(crate) fn set_written_state(&self, state: Arc<StateVersion<V::ResourceId>>) {
         if self.written_state.publish(state.clone()) {
             if self.is_batch_tail() {
                 self.state_diff.set_written_state(state.clone());

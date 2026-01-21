@@ -1,0 +1,10 @@
+[package]
+edition = "2021"
+name    = "vprogs-state-ptr-rollback"
+version = "0.1.0"
+
+[dependencies]
+vprogs-core-types      = { path = "../../core/types" }
+vprogs-state-space     = { path = "../space" }
+vprogs-storage-manager = { path = "../../storage/manager" }
+vprogs-storage-types   = { path = "../../storage/types" }

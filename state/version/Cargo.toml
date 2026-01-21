@@ -1,13 +1,13 @@
 [package]
 edition = "2021"
-name    = "vprogs-state-versioned-state"
+name    = "vprogs-state-version"
 version = "0.1.0"
 
 [dependencies]
 tap                       = "1.0.1"
 vprogs-core-types         = { path = "../../core/types" }
-vprogs-state-latest-ptr   = { path = "../latest-ptr" }
-vprogs-state-rollback-ptr = { path = "../rollback-ptr" }
-vprogs-state-space        = { path = "../state-space" }
+vprogs-state-ptr-latest   = { path = "../ptr-latest" }
+vprogs-state-ptr-rollback = { path = "../ptr-rollback" }
+vprogs-state-space        = { path = "../space" }
 vprogs-storage-manager    = { path = "../../storage/manager" }
 vprogs-storage-types      = { path = "../../storage/types" }

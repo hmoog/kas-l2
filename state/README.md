@@ -4,7 +4,7 @@ Defines **what** we store. This domain establishes the semantic meaning of state
 
 ## Crates
 
-### state-space/
+### space/
 `vprogs-state-space`
 
 Defines the logical partitions of state:
@@ -18,8 +18,8 @@ pub enum StateSpace {
 }
 ```
 
-### latest-ptr/
-`vprogs-state-latest-ptr`
+### ptr-latest/
+`vprogs-state-ptr-latest`
 
 Type-safe operations for the LatestPtr column family:
 
@@ -28,8 +28,8 @@ Type-safe operations for the LatestPtr column family:
 
 Provides `get`, `put`, `delete` operations with proper type constraints.
 
-### rollback-ptr/
-`vprogs-state-rollback-ptr`
+### ptr-rollback/
+`vprogs-state-ptr-rollback`
 
 Type-safe operations for the RollbackPtr column family:
 
@@ -38,13 +38,13 @@ Type-safe operations for the RollbackPtr column family:
 
 Provides `put`, `delete`, and `iter_batch` for rollback operations.
 
-### versioned-state/
-`vprogs-state-versioned-state`
+### version/
+`vprogs-state-version`
 
 The main state abstraction combining all pointer operations:
 
 ```rust
-pub struct VersionedState<R: ResourceId> {
+pub struct StateVersion<R: ResourceId> {
     resource_id: R,
     version: u64,
     data: Vec<u8>,

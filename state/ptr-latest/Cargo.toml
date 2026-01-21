@@ -1,0 +1,9 @@
+[package]
+edition = "2021"
+name    = "vprogs-state-ptr-latest"
+version = "0.1.0"
+
+[dependencies]
+vprogs-core-types    = { path = "../../core/types" }
+vprogs-state-space   = { path = "../space" }
+vprogs-storage-types = { path = "../../storage/types" }

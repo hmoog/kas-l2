@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
-vprogs-state-space                             = { path = "../../state/state-space" }
+vprogs-state-space                             = { path = "../../state/space" }
 vprogs-storage-types                           = { path = "../../storage/types" }
 vprogs-transaction-runtime                     = { path = "../../transaction-runtime/transaction-runtime" }
 vprogs-transaction-runtime-error               = { path = "../../transaction-runtime/error" }

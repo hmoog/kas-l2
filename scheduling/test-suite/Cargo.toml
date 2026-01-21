@@ -5,10 +5,10 @@ version = "0.1.0"
 
 [dependencies]
 tempfile                     = "3.23.0"
-vprogs-scheduling-scheduler  = { path = "../scheduler" }
 vprogs-core-types            = { path = "../../core/types" }
-vprogs-state-space           = { path = "../../state/state-space" }
-vprogs-state-versioned-state = { path = "../../state/versioned-state" }
+vprogs-scheduling-scheduler  = { path = "../scheduler" }
+vprogs-state-space           = { path = "../../state/space" }
+vprogs-state-version         = { path = "../../state/version" }
 vprogs-storage-manager       = { path = "../../storage/manager" }
 vprogs-storage-rocksdb-store = { path = "../../storage/rocksdb-store" }
 vprogs-storage-types         = { path = "../../storage/types" }

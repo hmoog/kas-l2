@@ -2,20 +2,20 @@ use std::sync::Arc;
 
 use tap::Tap;
 use vprogs_core_types::ResourceId;
-use vprogs_state_latest_ptr::LatestPtr;
-use vprogs_state_rollback_ptr::RollbackPtr;
+use vprogs_state_ptr_latest::StatePtrLatest;
+use vprogs_state_ptr_rollback::StatePtrRollback;
 use vprogs_state_space::StateSpace;
 use vprogs_storage_manager::concat_bytes;
 use vprogs_storage_types::{ReadStore, WriteBatch};
 
 #[derive(Debug, Eq, Hash, PartialEq)]
-pub struct VersionedState<R: ResourceId> {
+pub struct StateVersion<R: ResourceId> {
     resource_id: R,
     version: u64,
     data: Vec<u8>,
 }
 
-impl<R: ResourceId> VersionedState<R> {
+impl<R: ResourceId> StateVersion<R> {
     pub fn empty(id: R) -> Self {
         Self { resource_id: id, version: 0, data: Vec::new() }
     }
@@ -24,7 +24,7 @@ impl<R: ResourceId> VersionedState<R> {
     where
         S: ReadStore<StateSpace = StateSpace>,
     {
-        match LatestPtr::get(store, &id) {
+        match StatePtrLatest::get(store, &id) {
             None => Self::empty(id),
             Some(version) => match Self::get(store, version, &id) {
                 None => panic!("missing data for resource_{:?}@v{:?}", id, version),
@@ -56,14 +56,14 @@ impl<R: ResourceId> VersionedState<R> {
     where
         W: WriteBatch<StateSpace = StateSpace>,
     {
-        LatestPtr::put(store, &self.resource_id, self.version);
+        StatePtrLatest::put(store, &self.resource_id, self.version);
     }
 
     pub fn write_rollback_ptr<W>(&self, store: &mut W, batch_index: u64)
     where
         W: WriteBatch<StateSpace = StateSpace>,
     {
-        RollbackPtr::put(store, batch_index, &self.resource_id, self.version);
+        StatePtrRollback::put(store, batch_index, &self.resource_id, self.version);
     }
 
     /// Gets the data for a specific version of a resource.
@@ -74,7 +74,7 @@ impl<R: ResourceId> VersionedState<R> {
         S: ReadStore<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
-        store.get(StateSpace::Data, &key)
+        store.get(StateSpace::StateVersion, &key)
     }
 
     /// Stores data for a specific version of a resource.
@@ -85,7 +85,7 @@ impl<R: ResourceId> VersionedState<R> {
         W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
-        store.put(StateSpace::Data, &key, data);
+        store.put(StateSpace::StateVersion, &key, data);
     }
 
     /// Deletes data for a specific version of a resource.
@@ -96,11 +96,11 @@ impl<R: ResourceId> VersionedState<R> {
         W: WriteBatch<StateSpace = StateSpace>,
     {
         let key = concat_bytes!(&version.to_be_bytes(), &resource_id.to_bytes());
-        store.delete(StateSpace::Data, &key);
+        store.delete(StateSpace::StateVersion, &key);
     }
 }
 
-impl<R: ResourceId> Clone for VersionedState<R> {
+impl<R: ResourceId> Clone for StateVersion<R> {
     fn clone(&self) -> Self {
         Self {
             resource_id: self.resource_id.clone(),

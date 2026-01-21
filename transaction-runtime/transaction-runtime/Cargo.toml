@@ -5,9 +5,9 @@ version = "0.1.0"
 
 [dependencies]
 borsh                                          = "1.6.0"
-vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
 vprogs-core-types                              = { path = "../../core/types" }
-vprogs-state-space                             = { path = "../../state/state-space" }
+vprogs-scheduling-scheduler                    = { path = "../../scheduling/scheduler" }
+vprogs-state-space                             = { path = "../../state/space" }
 vprogs-storage-types                           = { path = "../../storage/types" }
 vprogs-transaction-runtime-address             = { path = "../address" }
 vprogs-transaction-runtime-auth-context        = { path = "../auth-context" }
