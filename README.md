@@ -46,14 +46,14 @@ vprogs is organized as a layered monorepo inspired by the ISO/OSI model. Each la
 
 ## Domains
 
-| Layer | Domain | Purpose | Documentation |
-|-------|--------|---------|---------------|
-| 0 | [core/](core/) | Foundational types, atomics, macros | [README](core/README.md) |
-| 1 | [storage/](storage/) | Persistence layer: how we store | [README](storage/README.md) |
-| 2 | [state/](state/) | State semantics: what we store | [README](state/README.md) |
-| 3 | [scheduling/](scheduling/) | Execution orchestration | [README](scheduling/README.md) |
-| 4 | [transaction-runtime/](transaction-runtime/) | Execution semantics | [README](transaction-runtime/README.md) |
-| 5 | [node/](node/) | VM implementation | [README](node/README.md) |
+| Layer | Domain | Purpose                                        | Documentation |
+|-------|--------|------------------------------------------------|---------------|
+| 0 | [core/](core/) | Foundational types, atomics, macros            | [README](core/README.md) |
+| 1 | [storage/](storage/) | Persistence layer: how we access the disk      | [README](storage/README.md) |
+| 2 | [state/](state/) | State semantics: what we store                 | [README](state/README.md) |
+| 3 | [scheduling/](scheduling/) | Execution orchestration: how we access the CPU | [README](scheduling/README.md) |
+| 4 | [transaction-runtime/](transaction-runtime/) | Execution semantics                            | [README](transaction-runtime/README.md) |
+| 5 | [node/](node/) | VM implementation                              | [README](node/README.md) |
 
 ## Design Principles
 
@@ -91,8 +91,8 @@ cargo build                 # Debug build
 cargo build --release       # Release build
 cargo test                  # Run all tests
 cargo test --test e2e       # Run integration tests only
-cargo fmt                   # Format code
-cargo clippy                # Lint code
+cargo +nightly fmt          # Format code
+cargo clippy --tests        # Lint code
 ```
 
 ## Package Naming Convention
